@@ -119,7 +119,7 @@ body{height:100%;margin:0;background:#fff;overflow:hidden}
 #fx{position:fixed;inset:0;z-index:55;pointer-events:none}
 #fx i{position:absolute;left:50%;top:50%;border-radius:50%;opacity:0}
 #fx i{will-change:transform,opacity;backface-visibility:hidden}
-#home,#verify,#rs1,#rs2,#rs3{position:absolute;inset:0;z-index:90;display:none;background:var(--cream);padding:calc(32px + env(safe-area-inset-top,0px)) 20px calc(32px + env(safe-area-inset-bottom,0px));overflow-y:auto;font-size:16px}
+#home,#verify,#rs1,#rs2,#rs3,#rs4{position:absolute;inset:0;z-index:90;display:none;background:var(--cream);padding:calc(32px + env(safe-area-inset-top,0px)) 20px calc(32px + env(safe-area-inset-bottom,0px));overflow-y:auto;font-size:16px}
 .msg{margin:0;text-align:center;font:700 12px/1.5 var(--mono);color:#d6452a}.msg:empty{display:none}
 .gsp{position:absolute;left:50%;top:50%;width:30px;height:30px;margin:-15px 0 0 -15px;opacity:0;pointer-events:none;z-index:3}
 .vt{margin:0;text-align:center;font:500 13px/1.6 var(--mono);color:#5d6568}
@@ -177,6 +177,7 @@ body{height:100%;margin:0;background:#fff;overflow:hidden}
   <div id="rs1"><div class="lg"><h2 class="ttl">Reset <span class="hl">password</span></h2><p class="vt">Enter your Gmail. We will send you a verification link.</p><label class="field"><i class="ic"><b>@</b></i><span class="tx"><small>Gmail / Email</small><input id="rs_email" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" inputmode="email" placeholder="you@gmail.com"></span><i class="glow"></i></label><button class="btn" id="rs_send" type="button" style="font-size:12px;letter-spacing:.1em"><i></i><span>Send verification link</span></button><p class="signup"><button type="button" id="rs_back">Back to login</button></p></div></div>
   <div id="rs2"><div class="lg"><h2 class="ttl">Check your <span class="hl">Gmail</span></h2><p class="sub">We sent a reset link to</p><p class="vt" id="rs_mail" style="color:#0b0f10;font-weight:700"></p><p class="vt" id="rs_st"></p><button class="btn" id="rs_ok" type="button"><i></i><span>Verify</span></button><p class="signup"><button type="button" id="rs_re">Resend link</button><span class="vtm" id="rs_t"></span> &nbsp;·&nbsp; <button type="button" id="rs_x">Use another email</button></p></div></div>
   <div id="rs3"><div class="lg"><h2 class="ttl">New <span class="hl">password</span></h2><p class="vt" id="rs3_mail" style="color:#0b0f10;font-weight:700"></p><label class="field"><i class="ic"><b>***</b></i><span class="tx"><small>New password</small><input id="np1" type="password" autocomplete="new-password" placeholder="••••••••"></span><button class="eye" data-t="np1" type="button" aria-label="Show password" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1.5 12S5.5 4.5 12 4.5 22.5 12 22.5 12 18.5 19.5 12 19.5 1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/><path class="sl" pathLength="1" d="M3.5 3.5l17 17"/></svg></button><i class="glow"></i></label><label class="field"><i class="ic"><b>***</b></i><span class="tx"><small>Confirm password</small><input id="np2" type="password" autocomplete="new-password" placeholder="••••••••"></span><button class="eye" data-t="np2" type="button" aria-label="Show password" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1.5 12S5.5 4.5 12 4.5 22.5 12 22.5 12 18.5 19.5 12 19.5 1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/><path class="sl" pathLength="1" d="M3.5 3.5l17 17"/></svg></button><i class="glow"></i></label><button class="btn" id="np_ok" type="button"><i></i><span>Confirm</span></button></div></div>
+  <div id="rs4"><div class="lg"><h2 class="ttl">Link <span class="hl">verified</span></h2><p class="sub">Your Gmail is confirmed</p><p class="vt">Go back to the Ultimate Tour tab you came from and tap Verify. Cannot find it? Continue here.</p><button class="btn" id="rs4_go" type="button"><i></i><span>Continue here</span></button></div></div>
   <div id="wipe"><i class="band"></i><i class="band"></i><i class="band"></i><i class="band"></i><i class="band"></i><i class="band"></i></div>
 </div>
 
@@ -446,13 +447,13 @@ const say=(root,t,ok)=>{let p=root.querySelector('.msg');if(!p){p=document.creat
 async function run(btn,root,fn,dim){if(working)return;working=true;if(dim!==false)btn.style.opacity='.6';say(root,'');try{await fn()}catch(e){if(!/popup-closed|cancelled-popup/.test(e.code||''))say(root,E[e.code]||'Something went wrong ('+(e.code||e.message)+')')}finally{working=false;btn.style.opacity=''}}
 const getProfile=async u=>{const s=await getDoc(doc(db,'users',u.uid));return s.exists()?s.data():null};
 const saveProfile=(u,d)=>runTransaction(db,async tx=>{const r=doc(db,'usernames',d.username);if((await tx.get(r)).exists())throw{code:'app/username-taken'};tx.set(r,{uid:u.uid});tx.set(doc(db,'users',u.uid),{...d,createdAt:serverTimestamp()})});
-const enter=p=>{q('#h_name').textContent=p.name;q('#h_meta').textContent='@'+p.username+' · '+p.email;home.style.display='flex';document.querySelectorAll('#verify,#rs1,#rs2,#rs3').forEach(x=>x.style.display='none')};
+const enter=p=>{q('#h_name').textContent=p.name;q('#h_meta').textContent='@'+p.username+' · '+p.email;home.style.display='flex';document.querySelectorAll('#verify,#rs1,#rs2,#rs3,#rs4').forEach(x=>x.style.display='none')};
 const sgOn=()=>getComputedStyle(q('#signup')).visibility==='visible';
 function resetSignup(){pending=null;pwF.forEach(f=>f.style.display='');q('#su_email').readOnly=false;q('#signup .sub').textContent='Create new account';sgF.querySelectorAll('input').forEach(i=>i.value='')}
 const introDone=()=>new Promise(r=>{const w=()=>typeof tl!=='undefined'&&tl&&tl.progress()>=1?r():setTimeout(w,300);w()});
 
 // Email + password login (text gathers into a ball > spinner > tick > box expands to home or the verify page)
-const topPg=()=>[...document.querySelectorAll('#home,#verify,#rs1,#rs2,#rs3')].filter(p=>p.style.display==='flex').pop()||document.body;
+const topPg=()=>[...document.querySelectorAll('#home,#verify,#rs1,#rs2,#rs3,#rs4')].filter(p=>p.style.display==='flex').pop()||document.body;
 async function animRun(btn,job,show,after){const g=gAnim(btn,true);try{const w=job();w.catch(()=>{});await g.eat();const r=await w;await g.done();if(after){await after(r);g.reset();return}await g.expand();(show||(x=>x&&x.uid?showVerify(x):enter(x)))(r);g.fade()}catch(e){g.reset();throw e}}
 const ver=q('#verify'),vF=q('#verify .lg'),PK='ut_pending';let mailP=null;
 const COOL=80;
@@ -599,11 +600,11 @@ q('#v_x').onclick=e=>{const b=e.currentTarget;if(b.dataset.busy)return;const u=a
   lineAnim(b,job,()=>{ver.style.display='none';const m=q('#su_email');m.value='';m.readOnly=false;say(sgF,'')}).finally(()=>{delete b.dataset.busy})};
 
 // ===== Forgot password: forgot link > email page > check Gmail > verify > new password > dust away =====
-const rs1=q('#rs1'),rs2=q('#rs2'),rs3=q('#rs3'),rsF1=q('#rs1 .lg'),rsF2=q('#rs2 .lg'),rsF3=q('#rs3 .lg'),RK='ut_reset';
+const rs1=q('#rs1'),rs2=q('#rs2'),rs3=q('#rs3'),rs4=q('#rs4'),rsF4=q('#rs4 .lg'),rsF1=q('#rs1 .lg'),rsF2=q('#rs2 .lg'),rsF3=q('#rs3 .lg'),RK='ut_reset';
 let rsMail='',rsCode=null;
 const rsSaved=()=>{try{return JSON.parse(localStorage.getItem(RK)||'null')}catch(e){return null}};
 const rsClear=()=>{try{localStorage.removeItem(RK)}catch(e){}};
-function resetRs(){[rs1,rs2,rs3].forEach(p=>p.style.display='none');['#rs_email','#np1','#np2'].forEach(i=>q(i).value='');T2.reset();rsCode=null;rsMail='';rsClear()}
+function resetRs(){[rs1,rs2,rs3,rs4].forEach(p=>p.style.display='none');['#rs_email','#np1','#np2'].forEach(i=>q(i).value='');T2.reset();rsCode=null;rsMail='';rsClear()}
 function loginIn(){const els=[...lgF.children];els.forEach(x=>x.style.transition='none');
   gsap.from(els,{y:28,opacity:0,duration:.7,stagger:.08,delay:.1,ease:'power3.out',onComplete:()=>els.forEach(x=>{x.style.transition=''})})}
 const showRs2=()=>{q('#rs_mail').textContent=rsMail;rs2.style.display='flex';q('#rs_ok').style.display='';
@@ -662,13 +663,16 @@ q('#np_ok').onclick=e=>{const b=e.currentTarget;return run(b,rsF3,async()=>{
   await animRun(b,async()=>{await confirmPasswordReset(auth,rsCode,p1);rsClear();return 1},null,async()=>{
     const em=rsMail;rs1.style.display='none';rs2.style.display='none';
     await dust(rs3,()=>{resetRs();lgF.username.value=em;lgF.password.value='';say(lgF,'Password changed. Log in with your new password.',1);loginIn()})})},false)};
+q('#rs4_go').onclick=e=>{const b=e.currentTarget;return run(b,rsF4,async()=>{
+  await animRun(b,async()=>{const d=rsSaved();if(!d)throw{code:'auth/invalid-action-code'};await verifyPasswordResetCode(auth,d.code);return d},showRs3)},false)};
+addEventListener('storage',e=>{if(e.key===RK&&e.newValue&&rs2.style.display==='flex')q('#rs_st').textContent='Link verified! Tap Verify to set your new password.'});
 for(const [fm,id] of [[rsF1,'#rs_send'],[rsF3,'#np_ok']])fm.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT'){e.preventDefault();q(id).click()}});
 // Reset link opened (Firebase action URL set to this page): go straight to the new password page and tell the other tab
 {const qs=new URLSearchParams(location.search),code=qs.get('oobCode');
  if(qs.get('mode')==='resetPassword'&&code){
   verifyPasswordResetCode(auth,code).then(async em=>{
     try{localStorage.setItem(RK,JSON.stringify({code,email:em.toLowerCase()}))}catch(e){}
-    history.replaceState(null,'',location.pathname);await introDone();showRs3({code,email:em.toLowerCase()})
+    history.replaceState(null,'',location.pathname);await introDone();rs4.style.display='flex';gsap.from('#rs4 .lg>*',{y:20,opacity:0,duration:.6,stagger:.08,ease:'power3.out'})
   }).catch(async()=>{history.replaceState(null,'',location.pathname);await introDone();say(lgF,'This reset link is invalid or already used. Request a new one.')})}}
 
 // Back from Google registration = cancel; Enter key; logout; stay logged in
@@ -681,4 +685,4 @@ onAuthStateChanged(auth,async u=>{if(!u||working||pending)return;
   catch(e){await signOut(auth)}});
 </script>
 </body>
-  </html>
+                                                                                                        </html>
