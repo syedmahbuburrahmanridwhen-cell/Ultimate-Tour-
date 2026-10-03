@@ -444,14 +444,14 @@ const sgOn=()=>getComputedStyle(q('#signup')).visibility==='visible';
 function resetSignup(){pending=null;pwF.forEach(f=>f.style.display='');q('#su_email').readOnly=false;q('#signup .sub').textContent='Create new account';sgF.querySelectorAll('input').forEach(i=>i.value='')}
 const introDone=()=>new Promise(r=>{const w=()=>typeof tl!=='undefined'&&tl&&tl.progress()>=1?r():setTimeout(w,300);w()});
 
-// Email + password login
-q('#login .btn').onclick=e=>run(e.currentTarget,lgF,async()=>{
+// Email + password login (text gathers into a ball > spinner > tick > box expands to home)
+async function animRun(btn,job){const g=gAnim(btn,true);try{const w=job();w.catch(()=>{});await g.eat();const p=await w;await g.done();await g.expand();enter(p);g.fade()}catch(e){g.reset();throw e}}
+q('#login .btn').onclick=e=>{const b=e.currentTarget;return run(b,lgF,async()=>{
   const em=lgF.username.value.trim(),pw=lgF.password.value;
   if(!MAIL.test(em))throw{code:'auth/invalid-email'};
   if(!pw)throw{code:'auth/invalid-credential'};
-  const {user}=await signInWithEmailAndPassword(auth,em,pw),p=await getProfile(user);
-  if(!p){await signOut(auth);throw{code:'app/no-profile'}}
-  enter(p)});
+  await animRun(b,async()=>{const {user}=await signInWithEmailAndPassword(auth,em,pw),p=await getProfile(user);
+    if(!p){await signOut(auth);throw{code:'app/no-profile'}}return p})},false)};
 
 // Google login: no extra details needed. Profile is auto-created on first use, then logo > spinner > tick > expand animation
 async function autoProfile(u){
@@ -461,18 +461,25 @@ async function autoProfile(u){
     try{await saveProfile(u,d);return d}catch(e){if(e.code!=='app/username-taken')throw e}}
   throw{code:'app/username-taken'}}
 const fin=t=>new Promise(r=>t.eventCallback('onComplete',r));
-function gAnim(btn){
-  const lg=btn.querySelector('svg'),tx=btn.querySelector('span'),R=btn.getBoundingClientRect(),L=lg.getBoundingClientRect(),T=tx.getBoundingClientRect();
+function gAnim(btn,dark){
+  const lg=btn.querySelector(dark?'i':'svg'),tx=btn.querySelector('span'),R=btn.getBoundingClientRect(),L=lg.getBoundingClientRect(),T=tx.getBoundingClientRect();
   const x0=Math.max(R.right-24-L.right,T.right-L.left-6),cx=R.left+R.width/2-(L.left+L.width/2);
   btn.style.position='relative';btn.style.overflow='hidden';lg.style.position='relative';lg.style.zIndex=2;
   const sp=document.createElement('div');sp.className='gsp';
   sp.innerHTML='<svg viewBox="0 0 30 30" width="30" height="30"><g class="rot"><circle cx="15" cy="15" r="11" pathLength="100" style="fill:rgba(201,222,60,0)" stroke="#1e4d3a" stroke-width="3.2" stroke-linecap="round" stroke-dasharray="28 72"/></g><path class="tick" d="M9.5 15.5l4 4 7-8" fill="none" stroke="#0b0f10" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/></svg>';
-  btn.append(sp);
+  btn.append(sp);if(dark)sp.querySelector('circle').setAttribute('stroke','#c9de3c');
   const rot=sp.querySelector('.rot'),ring=sp.querySelector('circle'),tick=sp.querySelector('.tick');
   let spin,gx;
   const clip=()=>{const c=lg.getBoundingClientRect(),m=c.left+c.width/2;tx.style.clipPath='inset(0 0 0 '+Math.min(T.width,Math.max(0,m-T.left))+'px)'};
+  const gather=()=>{const bc=R.left+R.width/2,tc=T.left+T.width/2,lc=L.left+L.width/2;
+    const t=gsap.timeline().to(tx,{x:bc-tc,scale:0,opacity:0,duration:.55,ease:'power3.in'},0)
+      .to(lg,{x:bc-lc,scale:2.6,duration:.55,ease:'power3.inOut'},0).to(lg,{scale:0,opacity:0,duration:.2},'-=.05')
+      .fromTo(sp,{opacity:0,scale:.4},{opacity:1,scale:1,duration:.3,ease:'back.out(2)'},'<')
+      .add(()=>{spin=gsap.to(rot,{rotation:360,svgOrigin:'15 15',duration:.8,repeat:-1,ease:'none'})},'<');
+    return fin(t)};
   return{
     eat(){
+      if(dark)return gather();
       const t=gsap.timeline().to(lg,{x:x0,scale:1.25,duration:.85,ease:'power2.inOut',onUpdate:clip})
         .to(lg,{x:cx,scale:1,duration:.45,ease:'power2.inOut'}).to(lg,{scale:0,opacity:0,duration:.2},'-=.1')
         .fromTo(sp,{opacity:0,scale:.4},{opacity:1,scale:1,duration:.3,ease:'back.out(2)'},'<')
@@ -483,11 +490,11 @@ function gAnim(btn){
         .to(tick,{strokeDashoffset:0,duration:.35,ease:'power2.out'}).to(sp,{scale:1.2,duration:.12,yoyo:true,repeat:1}).to({},{duration:.3});
       return fin(t)},
     expand(){const r=btn.getBoundingClientRect();gx=document.createElement('div');
-      Object.assign(gx.style,{position:'fixed',left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px',background:'#fff',borderRadius:'99px',zIndex:46,boxSizing:'border-box'});
+      Object.assign(gx.style,{position:'fixed',left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px',background:dark?'#0b0f10':'#fff',borderRadius:'99px',zIndex:46,boxSizing:'border-box'});
       gx.append(sp);document.body.append(gx);gsap.to(sp,{opacity:0,duration:.3,delay:.2});
       return fin(gsap.to(gx,{left:0,top:0,width:innerWidth,height:innerHeight,borderRadius:0,backgroundColor:'#f4efe9',duration:.85,ease:'power3.inOut'}))},
     fade(){gsap.to(gx,{opacity:0,duration:.45,onComplete:()=>gx.remove()});gsap.from('#home .lg>*',{y:24,opacity:0,duration:.6,stagger:.08,ease:'power3.out'})},
-    reset(){spin&&spin.kill();gsap.killTweensOf([lg,sp,tick,ring]);sp.remove();gx&&gx.remove();gsap.set(lg,{x:0,scale:1,opacity:1});tx.style.clipPath='';btn.style.overflow=btn.style.position=''}}}
+    reset(){spin&&spin.kill();gsap.killTweensOf([lg,sp,tick,ring]);sp.remove();gx&&gx.remove();gsap.set(lg,{x:0,scale:1,opacity:1});gsap.set(tx,{x:0,scale:1,opacity:1});tx.style.clipPath='';btn.style.overflow=btn.style.position=''}}}
 const google=btn=>run(btn,sgOn()?sgF:lgF,async()=>{
   const gp=new GoogleAuthProvider();gp.setCustomParameters({prompt:'select_account'});
   const {user}=await signInWithPopup(auth,gp),g=gAnim(btn);
@@ -495,22 +502,21 @@ const google=btn=>run(btn,sgOn()?sgF:lgF,async()=>{
   catch(e){g.reset();throw e}},false);
 document.querySelectorAll('.gbtn').forEach(b=>b.onclick=()=>google(b));
 
-// Create account (email or finishing Google profile)
-q('#sgf .btn').onclick=e=>run(e.currentTarget,sgF,async()=>{
-  const name=v('name'),un=v('username').toLowerCase(),em=v('email'),ph=v('phone');
+// Create account
+q('#sgf .btn').onclick=e=>{const b=e.currentTarget;return run(b,sgF,async()=>{
+  const name=v('name'),un=v('username').toLowerCase(),em=v('email'),ph=v('phone'),p1=q('#su_pw1').value;
   if(name.length<2)throw{code:'app/name'};
   if(!/^[a-z0-9_.]{3,20}$/.test(un))throw{code:'app/username'};
   if(!MAIL.test(em))throw{code:'auth/invalid-email'};
   if(ph&&!/^\+?[0-9\s-]{7,15}$/.test(ph))throw{code:'app/phone'};
-  const d={name,username:un,email:em,phone:ph,provider:pending?'google':'password'};
-  if(pending){await saveProfile(pending,d);resetSignup();enter(d);return}
-  const p1=q('#su_pw1').value;
   if(p1.length<6)throw{code:'auth/weak-password'};
   if(p1!==q('#su_pw2').value)throw{code:'app/pw-match'};
-  if((await getDoc(doc(db,'usernames',un))).exists())throw{code:'app/username-taken'};
-  const {user}=await createUserWithEmailAndPassword(auth,em,p1);
-  try{await saveProfile(user,d)}catch(err){await deleteUser(user);throw err}
-  enter(d)});
+  const d={name,username:un,email:em,phone:ph,provider:'password'};
+  await animRun(b,async()=>{
+    if((await getDoc(doc(db,'usernames',un))).exists())throw{code:'app/username-taken'};
+    const {user}=await createUserWithEmailAndPassword(auth,em,p1);
+    try{await saveProfile(user,d)}catch(err){await deleteUser(user);throw err}
+    return d})},false)};
 
 // Forgot password
 q('.forgot').onclick=e=>run(e.currentTarget,lgF,async()=>{
