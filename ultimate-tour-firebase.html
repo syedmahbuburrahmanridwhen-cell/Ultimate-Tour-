@@ -119,7 +119,7 @@ body{height:100%;margin:0;background:#fff;overflow:hidden}
 #fx{position:fixed;inset:0;z-index:55;pointer-events:none}
 #fx i{position:absolute;left:50%;top:50%;border-radius:50%;opacity:0}
 #fx i{will-change:transform,opacity;backface-visibility:hidden}
-#home,#verify{position:absolute;inset:0;z-index:45;display:none;background:var(--cream);padding:calc(32px + env(safe-area-inset-top,0px)) 20px calc(32px + env(safe-area-inset-bottom,0px));overflow-y:auto;font-size:16px}
+#home,#verify{position:absolute;inset:0;z-index:90;display:none;background:var(--cream);padding:calc(32px + env(safe-area-inset-top,0px)) 20px calc(32px + env(safe-area-inset-bottom,0px));overflow-y:auto;font-size:16px}
 .msg{margin:0;text-align:center;font:700 12px/1.5 var(--mono);color:#d6452a}.msg:empty{display:none}
 .gsp{position:absolute;left:50%;top:50%;width:30px;height:30px;margin:-15px 0 0 -15px;opacity:0;pointer-events:none;z-index:3}
 .vt{margin:0;text-align:center;font:500 13px/1.6 var(--mono);color:#5d6568}
@@ -172,7 +172,7 @@ body{height:100%;margin:0;background:#fff;overflow:hidden}
   <div id="xf"></div><div id="xc"></div><div id="fx"></div><i id="ub"></i>
 
   <div id="home"><div class="lg"><h2 class="ttl">Ultimate <span class="hl">Tour</span></h2><p class="sub" id="h_name"></p><p class="msg" id="h_meta" style="color:#5d6568"></p><button class="btn" id="h_out" type="button"><i></i><span>Log out</span></button></div></div>
-  <div id="verify"><div class="lg"><h2 class="ttl">Check your <span class="hl">Gmail</span></h2><p class="sub">We sent a verification link to</p><p class="vt" id="v_mail" style="color:#0b0f10;font-weight:700"></p><p class="vt">Open the link in your inbox (check Spam too), then come back here and tap Confirm.</p><button class="btn" id="v_ok" type="button"><i></i><span>Confirm</span></button><p class="signup"><button type="button" id="v_re">Resend link</button> &nbsp;·&nbsp; <button type="button" id="v_x">Use another email</button></p></div></div>
+  <div id="verify"><div class="lg"><h2 class="ttl">Check your <span class="hl">Gmail</span></h2><p class="sub">We sent a verification link to</p><p class="vt" id="v_mail" style="color:#0b0f10;font-weight:700"></p><p class="vt" id="v_st"></p><button class="btn" id="v_ok" type="button"><i></i><span>Confirm</span></button><p class="signup"><button type="button" id="v_re">Resend link</button> &nbsp;·&nbsp; <button type="button" id="v_x">Use another email</button></p></div></div>
   <div id="wipe"><i class="band"></i><i class="band"></i><i class="band"></i><i class="band"></i><i class="band"></i><i class="band"></i></div>
 </div>
 
@@ -448,8 +448,15 @@ const introDone=()=>new Promise(r=>{const w=()=>typeof tl!=='undefined'&&tl&&tl.
 
 // Email + password login (text gathers into a ball > spinner > tick > box expands to home or the verify page)
 async function animRun(btn,job,show){const g=gAnim(btn,true);try{const w=job();w.catch(()=>{});await g.eat();const r=await w;await g.done();await g.expand();(show||(x=>x&&x.uid?showVerify(x):enter(x)))(r);g.fade()}catch(e){g.reset();throw e}}
-const ver=q('#verify'),vF=q('#verify .lg'),PK='ut_pending';
-const showVerify=u=>{q('#v_mail').textContent=u.email;ver.style.display='flex'};
+const ver=q('#verify'),vF=q('#verify .lg'),PK='ut_pending';let mailP=null;
+const showVerify=u=>{
+  q('#v_mail').textContent=u.email;ver.style.display='flex';
+  const p=mailP,ok=q('#v_ok'),st=q('#v_st'),re=q('#v_re'),READY='Open the link we sent to your inbox (check Spam too), then come back here and tap Confirm.';
+  mailP=null;
+  if(!p){st.textContent=READY;return}
+  ok.style.display='none';re.disabled=true;st.textContent='Sending the link to your Gmail...';
+  p.then(()=>{st.textContent=READY},()=>{st.textContent='Could not send the link automatically. Tap Resend link.'})
+   .then(()=>{ok.style.display='';re.disabled=false;gsap.from(ok,{y:16,opacity:0,duration:.5,ease:'power3.out'})})};
 async function makeProfile(u){
   let d=null;try{d=JSON.parse(localStorage.getItem(PK)||'null')}catch(e){}
   if(d&&d.email===u.email.toLowerCase()){d={name:d.name,username:d.username,email:u.email,phone:d.phone||'',provider:'password'};
@@ -500,7 +507,7 @@ function gAnim(btn,dark){
         .to(tick,{strokeDashoffset:0,duration:.35,ease:'power2.out'}).to(sp,{scale:1.2,duration:.12,yoyo:true,repeat:1}).to({},{duration:.3});
       return fin(t)},
     expand(){const r=btn.getBoundingClientRect();gx=document.createElement('div');
-      Object.assign(gx.style,{position:'fixed',left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px',background:dark?'#0b0f10':'#fff',borderRadius:'99px',zIndex:46,boxSizing:'border-box'});
+      Object.assign(gx.style,{position:'fixed',left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px',background:dark?'#0b0f10':'#fff',borderRadius:'99px',zIndex:95,boxSizing:'border-box'});
       gx.append(sp);document.body.append(gx);gsap.to(sp,{opacity:0,duration:.3,delay:.2});
       return fin(gsap.to(gx,{left:0,top:0,width:innerWidth,height:innerHeight,borderRadius:0,backgroundColor:'#f4efe9',duration:.85,ease:'power3.inOut'}))},
     fade(){gsap.to(gx,{opacity:0,duration:.45,onComplete:()=>gx.remove()});gsap.from('#home .lg>*,#verify .lg>*',{y:24,opacity:0,duration:.6,stagger:.08,ease:'power3.out'})},
@@ -524,7 +531,7 @@ q('#sgf .btn').onclick=e=>{const b=e.currentTarget;return run(b,sgF,async()=>{
   await animRun(b,async()=>{
     if((await getDoc(doc(db,'usernames',un))).exists())throw{code:'app/username-taken'};
     const {user}=await createUserWithEmailAndPassword(auth,em,p1);
-    await sendEmailVerification(user).catch(()=>{});
+    mailP=sendEmailVerification(user);mailP.catch(()=>{});
     try{localStorage.setItem(PK,JSON.stringify({name,username:un,email:em.toLowerCase(),phone:ph}))}catch(e){}
     return user})},false)};
 
