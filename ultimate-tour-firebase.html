@@ -119,7 +119,7 @@ body{height:100%;margin:0;background:#fff;overflow:hidden}
 #fx{position:fixed;inset:0;z-index:55;pointer-events:none}
 #fx i{position:absolute;left:50%;top:50%;border-radius:50%;opacity:0}
 #fx i{will-change:transform,opacity;backface-visibility:hidden}
-#home,#verify{position:absolute;inset:0;z-index:90;display:none;background:var(--cream);padding:calc(32px + env(safe-area-inset-top,0px)) 20px calc(32px + env(safe-area-inset-bottom,0px));overflow-y:auto;font-size:16px}
+#home,#verify,#rs1,#rs2,#rs3{position:absolute;inset:0;z-index:90;display:none;background:var(--cream);padding:calc(32px + env(safe-area-inset-top,0px)) 20px calc(32px + env(safe-area-inset-bottom,0px));overflow-y:auto;font-size:16px}
 .msg{margin:0;text-align:center;font:700 12px/1.5 var(--mono);color:#d6452a}.msg:empty{display:none}
 .gsp{position:absolute;left:50%;top:50%;width:30px;height:30px;margin:-15px 0 0 -15px;opacity:0;pointer-events:none;z-index:3}
 .vt{margin:0;text-align:center;font:500 13px/1.6 var(--mono);color:#5d6568}
@@ -174,6 +174,9 @@ body{height:100%;margin:0;background:#fff;overflow:hidden}
 
   <div id="home"><div class="lg"><h2 class="ttl">Ultimate <span class="hl">Tour</span></h2><p class="sub" id="h_name"></p><p class="msg" id="h_meta" style="color:#5d6568"></p><button class="btn" id="h_out" type="button"><i></i><span>Log out</span></button></div></div>
   <div id="verify"><div class="lg"><h2 class="ttl">Check your <span class="hl">Gmail</span></h2><p class="sub">We sent a verification link to</p><p class="vt" id="v_mail" style="color:#0b0f10;font-weight:700"></p><p class="vt" id="v_st"></p><button class="btn" id="v_ok" type="button"><i></i><span>Confirm</span></button><p class="signup"><button type="button" id="v_re">Resend link</button><span class="vtm" id="v_t"></span> &nbsp;·&nbsp; <button type="button" id="v_x">Use another email</button></p></div></div>
+  <div id="rs1"><div class="lg"><h2 class="ttl">Reset <span class="hl">password</span></h2><p class="vt">Enter your Gmail. We will send you a verification link.</p><label class="field"><i class="ic"><b>@</b></i><span class="tx"><small>Gmail / Email</small><input id="rs_email" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" inputmode="email" placeholder="you@gmail.com"></span><i class="glow"></i></label><button class="btn" id="rs_send" type="button" style="font-size:12px;letter-spacing:.1em"><i></i><span>Send verification link</span></button><p class="signup"><button type="button" id="rs_back">Back to login</button></p></div></div>
+  <div id="rs2"><div class="lg"><h2 class="ttl">Check your <span class="hl">Gmail</span></h2><p class="sub">We sent a reset link to</p><p class="vt" id="rs_mail" style="color:#0b0f10;font-weight:700"></p><p class="vt" id="rs_st"></p><button class="btn" id="rs_ok" type="button"><i></i><span>Verify</span></button><p class="signup"><button type="button" id="rs_re">Resend link</button><span class="vtm" id="rs_t"></span> &nbsp;·&nbsp; <button type="button" id="rs_x">Use another email</button></p></div></div>
+  <div id="rs3"><div class="lg"><h2 class="ttl">New <span class="hl">password</span></h2><p class="vt" id="rs3_mail" style="color:#0b0f10;font-weight:700"></p><label class="field"><i class="ic"><b>***</b></i><span class="tx"><small>New password</small><input id="np1" type="password" autocomplete="new-password" placeholder="••••••••"></span><button class="eye" data-t="np1" type="button" aria-label="Show password" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1.5 12S5.5 4.5 12 4.5 22.5 12 22.5 12 18.5 19.5 12 19.5 1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/><path class="sl" pathLength="1" d="M3.5 3.5l17 17"/></svg></button><i class="glow"></i></label><label class="field"><i class="ic"><b>***</b></i><span class="tx"><small>Confirm password</small><input id="np2" type="password" autocomplete="new-password" placeholder="••••••••"></span><button class="eye" data-t="np2" type="button" aria-label="Show password" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1.5 12S5.5 4.5 12 4.5 22.5 12 22.5 12 18.5 19.5 12 19.5 1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/><path class="sl" pathLength="1" d="M3.5 3.5l17 17"/></svg></button><i class="glow"></i></label><button class="btn" id="np_ok" type="button"><i></i><span>Confirm</span></button></div></div>
   <div id="wipe"><i class="band"></i><i class="band"></i><i class="band"></i><i class="band"></i><i class="band"></i><i class="band"></i></div>
 </div>
 
@@ -428,38 +431,42 @@ Promise.race([
   new Promise(r=>setTimeout(r,1500))
 ]).then(start);
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-import {getAuth,GoogleAuthProvider,signInWithPopup,signInWithEmailAndPassword,createUserWithEmailAndPassword,sendPasswordResetEmail,onAuthStateChanged,signOut,deleteUser,sendEmailVerification} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import {getAuth,GoogleAuthProvider,signInWithPopup,signInWithEmailAndPassword,createUserWithEmailAndPassword,sendPasswordResetEmail,confirmPasswordReset,verifyPasswordResetCode,onAuthStateChanged,signOut,deleteUser,sendEmailVerification} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import {getFirestore,doc,getDoc,runTransaction,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 const app=initializeApp({apiKey:"AIzaSyB7WRLBVRufPnlFck0dreWcU8-yWh9f7_0",authDomain:"ultimate-tour-1.firebaseapp.com",projectId:"ultimate-tour-1",storageBucket:"ultimate-tour-1.firebasestorage.app",messagingSenderId:"593726515356",appId:"1:593726515356:web:bafe179aed7d77015be559"});
 const auth=getAuth(app),db=getFirestore(app),q=s=>document.querySelector(s),v=i=>q('#su_'+i).value.trim();
 const lgF=q('#login .lg'),sgF=q('#sgf'),home=q('#home'),pwF=['#su_pw1','#su_pw2'].map(i=>q(i).closest('.field'));
 const MAIL=/^\S+@\S+\.\S+$/;
 let pending=null,working=false;
-const E={'auth/invalid-credential':'Wrong email or password','auth/wrong-password':'Wrong email or password','auth/user-not-found':'No account with this email','auth/invalid-email':'Enter a valid email','auth/email-already-in-use':'This email already has an account. Log in instead','auth/weak-password':'Password must be at least 6 characters','auth/too-many-requests':'Too many tries. Wait a bit and retry','auth/network-request-failed':'No internet connection','auth/unauthorized-domain':'This website domain is not authorized in Firebase','app/username-taken':'This username is taken','app/not-verified':'Not verified yet. Open the link in your Gmail first, then tap Confirm','app/no-profile':'Account not found. Create a new account','app/name':'Enter your full name','app/username':'Username: 3-20 letters, numbers, . or _','app/phone':'Enter a valid phone number','app/pw-match':'Passwords do not match','permission-denied':'Permission denied. Check Firestore rules'};
+const E={'auth/invalid-credential':'Wrong email or password','auth/wrong-password':'Wrong email or password','auth/user-not-found':'No account with this email','auth/invalid-email':'Enter a valid email','auth/email-already-in-use':'This email already has an account. Log in instead','auth/weak-password':'Password must be at least 6 characters','auth/too-many-requests':'Too many tries. Wait a bit and retry','auth/network-request-failed':'No internet connection','auth/unauthorized-domain':'This website domain is not authorized in Firebase','app/username-taken':'This username is taken','app/not-verified':'Not verified yet. Open the link in your Gmail first, then come back here','auth/invalid-action-code':'This link is invalid or already used. Send a new link','auth/expired-action-code':'This link has expired. Send a new link','app/no-profile':'Account not found. Create a new account','app/name':'Enter your full name','app/username':'Username: 3-20 letters, numbers, . or _','app/phone':'Enter a valid phone number','app/pw-match':'Passwords do not match','permission-denied':'Permission denied. Check Firestore rules'};
 const say=(root,t,ok)=>{let p=root.querySelector('.msg');if(!p){p=document.createElement('p');p.className='msg';root.querySelector('.btn').before(p)}p.textContent=t||'';p.style.color=ok?'#1e4d3a':'#d6452a'};
 async function run(btn,root,fn,dim){if(working)return;working=true;if(dim!==false)btn.style.opacity='.6';say(root,'');try{await fn()}catch(e){if(!/popup-closed|cancelled-popup/.test(e.code||''))say(root,E[e.code]||'Something went wrong ('+(e.code||e.message)+')')}finally{working=false;btn.style.opacity=''}}
 const getProfile=async u=>{const s=await getDoc(doc(db,'users',u.uid));return s.exists()?s.data():null};
 const saveProfile=(u,d)=>runTransaction(db,async tx=>{const r=doc(db,'usernames',d.username);if((await tx.get(r)).exists())throw{code:'app/username-taken'};tx.set(r,{uid:u.uid});tx.set(doc(db,'users',u.uid),{...d,createdAt:serverTimestamp()})});
-const enter=p=>{q('#h_name').textContent=p.name;q('#h_meta').textContent='@'+p.username+' · '+p.email;home.style.display='flex';q('#verify').style.display='none'};
+const enter=p=>{q('#h_name').textContent=p.name;q('#h_meta').textContent='@'+p.username+' · '+p.email;home.style.display='flex';document.querySelectorAll('#verify,#rs1,#rs2,#rs3').forEach(x=>x.style.display='none')};
 const sgOn=()=>getComputedStyle(q('#signup')).visibility==='visible';
 function resetSignup(){pending=null;pwF.forEach(f=>f.style.display='');q('#su_email').readOnly=false;q('#signup .sub').textContent='Create new account';sgF.querySelectorAll('input').forEach(i=>i.value='')}
 const introDone=()=>new Promise(r=>{const w=()=>typeof tl!=='undefined'&&tl&&tl.progress()>=1?r():setTimeout(w,300);w()});
 
 // Email + password login (text gathers into a ball > spinner > tick > box expands to home or the verify page)
-async function animRun(btn,job,show){const g=gAnim(btn,true);try{const w=job();w.catch(()=>{});await g.eat();const r=await w;await g.done();await g.expand();(show||(x=>x&&x.uid?showVerify(x):enter(x)))(r);g.fade()}catch(e){g.reset();throw e}}
+const topPg=()=>[...document.querySelectorAll('#home,#verify,#rs1,#rs2,#rs3')].filter(p=>p.style.display==='flex').pop()||document.body;
+async function animRun(btn,job,show,after){const g=gAnim(btn,true);try{const w=job();w.catch(()=>{});await g.eat();const r=await w;await g.done();if(after){await after(r);g.reset();return}await g.expand();(show||(x=>x&&x.uid?showVerify(x):enter(x)))(r);g.fade()}catch(e){g.reset();throw e}}
 const ver=q('#verify'),vF=q('#verify .lg'),PK='ut_pending';let mailP=null;
-let readyAt=0,tmr=null;
-const startTimer=sec=>{clearInterval(tmr);readyAt=Date.now()+sec*1000;const t=q('#v_t');
-  const tick=()=>{const n=Math.ceil((readyAt-Date.now())/1000);if(n>0)t.textContent=n+'s';else{t.textContent='';clearInterval(tmr)}};tick();tmr=setInterval(tick,250)};
+const COOL=80;
+const mkTimer=sel=>{let at=0,id=null;const el=()=>q(sel);
+  return{start(sec){clearInterval(id);at=Date.now()+sec*1000;const t=()=>{const n=Math.ceil((at-Date.now())/1000);if(n>0)el().textContent=n+'s';else{el().textContent='';clearInterval(id)}};t();id=setInterval(t,250)},
+    ready:()=>Date.now()>=at,block(){clearInterval(id);at=Infinity;el().textContent=''},reset(){clearInterval(id);at=0;el().textContent=''}}};
+const T1=mkTimer('#v_t'),T2=mkTimer('#rs_t');
 const showVerify=u=>{
   q('#v_mail').textContent=u.email;ver.style.display='flex';
   const p=mailP,ok=q('#v_ok'),st=q('#v_st'),READY='Open the link we sent to your inbox (check Spam too), then come back here and tap Confirm.';
   mailP=null;
   if(!p){st.textContent=READY;ok.style.display='';return}
-  ok.style.display='none';readyAt=Infinity;q('#v_t').textContent='';st.textContent='Sending the link to your Gmail...';
-  p.then(()=>{st.textContent=READY;startTimer(30)},()=>{st.textContent='Could not send the link automatically. Tap Resend link.';readyAt=0})
+  ok.style.display='none';T1.block();st.textContent='Sending the link to your Gmail...';
+  p.then(()=>{st.textContent=READY;T1.start(COOL)},()=>{st.textContent='Could not send the link automatically. Tap Resend link.';T1.reset()})
    .then(()=>{ok.style.display='';gsap.killTweensOf(ok);gsap.fromTo(ok,{y:16,opacity:0},{y:0,opacity:1,duration:.5,ease:'power3.out'})})};
 const shake=b=>gsap.timeline().to(b,{x:-8,duration:.05}).to(b,{x:8,duration:.07}).to(b,{x:-6,duration:.07}).to(b,{x:6,duration:.07}).to(b,{x:0,duration:.05});
 // Text-link animation: underline takes the text and becomes a ball. mode resend: spinner > tick > back to a line. mode burst: box to the middle, bursts, then cover() swaps the page
@@ -473,7 +480,7 @@ async function lineAnim(btn,job,cover){
   sp.innerHTML='<svg viewBox="0 0 30 30" width="30" height="30"><g class="rot"><circle cx="15" cy="15" r="11" pathLength="100" style="fill:rgba(201,222,60,0)" stroke="#1e4d3a" stroke-width="3.2" stroke-linecap="round" stroke-dasharray="28 72"/></g><path class="tick" d="M9.5 15.5l4 4 7-8" fill="none" stroke="#0b0f10" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/></svg>';
   document.body.append(sp);
   const rot=sp.querySelector('.rot'),ring=sp.querySelector('circle'),tick=sp.querySelector('.tick');let spin;
-  const clean=()=>{spin&&spin.kill();gsap.killTweensOf([btn,ln,sp,ring,tick]);ln.remove();sp.remove();gsap.set(btn,{clearProps:'transform,opacity'});btn.style.borderBottomColor=''};
+  const clean=()=>{spin&&spin.kill();gsap.killTweensOf([btn,ln,sp,ring,tick]);ln.remove();sp.remove();gsap.set(btn,{x:0,scale:1,opacity:1});btn.style.borderBottomColor=''};
   try{
     if(cover){
       await fin(gsap.timeline().to(btn,{scale:0,opacity:0,duration:.4,ease:'power3.in'},0)
@@ -551,7 +558,7 @@ function gAnim(btn,dark){
       Object.assign(gx.style,{position:'fixed',left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px',background:dark?'#0b0f10':'#fff',borderRadius:'99px',zIndex:95,boxSizing:'border-box'});
       gx.append(sp);document.body.append(gx);gsap.to(sp,{opacity:0,duration:.3,delay:.2});
       return fin(gsap.to(gx,{left:0,top:0,width:innerWidth,height:innerHeight,borderRadius:0,backgroundColor:'#f4efe9',duration:.85,ease:'power3.inOut'}))},
-    fade(){gsap.to(gx,{opacity:0,duration:.45,onComplete:()=>gx.remove()});gsap.from('#home .lg>*,#verify .lg>*',{y:24,opacity:0,duration:.6,stagger:.08,ease:'power3.out'})},
+    fade(){gsap.to(gx,{opacity:0,duration:.45,onComplete:()=>gx.remove()});gsap.from(topPg().querySelectorAll('.lg>*'),{y:24,opacity:0,duration:.6,stagger:.08,ease:'power3.out'})},
     reset(){spin&&spin.kill();gsap.killTweensOf([lg,sp,tick,ring]);sp.remove();gx&&gx.remove();gsap.set(lg,{x:0,scale:1,opacity:1});gsap.set(tx,{x:0,scale:1,opacity:1});tx.style.clipPath='';btn.style.overflow=btn.style.position=''}}}
 const google=btn=>run(btn,sgOn()?sgF:lgF,async()=>{
   const gp=new GoogleAuthProvider();gp.setCustomParameters({prompt:'select_account'});
@@ -582,20 +589,84 @@ q('#v_ok').onclick=e=>{const b=e.currentTarget;return run(b,vF,async()=>{
   await u.reload();if(!u.emailVerified)throw{code:'app/not-verified'};
   await animRun(b,async()=>await getProfile(u)||await makeProfile(u),enter)},false)};
 q('#v_re').onclick=e=>{const b=e.currentTarget;if(b.dataset.busy)return;
-  if(Date.now()<readyAt){shake(b);return}
+  if(!T1.ready()){shake(b);return}
   b.dataset.busy=1;
-  lineAnim(b,sendEmailVerification(auth.currentUser)).then(()=>{say(vF,'Link sent again. Check Gmail and Spam',1);startTimer(30)},err=>say(vF,E[err.code]||'Could not send the link. Try again later')).finally(()=>{delete b.dataset.busy})};
+  lineAnim(b,sendEmailVerification(auth.currentUser)).then(()=>{say(vF,'Link sent again. Check Gmail and Spam',1);T1.start(COOL)},err=>{say(vF,E[err.code]||'Could not send the link. Try again later');if(err.code==='auth/too-many-requests')T1.start(COOL)}).finally(()=>{delete b.dataset.busy})};
 q('#v_x').onclick=e=>{const b=e.currentTarget;if(b.dataset.busy)return;const u=auth.currentUser;
   const job=(async()=>{try{if(u&&!u.emailVerified)await deleteUser(u)}catch(err){}await signOut(auth).catch(()=>{});try{localStorage.removeItem(PK)}catch(err){}})();
   if(!sgOn()){job.then(()=>location.reload());return}
-  b.dataset.busy=1;clearInterval(tmr);
+  b.dataset.busy=1;T1.reset();
   lineAnim(b,job,()=>{ver.style.display='none';const m=q('#su_email');m.value='';m.readOnly=false;say(sgF,'')}).finally(()=>{delete b.dataset.busy})};
 
-// Forgot password
-q('.forgot').onclick=e=>run(e.currentTarget,lgF,async()=>{
-  const em=lgF.username.value.trim();
-  if(!MAIL.test(em)){say(lgF,'Type your email above first');return}
-  await sendPasswordResetEmail(auth,em);say(lgF,'Reset link sent. Check your inbox',1)});
+// ===== Forgot password: forgot link > email page > check Gmail > verify > new password > dust away =====
+const rs1=q('#rs1'),rs2=q('#rs2'),rs3=q('#rs3'),rsF1=q('#rs1 .lg'),rsF2=q('#rs2 .lg'),rsF3=q('#rs3 .lg'),RK='ut_reset';
+let rsMail='',rsCode=null;
+const rsSaved=()=>{try{return JSON.parse(localStorage.getItem(RK)||'null')}catch(e){return null}};
+const rsClear=()=>{try{localStorage.removeItem(RK)}catch(e){}};
+function resetRs(){[rs1,rs2,rs3].forEach(p=>p.style.display='none');['#rs_email','#np1','#np2'].forEach(i=>q(i).value='');T2.reset();rsCode=null;rsMail='';rsClear()}
+const showRs2=()=>{q('#rs_mail').textContent=rsMail;rs2.style.display='flex';q('#rs_ok').style.display='';
+  q('#rs_st').textContent='Open the link we sent to your inbox (check Spam too), then come back here and tap Verify.'};
+const showRs3=d=>{rsCode=d.code;rsMail=d.email;q('#rs3_mail').textContent=d.email;rs3.style.display='flex'};
+async function dust(el){
+  const fallback=async()=>{el.style.background='';await fin(gsap.timeline().to(el,{opacity:0,duration:.6}));el.style.display='none';gsap.set(el,{opacity:1})};
+  if(typeof html2canvas==='undefined'){await fallback();return}
+  try{
+    const dpr=Math.min(devicePixelRatio||1,2),W=innerWidth,H=innerHeight;
+    el.style.background='transparent';
+    const snap=await html2canvas(el,{backgroundColor:null,scale:dpr,width:W,height:H,windowWidth:W,windowHeight:H,scrollX:0,scrollY:0,logging:false});
+    const sw=snap.width,sh=snap.height,data=snap.getContext('2d').getImageData(0,0,sw,sh).data;
+    const cv=document.createElement('canvas');cv.width=sw;cv.height=sh;
+    Object.assign(cv.style,{position:'fixed',left:0,top:0,width:W+'px',height:H+'px',zIndex:98,pointerEvents:'none'});
+    document.body.append(cv);const cx=cv.getContext('2d');
+    let step=Math.max(2,Math.round(2*dpr)),P;
+    for(;;){P=[];
+      for(let y=0;y<sh;y+=step)for(let x=0;x<sw;x+=step){const i=(y*sw+x)*4,a=data[i+3];
+        if(a>40)P.push({x,y,c:'rgba('+data[i]+','+data[i+1]+','+data[i+2]+',',a:a/255,d:(x/sw)*.55+Math.random()*.35,vx:(40+Math.random()*120)*dpr,vy:(-30-Math.random()*110)*dpr,s:step})}
+      if(P.length<=16000)break;step++}
+    el.style.display='none';el.style.background='';
+    const t0=performance.now();
+    await new Promise(res=>{const fr=now=>{const t=(now-t0)/1000;cx.clearRect(0,0,sw,sh);
+      for(const p of P){const u=t-p.d;
+        if(u<=0){cx.fillStyle=p.c+p.a+')';cx.fillRect(p.x,p.y,p.s,p.s);continue}
+        const k=u/1.1;if(k>=1)continue;
+        cx.fillStyle=p.c+(p.a*(1-k)*(1-k))+')';const z=p.s*(1-.6*k);
+        cx.fillRect(p.x+p.vx*u*(1+k),p.y+p.vy*u+u*u*20*dpr,z,z)}
+      if(t<2.1)requestAnimationFrame(fr);else res()};requestAnimationFrame(fr)});
+    cv.remove()
+  }catch(e){await fallback()}}
+
+q('.forgot').onclick=e=>{const b=e.currentTarget;if(b.dataset.busy)return;b.dataset.busy=1;
+  q('#rs_email').value=lgF.username.value.trim();
+  lineAnim(b,Promise.resolve(),()=>{rs1.style.display='flex';gsap.from('#rs1 .lg>*',{y:20,opacity:0,duration:.6,stagger:.08,delay:.1,ease:'power3.out'})}).finally(()=>{delete b.dataset.busy})};
+q('#rs_back').onclick=()=>gsap.to(rs1,{opacity:0,duration:.35,onComplete:()=>{resetRs();gsap.set(rs1,{opacity:1})}});
+q('#rs_send').onclick=e=>{const b=e.currentTarget;return run(b,rsF1,async()=>{
+  const em=q('#rs_email').value.trim().toLowerCase();
+  if(!MAIL.test(em))throw{code:'auth/invalid-email'};
+  await animRun(b,async()=>{await sendPasswordResetEmail(auth,em);rsMail=em;T2.start(COOL);return 1},showRs2)},false)};
+q('#rs_ok').onclick=e=>{const b=e.currentTarget;return run(b,rsF2,async()=>{
+  const d=rsSaved();if(!d||d.email!==rsMail)throw{code:'app/not-verified'};
+  await animRun(b,async()=>{await verifyPasswordResetCode(auth,d.code);return d},showRs3)},false)};
+q('#rs_re').onclick=e=>{const b=e.currentTarget;if(b.dataset.busy)return;if(!T2.ready()){shake(b);return}
+  b.dataset.busy=1;
+  lineAnim(b,sendPasswordResetEmail(auth,rsMail)).then(()=>{say(rsF2,'Link sent again. Check Gmail and Spam',1);T2.start(COOL)},err=>{say(rsF2,E[err.code]||'Could not send the link. Try again later');if(err.code==='auth/too-many-requests')T2.start(COOL)}).finally(()=>{delete b.dataset.busy})};
+q('#rs_x').onclick=e=>{const b=e.currentTarget;if(b.dataset.busy)return;b.dataset.busy=1;T2.reset();rsClear();
+  lineAnim(b,Promise.resolve(),()=>{rs2.style.display='none';q('#rs_email').value=''}).finally(()=>{delete b.dataset.busy})};
+q('#np_ok').onclick=e=>{const b=e.currentTarget;return run(b,rsF3,async()=>{
+  const p1=q('#np1').value;
+  if(!rsCode)throw{code:'auth/invalid-action-code'};
+  if(p1.length<6)throw{code:'auth/weak-password'};
+  if(p1!==q('#np2').value)throw{code:'app/pw-match'};
+  await animRun(b,async()=>{await confirmPasswordReset(auth,rsCode,p1);rsClear();return 1},null,async()=>{
+    const em=rsMail;rs1.style.display='none';rs2.style.display='none';
+    await dust(rs3);resetRs();lgF.username.value=em;lgF.password.value='';say(lgF,'Password changed. Log in with your new password.',1)})},false)};
+for(const [fm,id] of [[rsF1,'#rs_send'],[rsF3,'#np_ok']])fm.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT'){e.preventDefault();q(id).click()}});
+// Reset link opened (Firebase action URL set to this page): go straight to the new password page and tell the other tab
+{const qs=new URLSearchParams(location.search),code=qs.get('oobCode');
+ if(qs.get('mode')==='resetPassword'&&code){
+  verifyPasswordResetCode(auth,code).then(async em=>{
+    try{localStorage.setItem(RK,JSON.stringify({code,email:em.toLowerCase()}))}catch(e){}
+    history.replaceState(null,'',location.pathname);await introDone();showRs3({code,email:em.toLowerCase()})
+  }).catch(async()=>{history.replaceState(null,'',location.pathname);await introDone();say(lgF,'This reset link is invalid or already used. Request a new one.')})}}
 
 // Back from Google registration = cancel; Enter key; logout; stay logged in
 q('#back').addEventListener('click',()=>{if(pending){signOut(auth);resetSignup()}});
@@ -607,4 +678,4 @@ onAuthStateChanged(auth,async u=>{if(!u||working||pending)return;
   catch(e){await signOut(auth)}});
 </script>
 </body>
-        </html>
+  </html>
