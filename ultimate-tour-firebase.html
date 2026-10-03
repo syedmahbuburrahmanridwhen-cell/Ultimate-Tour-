@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ultimate Team — Loading</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@700;800&family=Newsreader:ital,wght@1,500;1,600&family=JetBrains+Mono:wght@400;700&display=swap">
+<style>
+:root{--cream:#f4efe9;--ink:#0b0f10;--lime:#c9de3c;--green:#1e4d3a;--serif:"Newsreader",Georgia,serif;--sans:"Inter Tight",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{height:100%;font-size:min(1vw,1.778vh);scroll-padding-top:env(safe-area-inset-top,0px)}
+@media (max-aspect-ratio:1/1){html{font-size:1.15vw}}
+body{height:100%;margin:0;background:#fff;overflow:hidden}
+#stage{position:fixed;inset:0;background:#fff;overflow:hidden;color:var(--ink);font-family:var(--sans)}
+#stage *{box-sizing:border-box}
+/* HUD */
+#hud{position:absolute;inset:0;z-index:30;opacity:0;pointer-events:none;--m:clamp(12px,2.2rem,40px);--k:clamp(14px,2.2rem,40px);font:700 clamp(9px,.78rem,14px)/1 var(--mono);letter-spacing:.12em;text-transform:uppercase}
+#hud>*{position:absolute}
+.k{width:var(--k);height:var(--k);border:0 solid var(--ink)}
+.tl{left:var(--m);top:calc(var(--m) + env(safe-area-inset-top,0px));border-width:2px 0 0 2px}
+.tr{right:var(--m);top:calc(var(--m) + env(safe-area-inset-top,0px));border-width:2px 2px 0 0}
+.bl{left:var(--m);bottom:calc(var(--m) + env(safe-area-inset-bottom,0px));border-width:0 0 2px 2px}
+.br{right:var(--m);bottom:calc(var(--m) + env(safe-area-inset-bottom,0px));border-width:0 2px 2px 0}
+.row{left:calc(var(--m) + var(--k)*1.4);right:calc(var(--m) + var(--k)*1.4);display:flex;align-items:center;justify-content:space-between}
+.top{top:calc(var(--m) + env(safe-area-inset-top,0px) + var(--k)*.55)}
+.bot{bottom:calc(var(--m) + env(safe-area-inset-bottom,0px) + var(--k)*.25)}
+.dim{opacity:.55;font-weight:400}
+.rec{display:inline-block;width:.6rem;height:.6rem;border-radius:50%;background:#ff5a36;margin-right:.8rem;animation:b 1s steps(2) infinite}
+@keyframes b{50%{opacity:.2}}
+#trk{flex:1;margin:0 4rem;height:1px;background:rgba(0,0,0,.18);position:relative}
+#bar{position:absolute;left:0;top:-.5px;height:2px;background:var(--ink);width:0}
+/* scene 1 */
+.c{position:absolute;left:50%;top:50%;width:0;height:0}
+#s1{z-index:5}
+#s1 *{position:absolute}
+#ball{width:3rem;height:3rem;left:-1.5rem;top:-1.5rem;border-radius:50%;background:radial-gradient(circle at 35% 30%,#eaf57a,var(--lime) 55%,#a3b81e);transform-origin:50% 100%}
+#sh{width:5rem;height:.9rem;left:-2.5rem;top:2rem;border-radius:50%;background:rgba(0,0,0,.22);filter:blur(3px);opacity:0}
+#r1{width:30rem;height:30rem;left:-15rem;top:-15rem;border:.4rem solid var(--lime);border-radius:50%;opacity:0}
+#r2{width:70rem;height:70rem;left:-35rem;top:-35rem;border:1px solid #999;border-radius:50%;opacity:0}
+#orb{width:26rem;height:9rem;left:-13rem;top:-4.5rem;border:.18rem solid var(--ink);border-radius:50%;opacity:0}
+.arm{left:0;top:0;width:0;height:0}
+.b{left:1.5rem;top:-.4rem;width:4.7rem;height:.8rem;background:var(--ink);border-radius:.4rem;transform-origin:0 50%}
+.d{left:8rem;top:-1.45rem;width:2.9rem;height:2.9rem;border-radius:50%;background:var(--ink)}
+#deb i{left:0;top:0;border-radius:50%;opacity:0}
+#tw{left:-30rem;top:13.5rem;width:60rem;text-align:center;font:400 1.1rem var(--mono);letter-spacing:.15em;opacity:0;white-space:pre}
+/* flood */
+#flood,#hole{position:absolute;inset:0;clip-path:circle(0% at 50% 50%)}
+#flood{background:var(--lime);z-index:10}
+#hole{background:var(--cream);z-index:11}
+/* scene 2 */
+#s2{position:absolute;inset:0;display:grid;place-items:center;z-index:12;visibility:hidden}
+#dl{position:relative;transform:translateY(-4rem)}
+#word{margin:0;font:italic 600 12rem/1 var(--serif);letter-spacing:-.02em;position:relative;z-index:2;white-space:nowrap;clip-path:inset(-25% -10% 8% -10%)}
+.l{display:inline-block}
+#hl{position:absolute;left:12%;width:70%;top:50%;height:11%;background:var(--lime);transform-origin:0 50%;z-index:1}
+#pill{position:absolute;left:50%;top:14rem;z-index:3;display:flex;align-items:center;gap:1.4rem;padding:1.3rem 2.8rem 1.3rem 2.2rem;background:var(--ink);border-radius:9rem;white-space:nowrap}
+#pdot{width:.9rem;height:.9rem;border-radius:50%;background:var(--lime)}
+#pl{font:400 1rem var(--mono);letter-spacing:.2em;color:#8a9296;text-transform:uppercase}
+#clk{font:700 3.4rem var(--mono);color:var(--lime)}
+.chip{position:absolute;z-index:3;display:flex;align-items:center;gap:1.1rem;padding:1.1rem 1.6rem 1.1rem 1.1rem;background:#fff;border-radius:1.6rem;box-shadow:0 1rem 2.4rem rgba(0,0,0,.1);white-space:nowrap}
+.chip b{width:3.4rem;height:3.4rem;border-radius:1rem;background:var(--ink);color:var(--lime);display:grid;place-items:center;font:700 1.6rem var(--mono)}
+.chip strong{display:block;font:700 1.9rem/1.1 var(--sans);letter-spacing:-.02em}
+.chip small{font:700 .9rem var(--mono);color:#ff6b4a;letter-spacing:.1em;text-transform:uppercase}
+#cl{position:absolute;inset:0;z-index:3}
+/* scene 3 */
+#t2{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;text-align:center;z-index:12;visibility:hidden;text-wrap:balance}
+.ln{overflow:hidden;padding:.6rem 1rem .9rem;max-width:94vw}
+#a1,#a2{display:block}
+#a1{white-space:nowrap;font:800 6.6rem/1.05 var(--sans);letter-spacing:-.045em}
+#a2{font:italic 500 7.2rem/1.1 var(--serif);color:var(--green);letter-spacing:-.02em}
+#mk{background:linear-gradient(var(--lime),var(--lime)) 0 62%/0% 60% no-repeat}
+/* wipe */
+#wipe{position:absolute;inset:0;z-index:40;pointer-events:none;overflow:hidden;display:grid;grid-template-rows:repeat(6,1fr)}
+.band{background:#060b0e;position:relative;will-change:transform;backface-visibility:hidden;box-shadow:0 1px 0 #060b0e}
+.band:nth-child(n+4)::after{right:auto;left:-2.2rem;background:linear-gradient(270deg,rgba(201,222,60,.6),transparent)}
+.band::after{content:"";position:absolute;right:-2.2rem;top:0;bottom:0;width:2.2rem;background:linear-gradient(90deg,rgba(201,222,60,.6),transparent)}
+/* login */
+#login,#signup{position:absolute;inset:0;z-index:15;display:flex;overflow-y:auto;visibility:hidden;background:var(--cream);padding:calc(32px + env(safe-area-inset-top,0px)) 20px calc(32px + env(safe-area-inset-bottom,0px));font-size:16px}
+.lg{margin:auto;width:min(100%,400px);display:grid;gap:16px}
+.ttl{margin:0 0 14px;text-align:center;font:italic 600 clamp(44px,13vw,68px)/1 var(--serif);letter-spacing:-.02em}
+.hl{background:linear-gradient(var(--lime),var(--lime)) 0 66%/100% 36% no-repeat;padding:0 .08em}
+.field{position:relative;display:flex;align-items:center;gap:14px;padding:12px 16px 12px 12px;background:#fff;border-radius:18px;box-shadow:0 10px 24px rgba(0,0,0,.08);cursor:text;transition:transform .7s cubic-bezier(.2,.8,.2,1)}
+.field:focus-within{transform:translateY(-2px)}
+.ic{flex:none;width:42px;height:42px;border-radius:12px;background:var(--ink);color:var(--lime);display:grid;place-items:center;font:700 16px var(--mono)}
+.tx{flex:1;min-width:0;display:grid;gap:5px}
+.tx small{font:700 10px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:#8a9296}
+.tx input{all:unset;display:block;width:100%;min-width:0;font:500 17px/1.3 var(--sans);color:var(--ink);caret-color:var(--green)}
+.tx input::placeholder{color:#b3b8b5}
+.glow{position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .8s ease-in-out;animation:breathe 2.4s ease-in-out infinite alternate}
+.field:focus-within .glow{opacity:1;transition-duration:1.4s;transition-timing-function:cubic-bezier(.25,.6,.3,1)}
+@keyframes breathe{from{box-shadow:0 0 0 1.5px rgba(201,222,60,.85),0 0 14px rgba(201,222,60,.3)}to{box-shadow:0 0 0 1.5px #c9de3c,0 0 34px rgba(201,222,60,.65)}}
+.btn{margin-top:6px;display:flex;align-items:center;justify-content:center;gap:12px;padding:18px;border:0;border-radius:99px;background:#0b0f10;box-shadow:0 10px 24px rgba(0,0,0,.08);color:var(--lime);font:700 14px var(--mono);letter-spacing:.18em;text-transform:uppercase;cursor:pointer;transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+.gbtn{display:flex;align-items:center;justify-content:center;gap:12px;padding:16px;border:1.5px solid rgba(11,15,16,.14);border-radius:99px;background:#fff;color:var(--ink);font:700 13px var(--mono);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+.gbtn:active{transform:scale(.98)}
+.btn i{width:9px;height:9px;border-radius:50%;background:var(--lime)}
+.btn:active{transform:scale(.98)}
+.forgot{all:unset;justify-self:end;margin-top:-6px;cursor:pointer;font:700 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--ink);border-bottom:2px solid var(--lime);padding-bottom:3px}
+.signup{margin:2px 0 0;text-align:center;font:500 12px/1.7 var(--mono);color:#5d6568}
+.signup button{all:unset;cursor:pointer;font-weight:700;color:var(--ink);border-bottom:2px solid var(--lime);-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
+.signup button:focus:not(:focus-visible){outline:none}
+#login button,#login .signup{-webkit-tap-highlight-color:transparent}
+.btn span,.ic b{display:inline-block}
+.eye{all:unset;flex:none;width:36px;height:36px;display:grid;place-items:center;color:#8a9296;cursor:pointer;border-radius:10px;transition:color .25s;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+.eye:hover{color:var(--ink)}
+.eye svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.eye .sl{stroke-dasharray:1;stroke-dashoffset:1;opacity:0;transition:stroke-dashoffset .45s cubic-bezier(.65,0,.35,1),opacity .12s linear .33s}
+.eye[aria-pressed=true] .sl{stroke-dashoffset:0;opacity:1;transition:stroke-dashoffset .45s cubic-bezier(.65,0,.35,1),opacity .05s linear}
+.forgot:focus-visible,.signup button:focus-visible,.eye:focus-visible,.btn:focus-visible{outline:2px solid var(--green);outline-offset:3px}
+.signup button::selection,.signup button *::selection{background:transparent}
+/* signup + burst transition */
+#signup{z-index:52;clip-path:circle(0% at 50% 50%)}
+.lg.sg{gap:12px}
+.sg .ttl{margin:0}
+.sub{margin:0 0 6px;text-align:center;font:italic 500 clamp(24px,7vw,32px)/1.1 var(--serif);color:var(--green);letter-spacing:-.01em}
+.sg .field{padding:10px 14px 10px 10px}
+#ub{position:fixed;left:0;top:0;z-index:60;background:var(--lime);visibility:hidden;pointer-events:none;will-change:transform;backface-visibility:hidden}
+#xf,#xc{position:fixed;left:50%;top:50%;width:0;height:0;border-radius:50%;pointer-events:none;visibility:hidden;transform:translateZ(0) scale(0);backface-visibility:hidden}
+#xf{z-index:50;background:var(--lime)}
+#xc{z-index:51;background:var(--cream)}
+#fx{position:fixed;inset:0;z-index:55;pointer-events:none}
+#fx i{position:absolute;left:50%;top:50%;border-radius:50%;opacity:0}
+#fx i{will-change:transform,opacity;backface-visibility:hidden}
+#home{position:absolute;inset:0;z-index:45;display:none;background:var(--cream);padding:calc(32px + env(safe-area-inset-top,0px)) 20px calc(32px + env(safe-area-inset-bottom,0px));overflow-y:auto;font-size:16px}
+.msg{margin:0;text-align:center;font:700 12px/1.5 var(--mono);color:#d6452a}.msg:empty{display:none}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="hud">
+    <i class="k tl"></i><i class="k tr"></i><i class="k bl"></i><i class="k br"></i>
+    <div class="row top"><span>Ultimate Team &nbsp;/&nbsp; <span class="dim">Motion' 1092</span></span><span><i class="rec"></i><span id="tc">TC 00:00:00:00</span></span></div>
+    <div class="row bot"><span id="lab">01 Loading</span><div id="trk"><u id="bar"></u></div><span>1920 × 1080 · 60 FPS</span></div>
+  </div>
+
+  <div class="c" id="s1">
+    <i id="r2"></i><i id="r1"></i><i id="orb"></i>
+    <div id="deb"></div>
+    <div id="g"></div>
+    <i id="sh"></i><i id="ball"></i>
+    <div id="tw"></div>
+  </div>
+
+  <div id="flood"></div><div id="hole"></div>
+
+  <div id="s2"><div id="cl"></div>
+    <div id="dl">
+      <i id="hl"></i>
+      <h1 id="word" aria-label="Ultimate Tour"></h1>
+      <div id="pill"><i id="pdot"></i><span id="pl">Loading</span><span id="clk">10:00:00</span></div>
+    </div>
+  </div>
+
+  <div id="t2">
+    <div class="ln"><span id="a1">Ultimate Esports Arena</span></div>
+    <div class="ln"><span id="a2">Created By <span id="mk">Ridwhen</span></span></div>
+  </div>
+
+  <div id="login">
+    <form class="lg" onsubmit="return false">
+      <h2 class="ttl tt" data-g="0">Ultimate <span class="hl">Tour</span></h2>
+      <label class="field"><i class="ic"><b class="tt" data-g="1">@</b></i><span class="tx"><small class="tt" data-g="1">Gmail / Email</small><input class="tt" data-g="1" type="text" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" inputmode="email" placeholder="you@gmail.com"></span><i class="glow"></i></label>
+      <label class="field"><i class="ic"><b class="tt" data-g="2">***</b></i><span class="tx"><small class="tt" data-g="2">Password</small><input id="pw" class="tt" data-g="2" type="password" name="password" autocomplete="current-password" placeholder="••••••••"></span><button id="eye" class="eye tt" data-g="2" type="button" aria-label="Show password" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1.5 12S5.5 4.5 12 4.5 22.5 12 22.5 12 18.5 19.5 12 19.5 1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/><path class="sl" pathLength="1" d="M3.5 3.5l17 17"/></svg></button><i class="glow"></i></label>
+      <button class="forgot tt" data-g="3" type="button">Forgot password?</button>
+      <button class="btn" type="button"><i class="tt" data-g="4"></i><span class="tt" data-g="4">Log in</span></button>
+      <button class="gbtn" type="button"><svg class="tt" data-g="5" viewBox="0 0 48 48" width="20" height="20" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.2 5.5-4.7 7.2l7.6 5.9c4.4-4.1 6.9-10.1 6.9-17.6z"/><path fill="#FBBC05" d="M10.5 28.7c-.5-1.4-.8-3-.8-4.7s.3-3.2.8-4.7l-7.9-6.1C.9 16.4 0 20.100 0 24s.9 7.600 2.600 10.800l7.900-6.100z"/><path fill="#34A853" d="M24 48c6.500 0 11.900-2.100 15.900-5.800l-7.600-5.900c-2.100 1.400-4.900 2.300-8.300 2.300-6.300 0-11.600-4.100-13.500-9.800l-7.900 6.100C6.500 42.600 14.600 48 24 48z"/></svg><span class="tt" data-g="5">Continue with Google</span></button>
+      <p class="signup tt" data-g="6">Don't have an account - <button type="button">Create new account</button></p>
+    </form>
+  </div>
+
+  <div id="signup"><form class="lg sg" id="sgf" onsubmit="return false"></form></div>
+  <div id="xf"></div><div id="xc"></div><div id="fx"></div><i id="ub"></i>
+
+  <div id="home"><div class="lg"><h2 class="ttl">Ultimate <span class="hl">Tour</span></h2><p class="sub" id="h_name"></p><p class="msg" id="h_meta" style="color:#5d6568"></p><button class="btn" id="h_out" type="button"><i></i><span>Log out</span></button></div></div>
+  <div id="wipe"><i class="band"></i><i class="band"></i><i class="band"></i><i class="band"></i><i class="band"></i><i class="band"></i></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script>
+const $=s=>document.querySelector(s),p2=n=>String(n).padStart(2,'0');
+const SPEED=1; // 1 = normal, 1.5 = faster
+// [glyph, title, sub, landscape x,y,rot, portrait x,y,rot]  (x,y in rem from screen center)
+const CHIPS=[
+['‹›','All Ai Agents Pro','Api . OB . 01.00',-30,-16,-5,-18,-17,-5],
+['◔','Support Agent','High - 01.00',0,-19,-2,0,-26,-2],
+['▤','Dashboard Auto','High - 01.00',30,-16,4,19,-18,4],
+['▥','Analysis Agent','Pro . OB',-34,8,4,-19,18,4],
+['▣','Security Agent','Max - Go',34,8,-4,19,19,-4],
+['◉','Automation','On 0.10 Pro',-20,19,-3,-12,27,-3],
+['▦','Payment Pro','Instant-01.00',20,19,5,17,28,5]];
+
+// build DOM pieces
+$('#g').innerHTML='<div class="arm"><i class="b"></i><i class="d"></i></div>'.repeat(8);
+$('#word').innerHTML=[...'Ultimate Tour'].map(c=>`<span class="l">${c==' '?'&nbsp;':c}</span>`).join('');
+const D=[];
+for(let i=0;i<16;i++){const e=document.createElement('i'),s=.5+Math.random()*1.4;e.style.cssText=`width:${s}rem;height:${s}rem;background:${i%4?'var(--ink)':'var(--lime)'}`;$('#deb').append(e);D.push(e)}
+
+const lab=$('#lab'),clk=$('#clk'),tw=$('#tw');
+const fmt=v=>{v=Math.round(v);return [v/3600|0,(v%3600)/60|0,v%60].map(p2).join(':')};
+const toC=(e,y)=>{const r=e.getBoundingClientRect();return y?innerHeight/2-r.top-r.height/2:innerWidth/2-r.left-r.width/2};
+let tl;
+function tick(){const t=tl.time();$('#tc').textContent=`TC 00:00:${p2(Math.floor(t))}:${p2(Math.floor((t%1)*60))}`;$('#bar').style.width=tl.progress()*100+'%'}
+function done(){dispatchEvent(new Event('loader:done'))}
+
+function build(){
+  const u=parseFloat(getComputedStyle(document.documentElement).fontSize),H=innerHeight;
+  const P=innerWidth<innerHeight,o=P?6:3;
+  CHIPS.forEach(c=>$('#cl').insertAdjacentHTML('beforeend',`<div class="chip" style="left:calc(50% + ${c[o]}rem);top:calc(50% + ${c[o+1]}rem)" data-r="${c[o+2]}"><b>${c[0]}</b><div><strong>${c[1]}</strong><small>${c[2]}</small></div></div>`));
+  gsap.set('.arm',{rotation:i=>i*45});
+  gsap.set('.chip',{xPercent:-50,yPercent:-50,rotation:(i,e)=>+e.dataset.r});
+  gsap.set(D,{xPercent:-50,yPercent:-50});
+  gsap.set('#pill',{xPercent:-50});
+  gsap.set('#hl',{rotation:-.8});
+  gsap.set('.band',{xPercent:i=>i<3?-105:105});
+  tl=gsap.timeline({paused:true,onUpdate:tick,onComplete:done});
+  tl.timeScale(SPEED);
+
+  // 0 — white page, HUD fades in
+  tl.to('#stage',{backgroundColor:'#f4efe9',duration:.6},0)
+    .fromTo('#hud',{opacity:0},{opacity:1,duration:1,ease:'power2.out'},1.0)
+    .fromTo('.tl,.tr,.top',{y:-1.2*u},{y:0,duration:1.1,ease:'power3.out'},1.0)
+    .fromTo('.bl,.br,.bot',{y:1.2*u},{y:0,duration:1.1,ease:'power3.out'},1.0);
+
+  // 1 — lime ball drops, bounces
+  tl.fromTo('#ball',{y:-(H/2+3*u)},{y:0,duration:.7,ease:'power2.in'},.25)
+    .fromTo('#sh',{opacity:0,scale:.3},{opacity:1,scale:1,duration:.7,ease:'power2.in'},.25)
+    .to('#ball',{scaleX:1.35,scaleY:.65,duration:.07},.95)
+    .to('#ball',{y:-6*u,scaleX:.92,scaleY:1.08,duration:.3,ease:'power2.out'},1.02)
+    .to('#sh',{scale:.55,opacity:.5,duration:.3,ease:'power2.out'},1.02)
+    .to('#ball',{y:0,scaleX:1,scaleY:1,duration:.22,ease:'power2.in'},1.32)
+    .to('#sh',{scale:1,opacity:1,duration:.22,ease:'power2.in'},1.32);
+
+  // 2 — burst into the shape
+  const B=1.54;
+  tl.to('#ball',{scale:1.25,duration:.1,yoyo:true,repeat:1},B)
+    .to('#sh',{opacity:0,duration:.3},B)
+    .set('#r1',{opacity:1,scale:.15},B).to('#r1',{scale:2,opacity:0,duration:1,ease:'power2.out'},B)
+    .set('#r2',{opacity:.8,scale:.2},B+.1).to('#r2',{scale:1.15,opacity:0,duration:1.2,ease:'power2.out'},B+.1)
+    .fromTo('.b',{scaleX:0},{scaleX:1,duration:.45,stagger:.025,ease:'back.out(1.8)'},B+.08)
+    .fromTo('.d',{scale:0,x:-5*u},{scale:1,x:0,duration:.55,stagger:.03,ease:'back.out(2)'},B+.08);
+  D.forEach(e=>{const a=Math.random()*6.283,r=(5+Math.random()*10)*u;
+    tl.set(e,{opacity:1,x:0,y:0,scale:1},B).to(e,{x:Math.cos(a)*r,y:Math.sin(a)*r,scale:.3,opacity:0,duration:1+Math.random()*.5,ease:'power3.out'},B)});
+  const msg='> All Ultimate Servers - Online',T={n:0};
+  tl.set('#tw',{opacity:1},B+.5).to(T,{n:msg.length,duration:.9,ease:'none',onUpdate:()=>{tw.textContent=msg.slice(0,Math.round(T.n))+'▌'}},B+.5);
+
+  // 3 — spin with orbit, then collapse
+  tl.to('#g',{rotation:180,duration:.95,ease:'power3.inOut'},2.15)
+    .to('#g',{filter:'blur(2.5px)',duration:.25,yoyo:true,repeat:1},2.3)
+    .set('#orb',{opacity:1,scale:.6,rotation:-30},2.15).to('#orb',{scale:1,rotation:-16,duration:.5,ease:'power2.out'},2.15).to('#orb',{opacity:0,duration:.3},2.8)
+    .to('#tw',{opacity:0,duration:.2},3.2)
+    .to('.d',{x:-3.2*u,scale:.55,duration:.35,ease:'power2.in'},3.3)
+    .to('#g',{scale:.6,filter:'blur(1.5px)',duration:.35,ease:'power2.in'},3.3);
+
+  // 4 — lime flood, cream circle opens
+  tl.to('#flood',{clipPath:'circle(75% at 50% 50%)',duration:.4,ease:'power3.in'},3.65)
+    .set('#s1',{visibility:'hidden'},4.05)
+    
+    .to('#hole',{clipPath:'circle(75% at 50% 50%)',duration:.55,ease:'power3.out'},4.05)
+    .set('#s2',{visibility:'visible'},4.05);
+
+  // 5 — "Deadline", timer, highlight, chips
+  const C={v:10*3600};clk.textContent=fmt(C.v);
+  tl.fromTo('.l',{yPercent:115,rotation:7,skewX:-10,opacity:0},{yPercent:0,rotation:0,skewX:0,opacity:1,duration:.75,stagger:.04,ease:'power3.out'},4.25)
+    .fromTo('#pill',{opacity:0,scale:.6},{opacity:1,scale:1,duration:.5,ease:'back.out(2)'},4.75)
+    .to(C,{v:0,duration:1.4,ease:'power2.out',onUpdate:()=>{clk.textContent=fmt(C.v)}},4.85)
+    .to('#clk',{color:'#ff7a45',duration:.2},6.25).to('#pdot',{backgroundColor:'#ff7a45',duration:.2},6.25)
+    .fromTo('#hl',{scaleX:0},{scaleX:1,duration:.5,ease:'power3.inOut'},5.4)
+    .fromTo('.chip',{opacity:0,scale:.5,y:3*u},{opacity:1,scale:1,y:0,duration:.5,stagger:.08,ease:'back.out(1.8)'},5.5);
+
+  // 6 — everything whirls into the center and out
+  const X=6.9;
+  tl.to('.chip',{x:(i,e)=>toC(e,0),y:(i,e)=>toC(e,1),scale:.3,opacity:0,filter:'blur(6px)',duration:.5,stagger:.03,ease:'power3.in'},X)
+    .to('.l',{yPercent:-120,skewX:8,opacity:0,filter:'blur(6px)',duration:.4,stagger:.015,ease:'power3.in'},X+.1)
+    .to('#pill,#hl',{opacity:0,scale:.7,duration:.3},X+.05)
+    .set('#t2',{visibility:'visible'},X+.45)
+    .set('#s2',{visibility:'hidden'},X+.7);
+
+  // 7 — tagline
+  const Y=X+.5;
+  tl.fromTo('#a1',{yPercent:110},{yPercent:0,duration:.6,ease:'power4.out'},Y)
+    .fromTo('#a2',{yPercent:110},{yPercent:0,duration:.6,ease:'power4.out'},Y+.12)
+    .to('#mk',{backgroundSize:'100% 60%',duration:.5,ease:'power3.inOut'},Y+.5);
+
+  // 8 — glitch stair-step to black
+  tl.to('.band',{xPercent:0,duration:.8,stagger:i=>[0,2,4,1,3,5][i]*.09,ease:'power3.inOut'},Y+1.7);
+
+  // 9 — brief black, strips leave the opposite way; login boxes show, then texts float up top→bottom
+  const cover=Y+1.7+.8+.45,go=cover+.02;
+  tl.set('#login',{visibility:'visible'},cover)
+    .set('#hud',{autoAlpha:0},cover)
+    .to('.band',{xPercent:i=>i<3?105:-105,duration:.7,stagger:i=>[0,2,4,1,3,5][i]*.07,ease:'power2.inOut'},go)
+    .fromTo('.field,.btn,.gbtn',{y:20,opacity:0},{y:0,opacity:1,duration:.8,ease:'power3.out',stagger:.1,clearProps:'transform'},go+.05)
+    .fromTo('.tt',{y:14,opacity:0},{y:0,opacity:1,duration:.7,ease:'power3.out',stagger:(i,el)=>el.dataset.g*.14},go+.85);
+}
+
+const eye=$('#eye'),pw=$('#pw');
+eye.addEventListener('pointerdown',e=>e.preventDefault());
+eye.onclick=()=>{const on=pw.type==='password';pw.type=on?'text':'password';eye.setAttribute('aria-pressed',on);eye.setAttribute('aria-label',on?'Hide password':'Show password')};
+// ---------- Create account: underline -> ball -> burst -> signup ----------
+const EYE='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1.5 12S5.5 4.5 12 4.5 22.5 12 22.5 12 18.5 19.5 12 19.5 1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/><path class="sl" pathLength="1" d="M3.5 3.5l17 17"/></svg>';
+const FD=[[2,'Aa','Full Name','text','name','your full name','name'],
+[3,'@','Username','text','username','choose a username','username'],
+[4,'G','Gmail','email','email','you@gmail.com','email'],
+[5,'#','Phone Number · Optional','tel','phone','01XXXXXXXXX','tel'],
+[6,'***','Password','password','pw1','••••••••','new-password',1],
+[7,'✓','Confirm Password','password','pw2','••••••••','new-password',1]];
+$('#sgf').innerHTML='<h2 class="ttl st" data-g="0">Ultimate <span class="hl">Tour</span></h2><p class="sub st" data-g="1">Create new account</p>'
++FD.map(f=>`<label class="field"><i class="ic"><b class="st" data-g="${f[0]}">${f[1]}</b></i><span class="tx"><small class="st" data-g="${f[0]}">${f[2]}</small><input class="st" data-g="${f[0]}" id="su_${f[4]}" type="${f[3]}" name="${f[4]}" autocomplete="${f[6]}" autocapitalize="none" spellcheck="false" placeholder="${f[5]}"></span>${f[7]?`<button class="eye st" data-t="su_${f[4]}" data-g="${f[0]}" type="button" aria-label="Show password" aria-pressed="false">${EYE}</button>`:''}<i class="glow"></i></label>`).join('')
++'<button class="btn" type="button"><i class="st" data-g="8"></i><span class="st" data-g="8">Create</span></button><button class="gbtn" type="button">'+`<svg class="st" data-g="9" viewBox="0 0 48 48" width="20" height="20" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.2 5.5-4.7 7.2l7.6 5.9c4.4-4.1 6.9-10.1 6.9-17.6z"/><path fill="#FBBC05" d="M10.5 28.7c-.5-1.4-.8-3-.8-4.7s.3-3.2.8-4.7l-7.9-6.1C.9 16.4 0 20.100 0 24s.9 7.600 2.600 10.800l7.900-6.100z"/><path fill="#34A853" d="M24 48c6.500 0 11.900-2.100 15.900-5.800l-7.600-5.900c-2.100 1.400-4.900 2.300-8.300 2.300-6.300 0-11.600-4.100-13.500-9.800l-7.900 6.100C6.500 42.600 14.600 48 24 48z"/></svg>`+'<span class="st" data-g="9">Continue with Google</span></button><p class="signup st" data-g="10">Already have an account - <button type="button" id="back">Log in</button></p>';
+addEventListener('pointerdown',e=>{if(e.target.closest('.eye[data-t]'))e.preventDefault()});
+addEventListener('click',e=>{const b=e.target.closest('.eye[data-t]');if(!b)return;const i=$('#'+b.dataset.t),on=i.type==='password';i.type=on?'text':'password';b.setAttribute('aria-pressed',on);b.setAttribute('aria-label',on?'Hide password':'Show password')});
+
+const XD=[];
+let busy=false;
+const kids=()=>[...document.querySelectorAll('#login .lg>*')];
+
+function goSignup(btn){
+  if(busy)return;busy=true;
+  document.activeElement&&document.activeElement.blur();
+  const r=btn.getBoundingClientRect(),W=innerWidth,H=innerHeight,SX=r.left+r.width/2,SY=r.bottom-1,EX=W/2,EY=H/2;
+  const ub=$('#ub'),xf=$('#xf'),xc=$('#xc'),fx=$('#fx'),su=$('#signup'),lg=$('#login'),P={k:0};
+  const RM=Math.hypot(W,H)/2*1.06,T0=1.75; // T0 = the moment the ball reaches the center
+  su.scrollTop=0;
+  gsap.set(su,{visibility:'hidden',clipPath:'none',opacity:1,backgroundColor:'rgba(244,239,233,0)'});
+  gsap.set('#signup .field,#signup .btn,#signup .gbtn',{opacity:0,y:20});
+  gsap.set('#signup .st',{opacity:0,y:14});
+  gsap.set(ub,{visibility:'visible',x:SX,y:SY,xPercent:-50,yPercent:-50,width:r.width,height:2,borderRadius:1,scale:1,opacity:1,backgroundImage:'none',boxShadow:'0 0 22px rgba(201,222,60,.8)',force3D:true});
+  for(const e of [xf,xc]){gsap.set(e,{width:RM*2,height:RM*2,marginLeft:-RM,marginTop:-RM,scale:0,visibility:'visible',force3D:true})}
+  gsap.set(btn,{borderBottomColor:'transparent',display:'inline-block',transformOrigin:'50% 100%'});
+  // burst pieces (transform + opacity only = GPU smooth)
+  const mk=(css)=>{const i=document.createElement('i');i.style.cssText=css;fx.appendChild(i);return i};
+  const rings=[0,1].map(n=>mk('width:400px;height:400px;margin:-200px 0 0 -200px;border:4px solid '+(n?'#0b0f10':'#c9de3c')+';opacity:0'));
+  const dots=Array.from({length:16},(_,n)=>{const s=n%3===0?16:n%3===1?10:7;return mk('width:'+s+'px;height:'+s+'px;margin:-'+s/2+'px 0 0 -'+s/2+'px;background:'+(n%4===0?'#0b0f10':'#c9de3c')+';opacity:0')});
+  gsap.set([...rings,...dots],{x:0,y:0,scale:0,force3D:true}); // #fx i are already centered via left/top:50%
+  const cleanup=()=>{fx.innerHTML='';for(const e of [xf,xc])gsap.set(e,{clearProps:'all'});gsap.set(ub,{visibility:'hidden',clearProps:'boxShadow'});gsap.set(su,{clearProps:'backgroundColor'});busy=false};
+  const t=gsap.timeline({defaults:{overwrite:false},onComplete:cleanup});
+  // 1 text sucked into the underline, line rolls up into a ball
+  t.set(ub,{backgroundImage:'radial-gradient(circle at 35% 30%,#eaf57a,#c9de3c 55%,#a3b81e)'},0)
+   .to(btn,{scale:.04,y:r.height*.35,opacity:0,duration:.6,ease:'power2.inOut'},0)
+   .to(ub,{width:30,height:30,borderRadius:15,duration:.6,ease:'power2.inOut'},0);
+  // 2 spiral to the exact center
+  t.to(P,{k:1,duration:T0-.6,ease:'power2.inOut',onUpdate:()=>{const k=P.k,a=k*Math.PI*2.2,A=70*Math.sin(Math.PI*k);
+    gsap.set(ub,{x:SX+(EX-SX)*k+Math.cos(a)*A,y:SY+(EY-SY)*k+Math.sin(a)*A})}},.6);
+  // 3 BURST: ball squeezes, then pops into shockwave rings + sparks while the lime wave rolls out
+  t.to(ub,{scale:.7,duration:.16,ease:'power2.in'},T0-.02)
+   .to(ub,{scale:2.6,opacity:0,duration:.34,ease:'expo.out'},T0+.14)
+   .to(rings[0],{scale:1.7,duration:.35,ease:'expo.out'},T0+.14)
+   .fromTo(rings[0],{opacity:.9},{opacity:0,duration:.4,ease:'power2.out'},T0+.14)
+   .to(rings[1],{scale:1.15,duration:.35,ease:'expo.out'},T0+.18)
+   .fromTo(rings[1],{opacity:.55},{opacity:0,duration:.4,ease:'power2.out'},T0+.18);
+  dots.forEach((d,n)=>{const a=n/dots.length*Math.PI*2+(n%2?.18:0),dist=(n%2?170:290)+(n%3)*50;
+    t.set(d,{opacity:1},T0+.14)
+     .to(d,{x:Math.cos(a)*dist,y:Math.sin(a)*dist,scale:1,duration:.35,ease:'expo.out'},T0+.14)
+     .to(d,{scale:0,opacity:0,duration:.15,ease:'power1.in'},T0+.22)}); // particles fully dissolved by T0+.5, before the lime wave grows over them
+  // 4 login elements blast outward (no blur filter - that was the lag)
+  kids().forEach((el,i)=>{el.style.transition='none';el.style.willChange='transform,opacity';const b=el.getBoundingClientRect(),dx=b.left+b.width/2-EX,dy=b.top+b.height/2-EY,d=Math.hypot(dx,dy)||1;
+    t.to(el,{x:dx/d*W*.45,y:dy/d*H*.45,scale:.6,opacity:0,duration:.4,ease:'power3.in',force3D:true},T0+.12+.015*i)});
+  // 5 lime wave = a scaled circle, then a cream wave opens the signup page
+  t.to(xf,{scale:1,duration:.6,ease:'power3.inOut'},T0+.1)
+   .add(()=>{lg.style.visibility='hidden';gsap.set(btn,{clearProps:'all'});kids().forEach(el=>{el.style.transition='';el.style.willChange='';gsap.set(el,{clearProps:'transform,opacity,filter'})});su.style.visibility='visible'},T0+.7)
+   .to(xc,{scale:1,duration:.55,ease:'power3.inOut'},T0+.5)
+   .set(su,{backgroundColor:'#f4efe9'},T0+1.05);
+  // 6 boxes rise first, then texts float top to bottom
+  const E=T0+.9;
+  t.to('#signup .field,#signup .btn,#signup .gbtn',{y:0,opacity:1,duration:.8,ease:'power3.out',stagger:.1,clearProps:'transform'},E)
+   .to('#signup .st',{y:0,opacity:1,duration:.7,ease:'power3.out',stagger:(i,el)=>el.dataset.g*.14},E+.8);
+}
+function goLogin(btn){
+  if(busy)return;busy=true;
+  document.activeElement&&document.activeElement.blur();
+  const r=btn.getBoundingClientRect(),W=innerWidth,H=innerHeight,SX=r.left+r.width/2,SY=r.bottom-1,EX=W/2,EY=H/2;
+  const ub=$('#ub'),xf=$('#xf'),xc=$('#xc'),fx=$('#fx'),su=$('#signup'),lg=$('#login'),P={k:0};
+  const RM=Math.hypot(W,H)/2*1.06,T0=1.75;
+  const sk=()=>[...document.querySelectorAll('#signup .lg>*')];
+  lg.scrollTop=0;
+  gsap.set(su,{zIndex:15,clipPath:'none',opacity:1,backgroundColor:'#f4efe9'}); // keep signup UNDER the lime wave (it was z52, hiding the green burst)
+  gsap.set(lg,{visibility:'hidden',zIndex:52,backgroundColor:'rgba(244,239,233,0)'});
+  gsap.set('#login .field,#login .btn,#login .gbtn',{opacity:0,y:20});
+  gsap.set('#login .tt',{opacity:0,y:14});
+  gsap.set(ub,{visibility:'visible',x:SX,y:SY,xPercent:-50,yPercent:-50,width:r.width,height:2,borderRadius:1,scale:1,opacity:1,backgroundImage:'none',boxShadow:'0 0 22px rgba(201,222,60,.8)',force3D:true});
+  for(const e of [xf,xc]){gsap.set(e,{width:RM*2,height:RM*2,marginLeft:-RM,marginTop:-RM,scale:0,visibility:'visible',force3D:true})}
+  gsap.set(btn,{borderBottomColor:'transparent',display:'inline-block',transformOrigin:'50% 100%'});
+  const mk=(css)=>{const i=document.createElement('i');i.style.cssText=css;fx.appendChild(i);return i};
+  const rings=[0,1].map(n=>mk('width:400px;height:400px;margin:-200px 0 0 -200px;border:4px solid '+(n?'#0b0f10':'#c9de3c')+';opacity:0'));
+  const dots=Array.from({length:16},(_,n)=>{const s=n%3===0?16:n%3===1?10:7;return mk('width:'+s+'px;height:'+s+'px;margin:-'+s/2+'px 0 0 -'+s/2+'px;background:'+(n%4===0?'#0b0f10':'#c9de3c')+';opacity:0')});
+  gsap.set([...rings,...dots],{x:0,y:0,scale:0,force3D:true});
+  const cleanup=()=>{fx.innerHTML='';for(const e of [xf,xc])gsap.set(e,{clearProps:'all'});gsap.set(ub,{visibility:'hidden',clearProps:'boxShadow'});gsap.set(lg,{clearProps:'zIndex,backgroundColor'});gsap.set(su,{clearProps:'zIndex,backgroundColor'});busy=false};
+  const t=gsap.timeline({defaults:{overwrite:false},onComplete:cleanup});
+  // 1 text sucked into the underline, line rolls up into a ball
+  t.set(ub,{backgroundImage:'radial-gradient(circle at 35% 30%,#eaf57a,#c9de3c 55%,#a3b81e)'},0)
+   .to(btn,{scale:.04,y:r.height*.35,opacity:0,duration:.6,ease:'power2.inOut'},0)
+   .to(ub,{width:30,height:30,borderRadius:15,duration:.6,ease:'power2.inOut'},0);
+  // 2 smooth arc to the exact center (no spin): ball hops up and glides in, softly settling
+  t.to(P,{k:1,duration:T0-.6,ease:'power3.inOut',onUpdate:()=>{const k=P.k,lift=H*.14*Math.sin(Math.PI*k);
+    gsap.set(ub,{x:SX+(EX-SX)*k,y:SY+(EY-SY)*k-lift,scale:1+.25*Math.sin(Math.PI*k)})}},.6);
+  // 3 burst
+  t.to(ub,{scale:.7,duration:.16,ease:'power2.in'},T0-.02)
+   .to(ub,{scale:2.6,opacity:0,duration:.34,ease:'expo.out'},T0+.14)
+   .to(rings[0],{scale:1.7,duration:.35,ease:'expo.out'},T0+.14)
+   .fromTo(rings[0],{opacity:.9},{opacity:0,duration:.4,ease:'power2.out'},T0+.14)
+   .to(rings[1],{scale:1.15,duration:.35,ease:'expo.out'},T0+.18)
+   .fromTo(rings[1],{opacity:.55},{opacity:0,duration:.4,ease:'power2.out'},T0+.18);
+  dots.forEach((d,n)=>{const a=n/dots.length*Math.PI*2+(n%2?.18:0),dist=(n%2?170:290)+(n%3)*50;
+    t.set(d,{opacity:1},T0+.14)
+     .to(d,{x:Math.cos(a)*dist,y:Math.sin(a)*dist,scale:1,duration:.35,ease:'expo.out'},T0+.14)
+     .to(d,{scale:0,opacity:0,duration:.15,ease:'power1.in'},T0+.22)});
+  // 4 signup elements blast outward
+  sk().forEach((el,i)=>{el.style.transition='none';el.style.willChange='transform,opacity';const b=el.getBoundingClientRect(),dx=b.left+b.width/2-EX,dy=b.top+b.height/2-EY,d=Math.hypot(dx,dy)||1;
+    t.to(el,{x:dx/d*W*.45,y:dy/d*H*.45,scale:.6,opacity:0,duration:.4,ease:'power3.in',force3D:true},T0+.12+.015*i)});
+  // 5 lime wave, then cream wave opens the login page
+  t.to(xf,{scale:1,duration:.6,ease:'power3.inOut'},T0+.1)
+   .add(()=>{su.style.visibility='hidden';gsap.set(btn,{clearProps:'all'});sk().forEach(el=>{el.style.transition='';el.style.willChange='';gsap.set(el,{clearProps:'transform,opacity,filter'})});gsap.set('#signup .st',{opacity:0});lg.style.visibility='visible'},T0+.7)
+   .to(xc,{scale:1,duration:.55,ease:'power3.inOut'},T0+.5)
+   .set(lg,{backgroundColor:'#f4efe9'},T0+1.05);
+  // 6 boxes rise first, then texts float top to bottom
+  const E=T0+.9;
+  t.to('#login .field,#login .btn,#login .gbtn',{y:0,opacity:1,duration:.8,ease:'power3.out',stagger:.1,clearProps:'transform'},E)
+   .to('#login .tt',{y:0,opacity:1,duration:.7,ease:'power3.out',stagger:(i,el)=>el.dataset.g*.14},E+.8);
+}
+const csb=$('#login .signup button');csb.onclick=()=>goSignup(csb);
+const bk=$('#back');bk.onclick=()=>goLogin(bk);
+
+function start(){build();tl.play(0)}
+Promise.race([
+  Promise.all(['italic 600 16px Newsreader','800 16px "Inter Tight"','700 16px "JetBrains Mono"'].map(f=>document.fonts.load(f))),
+  new Promise(r=>setTimeout(r,1500))
+]).then(start);
+</script>
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import {getAuth,GoogleAuthProvider,signInWithPopup,signInWithEmailAndPassword,createUserWithEmailAndPassword,sendPasswordResetEmail,onAuthStateChanged,signOut,deleteUser} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import {getFirestore,doc,getDoc,runTransaction,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+const app=initializeApp({apiKey:"AIzaSyB7WRLBVRufPnlFck0dreWcU8-yWh9f7_0",authDomain:"ultimate-tour-1.firebaseapp.com",projectId:"ultimate-tour-1",storageBucket:"ultimate-tour-1.firebasestorage.app",messagingSenderId:"593726515356",appId:"1:593726515356:web:bafe179aed7d77015be559"});
+const auth=getAuth(app),db=getFirestore(app),q=s=>document.querySelector(s),v=i=>q('#su_'+i).value.trim();
+const lgF=q('#login .lg'),sgF=q('#sgf'),home=q('#home'),pwF=['#su_pw1','#su_pw2'].map(i=>q(i).closest('.field'));
+const MAIL=/^\S+@\S+\.\S+$/;
+let pending=null,working=false;
+const E={'auth/invalid-credential':'Wrong email or password','auth/wrong-password':'Wrong email or password','auth/user-not-found':'No account with this email','auth/invalid-email':'Enter a valid email','auth/email-already-in-use':'This email already has an account. Log in instead','auth/weak-password':'Password must be at least 6 characters','auth/too-many-requests':'Too many tries. Wait a bit and retry','auth/network-request-failed':'No internet connection','auth/unauthorized-domain':'This website domain is not authorized in Firebase','app/username-taken':'This username is taken','app/no-profile':'Account not found. Create a new account','app/name':'Enter your full name','app/username':'Username: 3-20 letters, numbers, . or _','app/phone':'Enter a valid phone number','app/pw-match':'Passwords do not match','permission-denied':'Permission denied. Check Firestore rules'};
+const say=(root,t,ok)=>{let p=root.querySelector('.msg');if(!p){p=document.createElement('p');p.className='msg';root.querySelector('.btn').before(p)}p.textContent=t||'';p.style.color=ok?'#1e4d3a':'#d6452a'};
+async function run(btn,root,fn){if(working)return;working=true;btn.style.opacity='.6';say(root,'');try{await fn()}catch(e){if(!/popup-closed|cancelled-popup/.test(e.code||''))say(root,E[e.code]||'Something went wrong ('+(e.code||e.message)+')')}finally{working=false;btn.style.opacity=''}}
+const getProfile=async u=>{const s=await getDoc(doc(db,'users',u.uid));return s.exists()?s.data():null};
+const saveProfile=(u,d)=>runTransaction(db,async tx=>{const r=doc(db,'usernames',d.username);if((await tx.get(r)).exists())throw{code:'app/username-taken'};tx.set(r,{uid:u.uid});tx.set(doc(db,'users',u.uid),{...d,createdAt:serverTimestamp()})});
+const enter=p=>{q('#h_name').textContent=p.name;q('#h_meta').textContent='@'+p.username+' · '+p.email;home.style.display='flex'};
+const sgOn=()=>getComputedStyle(q('#signup')).visibility==='visible';
+function resetSignup(){pending=null;pwF.forEach(f=>f.style.display='');q('#su_email').readOnly=false;q('#signup .sub').textContent='Create new account';sgF.querySelectorAll('input').forEach(i=>i.value='')}
+const introDone=()=>new Promise(r=>{const w=()=>typeof tl!=='undefined'&&tl&&tl.progress()>=1?r():setTimeout(w,300);w()});
+
+// Email + password login
+q('#login .btn').onclick=e=>run(e.currentTarget,lgF,async()=>{
+  const em=lgF.username.value.trim(),pw=lgF.password.value;
+  if(!MAIL.test(em))throw{code:'auth/invalid-email'};
+  if(!pw)throw{code:'auth/invalid-credential'};
+  const {user}=await signInWithEmailAndPassword(auth,em,pw),p=await getProfile(user);
+  if(!p){await signOut(auth);throw{code:'app/no-profile'}}
+  enter(p)});
+
+// Google login / first-time Google registration
+const google=btn=>run(btn,sgOn()?sgF:lgF,async()=>{
+  const gp=new GoogleAuthProvider();gp.setCustomParameters({prompt:'select_account'});
+  const {user}=await signInWithPopup(auth,gp),p=await getProfile(user);
+  if(p){enter(p);return}
+  pending=user;
+  q('#su_name').value=user.displayName||'';const em=q('#su_email');em.value=user.email;em.readOnly=true;
+  pwF.forEach(f=>f.style.display='none');q('#signup .sub').textContent='Complete your profile';
+  if(!sgOn())goSignup(q('#login .signup button'))});
+document.querySelectorAll('.gbtn').forEach(b=>b.onclick=()=>google(b));
+
+// Create account (email or finishing Google profile)
+q('#sgf .btn').onclick=e=>run(e.currentTarget,sgF,async()=>{
+  const name=v('name'),un=v('username').toLowerCase(),em=v('email'),ph=v('phone');
+  if(name.length<2)throw{code:'app/name'};
+  if(!/^[a-z0-9_.]{3,20}$/.test(un))throw{code:'app/username'};
+  if(!MAIL.test(em))throw{code:'auth/invalid-email'};
+  if(ph&&!/^\+?[0-9\s-]{7,15}$/.test(ph))throw{code:'app/phone'};
+  const d={name,username:un,email:em,phone:ph,provider:pending?'google':'password'};
+  if(pending){await saveProfile(pending,d);resetSignup();enter(d);return}
+  const p1=q('#su_pw1').value;
+  if(p1.length<6)throw{code:'auth/weak-password'};
+  if(p1!==q('#su_pw2').value)throw{code:'app/pw-match'};
+  if((await getDoc(doc(db,'usernames',un))).exists())throw{code:'app/username-taken'};
+  const {user}=await createUserWithEmailAndPassword(auth,em,p1);
+  try{await saveProfile(user,d)}catch(err){await deleteUser(user);throw err}
+  enter(d)});
+
+// Forgot password
+q('.forgot').onclick=e=>run(e.currentTarget,lgF,async()=>{
+  const em=lgF.username.value.trim();
+  if(!MAIL.test(em)){say(lgF,'Type your email above first');return}
+  await sendPasswordResetEmail(auth,em);say(lgF,'Reset link sent. Check your inbox',1)});
+
+// Back from Google registration = cancel; Enter key; logout; stay logged in
+q('#back').addEventListener('click',()=>{if(pending){signOut(auth);resetSignup()}});
+for(const f of [lgF,sgF])f.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT'){e.preventDefault();f.querySelector('.btn').click()}});
+q('#h_out').onclick=async()=>{await signOut(auth);location.reload()};
+onAuthStateChanged(auth,async u=>{if(!u||working||pending)return;const p=await getProfile(u);if(p){await introDone();enter(p)}else await signOut(auth)});
+</script>
+</body>
+</html>
