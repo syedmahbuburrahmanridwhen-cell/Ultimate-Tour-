@@ -604,11 +604,14 @@ let rsMail='',rsCode=null;
 const rsSaved=()=>{try{return JSON.parse(localStorage.getItem(RK)||'null')}catch(e){return null}};
 const rsClear=()=>{try{localStorage.removeItem(RK)}catch(e){}};
 function resetRs(){[rs1,rs2,rs3].forEach(p=>p.style.display='none');['#rs_email','#np1','#np2'].forEach(i=>q(i).value='');T2.reset();rsCode=null;rsMail='';rsClear()}
+function loginIn(){const els=[...lgF.children];els.forEach(x=>x.style.transition='none');
+  gsap.from(els,{y:28,opacity:0,duration:.7,stagger:.08,delay:.1,ease:'power3.out',onComplete:()=>els.forEach(x=>{x.style.transition=''})})}
 const showRs2=()=>{q('#rs_mail').textContent=rsMail;rs2.style.display='flex';q('#rs_ok').style.display='';
   q('#rs_st').textContent='Open the link we sent to your inbox (check Spam too), then come back here and tap Verify.'};
 const showRs3=d=>{rsCode=d.code;rsMail=d.email;q('#rs3_mail').textContent=d.email;rs3.style.display='flex'};
-async function dust(el){
-  const fallback=async()=>{el.style.background='';await fin(gsap.timeline().to(el,{opacity:0,duration:.6}));el.style.display='none';gsap.set(el,{opacity:1})};
+async function dust(el,onHide){
+  let hid=false;const hide=()=>{if(!hid){hid=true;onHide&&onHide()}};
+  const fallback=async()=>{el.style.background='';await fin(gsap.timeline().to(el,{opacity:0,duration:.6}));el.style.display='none';gsap.set(el,{opacity:1});hide()};
   if(typeof html2canvas==='undefined'){await fallback();return}
   try{
     const dpr=Math.min(devicePixelRatio||1,2),W=innerWidth,H=innerHeight;
@@ -623,7 +626,7 @@ async function dust(el){
       for(let y=0;y<sh;y+=step)for(let x=0;x<sw;x+=step){const i=(y*sw+x)*4,a=data[i+3];
         if(a>40)P.push({x,y,c:'rgba('+data[i]+','+data[i+1]+','+data[i+2]+',',a:a/255,d:(x/sw)*.55+Math.random()*.35,vx:(40+Math.random()*120)*dpr,vy:(-30-Math.random()*110)*dpr,s:step})}
       if(P.length<=16000)break;step++}
-    el.style.display='none';el.style.background='';
+    el.style.display='none';el.style.background='';hide();
     const t0=performance.now();
     await new Promise(res=>{const fr=now=>{const t=(now-t0)/1000;cx.clearRect(0,0,sw,sh);
       for(const p of P){const u=t-p.d;
@@ -638,7 +641,7 @@ async function dust(el){
 q('.forgot').onclick=e=>{const b=e.currentTarget;if(b.dataset.busy)return;b.dataset.busy=1;
   q('#rs_email').value=lgF.username.value.trim();
   lineAnim(b,Promise.resolve(),()=>{rs1.style.display='flex';gsap.from('#rs1 .lg>*',{y:20,opacity:0,duration:.6,stagger:.08,delay:.1,ease:'power3.out'})}).finally(()=>{delete b.dataset.busy})};
-q('#rs_back').onclick=e=>{const b=e.currentTarget;if(b.dataset.busy)return;b.dataset.busy=1;lineAnim(b,Promise.resolve(),()=>{resetRs()}).finally(()=>{delete b.dataset.busy})};
+q('#rs_back').onclick=e=>{const b=e.currentTarget;if(b.dataset.busy)return;b.dataset.busy=1;lineAnim(b,Promise.resolve(),()=>{resetRs();loginIn()}).finally(()=>{delete b.dataset.busy})};
 q('#rs_send').onclick=e=>{const b=e.currentTarget;return run(b,rsF1,async()=>{
   const em=q('#rs_email').value.trim().toLowerCase();
   if(!MAIL.test(em))throw{code:'auth/invalid-email'};
@@ -658,7 +661,7 @@ q('#np_ok').onclick=e=>{const b=e.currentTarget;return run(b,rsF3,async()=>{
   if(p1!==q('#np2').value)throw{code:'app/pw-match'};
   await animRun(b,async()=>{await confirmPasswordReset(auth,rsCode,p1);rsClear();return 1},null,async()=>{
     const em=rsMail;rs1.style.display='none';rs2.style.display='none';
-    await dust(rs3);resetRs();lgF.username.value=em;lgF.password.value='';say(lgF,'Password changed. Log in with your new password.',1)})},false)};
+    await dust(rs3,()=>{resetRs();lgF.username.value=em;lgF.password.value='';say(lgF,'Password changed. Log in with your new password.',1);loginIn()})})},false)};
 for(const [fm,id] of [[rsF1,'#rs_send'],[rsF3,'#np_ok']])fm.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT'){e.preventDefault();q(id).click()}});
 // Reset link opened (Firebase action URL set to this page): go straight to the new password page and tell the other tab
 {const qs=new URLSearchParams(location.search),code=qs.get('oobCode');
@@ -678,4 +681,4 @@ onAuthStateChanged(auth,async u=>{if(!u||working||pending)return;
   catch(e){await signOut(auth)}});
 </script>
 </body>
-      </html>
+  </html>
