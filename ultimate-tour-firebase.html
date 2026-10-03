@@ -123,7 +123,7 @@ body{height:100%;margin:0;background:#fff;overflow:hidden}
 .msg{margin:0;text-align:center;font:700 12px/1.5 var(--mono);color:#d6452a}.msg:empty{display:none}
 .gsp{position:absolute;left:50%;top:50%;width:30px;height:30px;margin:-15px 0 0 -15px;opacity:0;pointer-events:none;z-index:3}
 .vt{margin:0;text-align:center;font:500 13px/1.6 var(--mono);color:#5d6568}
-#verify .signup{margin-top:14px}#verify .signup button{display:inline-block}.vtm{font:700 11px var(--mono);color:#5d6568;margin-left:6px}
+#verify .signup,#rs1 .signup,#rs2 .signup{margin-top:22px}#verify .signup button,#rs1 .signup button,#rs2 .signup button{display:inline-block}.vtm{font:700 11px var(--mono);color:#5d6568;margin-left:6px}
 </style>
 </head>
 <body>
@@ -638,7 +638,7 @@ async function dust(el){
 q('.forgot').onclick=e=>{const b=e.currentTarget;if(b.dataset.busy)return;b.dataset.busy=1;
   q('#rs_email').value=lgF.username.value.trim();
   lineAnim(b,Promise.resolve(),()=>{rs1.style.display='flex';gsap.from('#rs1 .lg>*',{y:20,opacity:0,duration:.6,stagger:.08,delay:.1,ease:'power3.out'})}).finally(()=>{delete b.dataset.busy})};
-q('#rs_back').onclick=()=>gsap.to(rs1,{opacity:0,duration:.35,onComplete:()=>{resetRs();gsap.set(rs1,{opacity:1})}});
+q('#rs_back').onclick=e=>{const b=e.currentTarget;if(b.dataset.busy)return;b.dataset.busy=1;lineAnim(b,Promise.resolve(),()=>{resetRs()}).finally(()=>{delete b.dataset.busy})};
 q('#rs_send').onclick=e=>{const b=e.currentTarget;return run(b,rsF1,async()=>{
   const em=q('#rs_email').value.trim().toLowerCase();
   if(!MAIL.test(em))throw{code:'auth/invalid-email'};
@@ -678,4 +678,4 @@ onAuthStateChanged(auth,async u=>{if(!u||working||pending)return;
   catch(e){await signOut(auth)}});
 </script>
 </body>
-  </html>
+      </html>
