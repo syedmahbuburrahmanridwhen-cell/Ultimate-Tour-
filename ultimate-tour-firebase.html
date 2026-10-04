@@ -124,6 +124,7 @@ body{height:100%;margin:0;background:#fff;overflow:hidden}
 .gsp{position:absolute;left:50%;top:50%;width:30px;height:30px;margin:-15px 0 0 -15px;opacity:0;pointer-events:none;z-index:3}
 .vt{margin:0;text-align:center;font:500 13px/1.6 var(--mono);color:#5d6568}
 #verify .signup,#rs1 .signup,#rs2 .signup{margin-top:22px}#verify .signup button,#rs1 .signup button,#rs2 .signup button{display:inline-block}.vtm{font:700 11px var(--mono);color:#5d6568;margin-left:6px}
+.cdt{display:inline-block;width:calc(4ch + .8em);text-align:left;font-style:normal;white-space:pre;overflow:hidden;vertical-align:bottom}
 </style>
 </head>
 <body>
@@ -449,6 +450,38 @@ const say=(root,t,ok)=>{let p=root.querySelector('.slot');if(!p){p=document.crea
 const errText=e=>E[e.code]||'Something went wrong ('+(e.code||e.message)+')';
 async function failAnim(btn,root,text){const slot=root.querySelector('.slot');if(!slot){say(root,text);return}
   const g=gAnim(btn,true);try{await g.eat();await new Promise(r=>setTimeout(r,350));await g.fail(text,slot)}catch(x){g.reset();say(root,text)}}
+// A pill button left blank by its gather animation gets its dot and text back
+function restoreBtn(b){b.querySelectorAll('.gsp').forEach(x=>x.remove());const i=b.querySelector('i'),t=b.querySelector('span');
+  gsap.killTweensOf([i,t]);gsap.set([i,t],{x:0,scale:1,opacity:1});t.style.clipPath='';b.style.overflow=b.style.position=''}
+// Cooldown on a button: label shows a live countdown (e.g. Create 79s); clicking early shakes the label
+function cdMarkup(tx,base,txt){tx.textContent=base;const cd=document.createElement('em');cd.className='cdt';cd.textContent=txt;tx.append(cd);return cd}
+function cdStart(btn,sec,base){const tx=btn.querySelector('span');clearInterval(btn._i);btn._at=Date.now()+sec*1000;
+  const cd=cdMarkup(tx,base,'');
+  const tick=()=>{const n=Math.ceil((btn._at-Date.now())/1000);
+    if(n>0){cd.textContent=' '+n+'s';return}
+    clearInterval(btn._i);btn._at=0;
+    gsap.to(cd,{width:0,opacity:0,duration:.7,ease:'power3.inOut',onComplete:()=>{tx.textContent=base}})};
+  tick();btn._i=setInterval(tick,250)}
+const cdReady=btn=>!btn._at||Date.now()>=btn._at;
+// The ball comes back, writes the label with the timer, and settles into the dot's place
+async function btnWrite(btn,base,sec){
+  UI=true;
+  try{
+    restoreBtn(btn);
+    const lg=btn.querySelector('i'),tx=btn.querySelector('span');
+    cdMarkup(tx,base,' '+sec+'s');gsap.set(lg,{opacity:0});tx.style.clipPath='inset(0 100% 0 0)';
+    const B=btn.getBoundingClientRect(),L=lg.getBoundingClientRect(),T=tx.getBoundingClientRect(),cx=B.left+B.width/2,cy=B.top+B.height/2;
+    const bl=document.createElement('div');
+    Object.assign(bl.style,{position:'fixed',left:cx-7+'px',top:cy-7+'px',width:'14px',height:'14px',borderRadius:'50%',background:'#c9de3c',zIndex:96,pointerEvents:'none'});
+    document.body.append(bl);gsap.set(bl,{scale:.2,opacity:0});
+    await fin(gsap.to(bl,{scale:1,opacity:1,duration:.3,ease:'back.out(2)'}));
+    await fin(gsap.to(bl,{left:T.left-7,duration:.45,ease:'power3.inOut'}));
+    const o={v:T.left};
+    await fin(gsap.to(o,{v:T.right,duration:Math.min(1.2,.3+tx.textContent.length*.03),ease:'none',onUpdate:()=>{tx.style.clipPath='inset(0 '+(T.right-o.v)+'px 0 0)';bl.style.left=(o.v-7)+'px'}}));
+    tx.style.clipPath='';
+    await fin(gsap.timeline().to(bl,{left:L.left+L.width/2-7,duration:.5,ease:'power3.inOut'}).to(bl,{opacity:0,duration:.15}).to(lg,{opacity:1,duration:.2},'<'));
+    bl.remove();cdStart(btn,sec,base)
+  }finally{UI=false}}
 async function absorb(root,btn){const p=root.querySelector('.slot');if(!p||!p.textContent)return;
   const S=p.getBoundingClientRect(),B=btn.getBoundingClientRect();
   await fin(gsap.to(p,{y:B.top+B.height/2-(S.top+S.height/2),scale:.15,opacity:0,transformOrigin:'50% 50%',duration:.45,ease:'power3.in'}));
@@ -613,7 +646,7 @@ const google=btn=>run(btn,sgOn()?sgF:lgF,async()=>{
 document.querySelectorAll('.gbtn').forEach(b=>b.onclick=()=>google(b));
 
 // Create account: makes the login, emails a verification link, and shows the verify page. Profile is saved only after verification.
-q('#sgf .btn').onclick=e=>{const b=e.currentTarget;return run(b,sgF,async()=>{
+q('#sgf .btn').onclick=e=>{const b=e.currentTarget;if(!cdReady(b)){shake(b.querySelector('span'));return}return run(b,sgF,async()=>{
   const name=v('name'),un=v('username').toLowerCase(),em=v('email'),ph=v('phone'),p1=q('#su_pw1').value,p2=q('#su_pw2').value;
   await animRun(b,async()=>{
     if(!name)throw{code:'app/name-empty'};
@@ -647,7 +680,7 @@ q('#v_x').onclick=e=>{const b=e.currentTarget;if(b.dataset.busy)return;const u=a
   const job=(async()=>{try{if(u&&!u.emailVerified)await deleteUser(u)}catch(err){}await signOut(auth).catch(()=>{});try{localStorage.removeItem(PK)}catch(err){}})();
   if(!sgOn()){job.then(()=>location.reload());return}
   b.dataset.busy=1;T1.reset();
-  lineAnim(b,job,()=>{ver.style.display='none';const m=q('#su_email');m.value='';m.readOnly=false;say(sgF,'')}).finally(()=>{delete b.dataset.busy})};
+  lineAnim(b,job,()=>{ver.style.display='none';const m=q('#su_email');m.value='';m.readOnly=false;say(sgF,'')}).then(()=>btnWrite(q('#sgf .btn'),'Create',COOL)).finally(()=>{delete b.dataset.busy})};
 
 // ===== Forgot password: forgot link > email page > check Gmail > verify > new password > dust away =====
 const rs1=q('#rs1'),rs2=q('#rs2'),rs3=q('#rs3'),rs4=q('#rs4'),rsF4=q('#rs4 .lg'),rsF1=q('#rs1 .lg'),rsF2=q('#rs2 .lg'),rsF3=q('#rs3 .lg'),RK='ut_reset';
@@ -657,7 +690,7 @@ const VACS=()=>({url:location.origin+location.pathname+'?verified=1'});
 const ACS=()=>({url:location.origin+location.pathname+'?reset=done'});
 const rsSaved=()=>{try{return JSON.parse(localStorage.getItem(RK)||'null')}catch(e){return null}};
 const rsClear=()=>{try{localStorage.removeItem(RK)}catch(e){}};
-function resetRs(){[rs1,rs2,rs3,rs4].forEach(p=>p.style.display='none');['#rs_email','#np1','#np2'].forEach(i=>q(i).value='');T2.reset();rsCode=null;rsMail='';rsClear()}
+function resetRs(){[rs1,rs2,rs3,rs4].forEach(p=>p.style.display='none');['#rs_send','#rs_ok','#np_ok'].forEach(i=>restoreBtn(q(i)));['#rs_email','#np1','#np2'].forEach(i=>q(i).value='');T2.reset();rsCode=null;rsMail='';rsClear()}
 let warmed=false;
 const warm=()=>{if(warmed||typeof html2canvas==='undefined')return;warmed=true;
   const go=()=>html2canvas(q('#rs_mail'),{scale:.3,logging:false,backgroundColor:null}).catch(()=>{});
@@ -706,7 +739,7 @@ q('.forgot').onclick=e=>{const b=e.currentTarget;if(b.dataset.busy)return;b.data
   q('#rs_email').value=lgF.username.value.trim();
   lineAnim(b,Promise.resolve(),()=>{rs1.style.display='flex';popIn(document.querySelectorAll('#rs1 .lg>*'),.1)}).finally(()=>{delete b.dataset.busy})};
 q('#rs_back').onclick=e=>{const b=e.currentTarget;if(b.dataset.busy)return;b.dataset.busy=1;lineAnim(b,Promise.resolve(),()=>{resetRs();loginIn()}).finally(()=>{delete b.dataset.busy})};
-q('#rs_send').onclick=e=>{const b=e.currentTarget;return run(b,rsF1,async()=>{
+q('#rs_send').onclick=e=>{const b=e.currentTarget;if(!cdReady(b)){shake(b.querySelector('span'));return}return run(b,rsF1,async()=>{
   const em=q('#rs_email').value.trim().toLowerCase();
   if(!em)throw{code:'app/email-empty'};
   if(!MAIL.test(em))throw{code:'auth/invalid-email'};
@@ -722,7 +755,7 @@ q('#rs_re').onclick=e=>{const b=e.currentTarget;if(b.dataset.busy)return;if(!T2.
   b.dataset.busy=1;
   lineAnim(b,sendPasswordResetEmail(auth,rsMail,ACS())).then(()=>{say(rsF2,'Link sent again. Check Gmail and Spam',1);T2.start(COOL)},err=>{say(rsF2,E[err.code]||'Could not send the link. Try again later');if(err.code==='auth/too-many-requests')T2.start(COOL)}).finally(()=>{delete b.dataset.busy})};
 q('#rs_x').onclick=e=>{const b=e.currentTarget;if(b.dataset.busy)return;b.dataset.busy=1;T2.reset();rsClear();
-  lineAnim(b,Promise.resolve(),()=>{rs2.style.display='none';q('#rs_email').value=''}).finally(()=>{delete b.dataset.busy})};
+  lineAnim(b,Promise.resolve(),()=>{rs2.style.display='none';q('#rs_email').value=''}).then(()=>btnWrite(q('#rs_send'),'Send verification link',COOL)).finally(()=>{delete b.dataset.busy})};
 q('#np_ok').onclick=e=>{const b=e.currentTarget;return run(b,rsF3,async()=>{
   const p1=q('#np1').value;
   if(!rsCode)throw{code:'auth/invalid-action-code'};
@@ -788,4 +821,4 @@ onAuthStateChanged(auth,async u=>{if(!u||working||pending||VERIFIED||GFLAG)retur
   catch(e){await signOut(auth)}});
 </script>
 </body>
-        </html>
+                                           </html>
