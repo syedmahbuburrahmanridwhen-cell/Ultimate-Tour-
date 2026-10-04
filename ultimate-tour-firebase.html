@@ -175,7 +175,7 @@ body{height:100%;margin:0;background:#fff;overflow:hidden}
   <div id="home"><div class="lg"><h2 class="ttl">Ultimate <span class="hl">Tour</span></h2><p class="sub" id="h_name"></p><p class="msg" id="h_meta" style="color:#5d6568"></p><button class="btn" id="h_out" type="button"><i></i><span>Log out</span></button></div></div>
   <div id="verify"><div class="lg"><h2 class="ttl">Check your <span class="hl">Gmail</span></h2><p class="sub">We sent a verification link to</p><p class="vt" id="v_mail" style="color:#0b0f10;font-weight:700"></p><p class="vt" id="v_st"></p><button class="btn" id="v_ok" type="button"><i></i><span>Confirm</span></button><p class="signup"><button type="button" id="v_re">Resend link</button><span class="vtm" id="v_t"></span> &nbsp;·&nbsp; <button type="button" id="v_x">Use another email</button></p></div></div>
   <div id="rs1"><div class="lg"><h2 class="ttl">Reset <span class="hl">password</span></h2><p class="vt">Enter your Gmail. We will send you a verification link.</p><label class="field"><i class="ic"><b>@</b></i><span class="tx"><small>Gmail / Email</small><input id="rs_email" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" inputmode="email" placeholder="you@gmail.com"></span><i class="glow"></i></label><button class="btn" id="rs_send" type="button" style="font-size:12px;letter-spacing:.1em"><i></i><span>Send verification link</span></button><p class="signup"><button type="button" id="rs_back">Back to login</button></p></div></div>
-  <div id="rs2"><div class="lg"><h2 class="ttl">Check your <span class="hl">Gmail</span></h2><p class="sub">We sent a reset link to</p><p class="vt" id="rs_mail" style="color:#0b0f10;font-weight:700"></p><p class="vt" id="rs_st"></p><button class="btn" id="rs_ok" type="button"><i></i><span>Verify</span></button><p class="signup"><button type="button" id="rs_re">Resend link</button><span class="vtm" id="rs_t"></span> &nbsp;·&nbsp; <button type="button" id="rs_x">Use another email</button></p></div></div>
+  <div id="rs2"><div class="lg"><h2 class="ttl">Check your <span class="hl">Gmail</span></h2><p class="sub">We sent a reset link to</p><p class="vt" id="rs_mail" style="color:#0b0f10;font-weight:700"></p><p class="vt" id="rs_st"></p><button class="btn" id="rs_ok" type="button" style="font-size:12px;letter-spacing:.08em"><i></i><span>I changed my password</span></button><p class="signup"><button type="button" id="rs_re">Resend link</button><span class="vtm" id="rs_t"></span> &nbsp;·&nbsp; <button type="button" id="rs_x">Use another email</button></p></div></div>
   <div id="rs3"><div class="lg"><h2 class="ttl">New <span class="hl">password</span></h2><p class="vt" id="rs3_mail" style="color:#0b0f10;font-weight:700"></p><label class="field"><i class="ic"><b>***</b></i><span class="tx"><small>New password</small><input id="np1" type="password" autocomplete="new-password" placeholder="••••••••"></span><button class="eye" data-t="np1" type="button" aria-label="Show password" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1.5 12S5.5 4.5 12 4.5 22.5 12 22.5 12 18.5 19.5 12 19.5 1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/><path class="sl" pathLength="1" d="M3.5 3.5l17 17"/></svg></button><i class="glow"></i></label><label class="field"><i class="ic"><b>***</b></i><span class="tx"><small>Confirm password</small><input id="np2" type="password" autocomplete="new-password" placeholder="••••••••"></span><button class="eye" data-t="np2" type="button" aria-label="Show password" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1.5 12S5.5 4.5 12 4.5 22.5 12 22.5 12 18.5 19.5 12 19.5 1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/><path class="sl" pathLength="1" d="M3.5 3.5l17 17"/></svg></button><i class="glow"></i></label><button class="btn" id="np_ok" type="button"><i></i><span>Confirm</span></button></div></div>
   <div id="rs4"><div class="lg"><h2 class="ttl">Change <span class="hl">password?</span></h2><p class="vt" id="rs4_q">Do you want to change your Ultimate Tour password?</p><button class="btn" id="rs4_yes" type="button"><i></i><span>Yes</span></button><button class="gbtn" id="rs4_no" type="button"><span>No</span></button><button class="btn" id="rs4_go" type="button" style="display:none"><i></i><span>Continue here</span></button></div></div>
   <div id="wipe"><i class="band"></i><i class="band"></i><i class="band"></i><i class="band"></i><i class="band"></i><i class="band"></i></div>
@@ -442,7 +442,7 @@ const auth=getAuth(app),db=getFirestore(app),q=s=>document.querySelector(s),v=i=
 const lgF=q('#login .lg'),sgF=q('#sgf'),home=q('#home'),pwF=['#su_pw1','#su_pw2'].map(i=>q(i).closest('.field'));
 const MAIL=/^\S+@\S+\.\S+$/;
 let pending=null,working=false;
-const E={'auth/invalid-credential':'Wrong email or password','auth/wrong-password':'Wrong email or password','auth/user-not-found':'No account with this email','auth/invalid-email':'Enter a valid email','auth/email-already-in-use':'This email already has an account. Log in instead','auth/weak-password':'Password must be at least 6 characters','auth/too-many-requests':'Too many tries. Wait a bit and retry','auth/network-request-failed':'No internet connection','auth/unauthorized-domain':'This website domain is not authorized in Firebase','app/username-taken':'This username is taken','app/not-verified':'Not verified yet. Open the link in your Gmail first, then come back here','auth/invalid-action-code':'This link is invalid or already used. Send a new link','auth/expired-action-code':'This link has expired. Send a new link','app/no-profile':'Account not found. Create a new account','app/name':'Enter your full name','app/username':'Username: 3-20 letters, numbers, . or _','app/phone':'Enter a valid phone number','app/pw-match':'Passwords do not match','permission-denied':'Permission denied. Check Firestore rules'};
+const E={'auth/invalid-credential':'Wrong email or password','auth/wrong-password':'Wrong email or password','auth/user-not-found':'No account with this email','auth/invalid-email':'Enter a valid email','auth/email-already-in-use':'This email already has an account. Log in instead','auth/weak-password':'Password must be at least 6 characters','auth/too-many-requests':'Too many tries. Wait a bit and retry','auth/network-request-failed':'No internet connection','auth/unauthorized-domain':'This website domain is not authorized in Firebase','auth/unauthorized-continue-uri':'This website domain is not authorized in Firebase','app/username-taken':'This username is taken','app/not-verified':'Not verified yet. Open the link in your Gmail first, then come back here','auth/invalid-action-code':'This link is invalid or already used. Send a new link','auth/expired-action-code':'This link has expired. Send a new link','app/no-profile':'Account not found. Create a new account','app/name':'Enter your full name','app/username':'Username: 3-20 letters, numbers, . or _','app/phone':'Enter a valid phone number','app/pw-match':'Passwords do not match','permission-denied':'Permission denied. Check Firestore rules'};
 const say=(root,t,ok)=>{let p=root.querySelector('.msg');if(!p){p=document.createElement('p');p.className='msg';root.querySelector('.btn').before(p)}p.textContent=t||'';p.style.color=ok?'#1e4d3a':'#d6452a'};
 async function run(btn,root,fn,dim){if(working)return;working=true;if(dim!==false)btn.style.opacity='.6';say(root,'');try{await fn()}catch(e){if(!/popup-closed|cancelled-popup/.test(e.code||''))say(root,E[e.code]||'Something went wrong ('+(e.code||e.message)+')')}finally{working=false;btn.style.opacity=''}}
 const getProfile=async u=>{const s=await getDoc(doc(db,'users',u.uid));return s.exists()?s.data():null};
@@ -602,13 +602,14 @@ q('#v_x').onclick=e=>{const b=e.currentTarget;if(b.dataset.busy)return;const u=a
 // ===== Forgot password: forgot link > email page > check Gmail > verify > new password > dust away =====
 const rs1=q('#rs1'),rs2=q('#rs2'),rs3=q('#rs3'),rs4=q('#rs4'),rsF4=q('#rs4 .lg'),rsF1=q('#rs1 .lg'),rsF2=q('#rs2 .lg'),rsF3=q('#rs3 .lg'),RK='ut_reset';
 let rsMail='',rsCode=null;
+const ACS=()=>({url:location.origin+location.pathname+'?reset=done'});
 const rsSaved=()=>{try{return JSON.parse(localStorage.getItem(RK)||'null')}catch(e){return null}};
 const rsClear=()=>{try{localStorage.removeItem(RK)}catch(e){}};
 function resetRs(){[rs1,rs2,rs3,rs4].forEach(p=>p.style.display='none');['#rs_email','#np1','#np2'].forEach(i=>q(i).value='');T2.reset();rsCode=null;rsMail='';rsClear()}
 function loginIn(){const els=[...lgF.children];els.forEach(x=>x.style.transition='none');
   gsap.from(els,{y:28,opacity:0,duration:.7,stagger:.08,delay:.1,ease:'power3.out',onComplete:()=>els.forEach(x=>{x.style.transition=''})})}
 const showRs2=()=>{q('#rs_mail').textContent=rsMail;rs2.style.display='flex';q('#rs_ok').style.display='';
-  q('#rs_st').textContent='Open the link we sent to your inbox (check Spam too), then come back here and tap Verify.'};
+  q('#rs_st').textContent='Open the link in your Gmail (check Spam too) and set your new password on the page that opens. Then come back here and tap the button below.'};
 const showRs3=d=>{rsCode=d.code;rsMail=d.email;q('#rs3_mail').textContent=d.email;rs3.style.display='flex'};
 async function dust(el,onHide){
   let hid=false;const hide=()=>{if(!hid){hid=true;onHide&&onHide()}};
@@ -646,15 +647,15 @@ q('#rs_back').onclick=e=>{const b=e.currentTarget;if(b.dataset.busy)return;b.dat
 q('#rs_send').onclick=e=>{const b=e.currentTarget;return run(b,rsF1,async()=>{
   const em=q('#rs_email').value.trim().toLowerCase();
   if(!MAIL.test(em))throw{code:'auth/invalid-email'};
-  await animRun(b,async()=>{await sendPasswordResetEmail(auth,em);rsMail=em;T2.start(COOL);return 1},showRs2)},false)};
+  await animRun(b,async()=>{await sendPasswordResetEmail(auth,em,ACS());try{localStorage.setItem('ut_rmail',em)}catch(x){}rsMail=em;T2.start(COOL);return 1},showRs2)},false)};
 q('#rs_ok').onclick=e=>{const b=e.currentTarget;return run(b,rsF2,async()=>{
-  const d=rsSaved();if(!d||d.email!==rsMail||!d.choice)throw{code:'app/not-verified'};
-  if(d.choice==='no')await animRun(b,async()=>1,null,async()=>{rs1.style.display='none';
-    await dust(rs2,()=>{resetRs();lgF.username.value=d.email;lgF.password.value='';say(lgF,'No changes were made to your password.',1);loginIn()})});
-  else await animRun(b,async()=>{await verifyPasswordResetCode(auth,d.code);return d},showRs3)},false)};
+  const d=rsSaved(),em=rsMail,linked=d&&d.email===em,no=linked&&d.choice==='no';
+  if(linked&&d.choice==='yes'){await animRun(b,async()=>{await verifyPasswordResetCode(auth,d.code);return d},showRs3);return}
+  await animRun(b,async()=>{await new Promise(r=>setTimeout(r,700));return 1},null,async()=>{rs1.style.display='none';
+    await dust(rs2,()=>{resetRs();lgF.username.value=em;lgF.password.value='';say(lgF,no?'No changes were made to your password.':'Log in with your new password.',1);loginIn()})})},false)};
 q('#rs_re').onclick=e=>{const b=e.currentTarget;if(b.dataset.busy)return;if(!T2.ready()){shake(b);return}
   b.dataset.busy=1;
-  lineAnim(b,sendPasswordResetEmail(auth,rsMail)).then(()=>{say(rsF2,'Link sent again. Check Gmail and Spam',1);T2.start(COOL)},err=>{say(rsF2,E[err.code]||'Could not send the link. Try again later');if(err.code==='auth/too-many-requests')T2.start(COOL)}).finally(()=>{delete b.dataset.busy})};
+  lineAnim(b,sendPasswordResetEmail(auth,rsMail,ACS())).then(()=>{say(rsF2,'Link sent again. Check Gmail and Spam',1);T2.start(COOL)},err=>{say(rsF2,E[err.code]||'Could not send the link. Try again later');if(err.code==='auth/too-many-requests')T2.start(COOL)}).finally(()=>{delete b.dataset.busy})};
 q('#rs_x').onclick=e=>{const b=e.currentTarget;if(b.dataset.busy)return;b.dataset.busy=1;T2.reset();rsClear();
   lineAnim(b,Promise.resolve(),()=>{rs2.style.display='none';q('#rs_email').value=''}).finally(()=>{delete b.dataset.busy})};
 q('#np_ok').onclick=e=>{const b=e.currentTarget;return run(b,rsF3,async()=>{
@@ -673,8 +674,11 @@ q('#rs4_yes').onclick=()=>{rsChoice('yes');gsap.to(rsF4,{opacity:0,duration:.25,
   q('#rs4_yes').style.display='none';q('#rs4_no').style.display='none';q('#rs4_go').style.display='';gsap.to(rsF4,{opacity:1,duration:.4})}})};
 q('#rs4_no').onclick=async()=>{rsChoice('no');
   await dust(rs4,()=>{lgF.password.value='';say(lgF,'No changes were made to your password.',1);loginIn()});rs4.style.display='none'};
-addEventListener('storage',e=>{try{if(e.key===RK&&e.newValue&&JSON.parse(e.newValue).choice&&rs2.style.display==='flex')q('#rs_st').textContent='Done on the link page. Tap Verify to continue.'}catch(x){}});
+addEventListener('storage',e=>{try{if(e.key===RK&&e.newValue&&JSON.parse(e.newValue).choice&&rs2.style.display==='flex')q('#rs_st').textContent='Done on the link page. Tap the button below to continue.'}catch(x){}});
 for(const [fm,id] of [[rsF1,'#rs_send'],[rsF3,'#np_ok']])fm.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT'){e.preventDefault();q(id).click()}});
+// Came back from Firebase's reset page via the Continue button
+if(new URLSearchParams(location.search).get('reset')==='done'){history.replaceState(null,'',location.pathname);
+  introDone().then(()=>{let em='';try{em=localStorage.getItem('ut_rmail')||''}catch(x){}if(em)lgF.username.value=em;say(lgF,'Password changed. Log in with your new password.',1);loginIn()})}
 // Reset link opened (Firebase action URL set to this page): go straight to the new password page and tell the other tab
 {const qs=new URLSearchParams(location.search),code=qs.get('oobCode');
  if(qs.get('mode')==='resetPassword'&&code){
@@ -693,4 +697,4 @@ onAuthStateChanged(auth,async u=>{if(!u||working||pending)return;
   catch(e){await signOut(auth)}});
 </script>
 </body>
-                          </html>
+                                           </html>
