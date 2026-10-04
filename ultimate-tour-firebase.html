@@ -442,6 +442,7 @@ const auth=getAuth(app),db=getFirestore(app),q=s=>document.querySelector(s),v=i=
 const lgF=q('#login .lg'),sgF=q('#sgf'),home=q('#home'),pwF=['#su_pw1','#su_pw2'].map(i=>q(i).closest('.field'));
 const MAIL=/^\S+@\S+\.\S+$/;
 let pending=null,working=false;
+const VERIFIED=new URLSearchParams(location.search).get('verified')==='1';
 const E={'auth/invalid-credential':'Wrong email or password','auth/wrong-password':'Wrong email or password','auth/user-not-found':'No account with this email','auth/invalid-email':'Enter a valid email','auth/email-already-in-use':'This email already has an account. Log in instead','auth/weak-password':'Password must be at least 6 characters','auth/too-many-requests':'Too many tries. Wait a bit and retry','auth/network-request-failed':'No internet connection','auth/unauthorized-domain':'This website domain is not authorized in Firebase','auth/unauthorized-continue-uri':'This website domain is not authorized in Firebase','app/username-taken':'This username is taken','app/not-verified':'Not verified yet. Open the link in your Gmail first, then come back here','auth/invalid-action-code':'This link is invalid or already used. Send a new link','auth/expired-action-code':'This link has expired. Send a new link','app/no-profile':'Account not found. Create a new account','app/name':'Enter your full name','app/username':'Username: 3-20 letters, numbers, . or _','app/phone':'Enter a valid phone number','app/pw-match':'Passwords do not match','permission-denied':'Permission denied. Check Firestore rules'};
 const say=(root,t,ok)=>{let p=root.querySelector('.msg');if(!p){p=document.createElement('p');p.className='msg';root.querySelector('.btn').before(p)}p.textContent=t||'';p.style.color=ok?'#1e4d3a':'#d6452a'};
 async function run(btn,root,fn,dim){if(working)return;working=true;if(dim!==false)btn.style.opacity='.6';say(root,'');try{await fn()}catch(e){if(!/popup-closed|cancelled-popup/.test(e.code||''))say(root,E[e.code]||'Something went wrong ('+(e.code||e.message)+')')}finally{working=false;btn.style.opacity=''}}
@@ -559,7 +560,7 @@ function gAnim(btn,dark){
       Object.assign(gx.style,{position:'fixed',left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px',background:dark?'#0b0f10':'#fff',borderRadius:'99px',zIndex:95,boxSizing:'border-box'});
       gx.append(sp);document.body.append(gx);gsap.to(sp,{opacity:0,duration:.3,delay:.2});
       return fin(gsap.to(gx,{left:0,top:0,width:innerWidth,height:innerHeight,borderRadius:0,backgroundColor:'#f4efe9',duration:.85,ease:'power3.inOut'}))},
-    fade(){gsap.to(gx,{opacity:0,duration:.45,onComplete:()=>gx.remove()});gsap.from(topPg().querySelectorAll('.lg>*'),{y:24,opacity:0,duration:.6,stagger:.08,ease:'power3.out'})},
+    fade(){gsap.to(gx,{opacity:0,duration:.45,onComplete:()=>gx.remove()});gsap.from(topPg()===document.body?[]:topPg().querySelectorAll('.lg>*'),{y:24,opacity:0,duration:.6,stagger:.08,ease:'power3.out'})},
     reset(){spin&&spin.kill();gsap.killTweensOf([lg,sp,tick,ring]);sp.remove();gx&&gx.remove();gsap.set(lg,{x:0,scale:1,opacity:1});gsap.set(tx,{x:0,scale:1,opacity:1});tx.style.clipPath='';btn.style.overflow=btn.style.position=''}}}
 const google=btn=>run(btn,sgOn()?sgF:lgF,async()=>{
   const gp=new GoogleAuthProvider();gp.setCustomParameters({prompt:'select_account'});
@@ -580,7 +581,7 @@ q('#sgf .btn').onclick=e=>{const b=e.currentTarget;return run(b,sgF,async()=>{
   await animRun(b,async()=>{
     if((await getDoc(doc(db,'usernames',un))).exists())throw{code:'app/username-taken'};
     const {user}=await createUserWithEmailAndPassword(auth,em,p1);
-    mailP=sendEmailVerification(user);mailP.catch(()=>{});
+    mailP=sendEmailVerification(user,VACS());mailP.catch(()=>{});
     try{localStorage.setItem(PK,JSON.stringify({name,username:un,email:em.toLowerCase(),phone:ph}))}catch(e){}
     return user})},false)};
 
@@ -592,7 +593,7 @@ q('#v_ok').onclick=e=>{const b=e.currentTarget;return run(b,vF,async()=>{
 q('#v_re').onclick=e=>{const b=e.currentTarget;if(b.dataset.busy)return;
   if(!T1.ready()){shake(b);return}
   b.dataset.busy=1;
-  lineAnim(b,sendEmailVerification(auth.currentUser)).then(()=>{say(vF,'Link sent again. Check Gmail and Spam',1);T1.start(COOL)},err=>{say(vF,E[err.code]||'Could not send the link. Try again later');if(err.code==='auth/too-many-requests')T1.start(COOL)}).finally(()=>{delete b.dataset.busy})};
+  lineAnim(b,sendEmailVerification(auth.currentUser,VACS())).then(()=>{say(vF,'Link sent again. Check Gmail and Spam',1);T1.start(COOL)},err=>{say(vF,E[err.code]||'Could not send the link. Try again later');if(err.code==='auth/too-many-requests')T1.start(COOL)}).finally(()=>{delete b.dataset.busy})};
 q('#v_x').onclick=e=>{const b=e.currentTarget;if(b.dataset.busy)return;const u=auth.currentUser;
   const job=(async()=>{try{if(u&&!u.emailVerified)await deleteUser(u)}catch(err){}await signOut(auth).catch(()=>{});try{localStorage.removeItem(PK)}catch(err){}})();
   if(!sgOn()){job.then(()=>location.reload());return}
@@ -602,7 +603,8 @@ q('#v_x').onclick=e=>{const b=e.currentTarget;if(b.dataset.busy)return;const u=a
 // ===== Forgot password: forgot link > email page > check Gmail > verify > new password > dust away =====
 const rs1=q('#rs1'),rs2=q('#rs2'),rs3=q('#rs3'),rs4=q('#rs4'),rsF4=q('#rs4 .lg'),rsF1=q('#rs1 .lg'),rsF2=q('#rs2 .lg'),rsF3=q('#rs3 .lg'),RK='ut_reset';
 let rsMail='',rsCode=null;
-const noForgot=()=>{q('.forgot').style.display='none'};
+const noForgot=()=>{q('.forgot').style.display='none';q('#login .signup').style.display='none'};
+const VACS=()=>({url:location.origin+location.pathname+'?verified=1'});
 const ACS=()=>({url:location.origin+location.pathname+'?reset=done'});
 const rsSaved=()=>{try{return JSON.parse(localStorage.getItem(RK)||'null')}catch(e){return null}};
 const rsClear=()=>{try{localStorage.removeItem(RK)}catch(e){}};
@@ -661,8 +663,10 @@ q('#rs_send').onclick=e=>{const b=e.currentTarget;return run(b,rsF1,async()=>{
 q('#rs_ok').onclick=e=>{const b=e.currentTarget;return run(b,rsF2,async()=>{
   const d=rsSaved(),em=rsMail,linked=d&&d.email===em,no=linked&&d.choice==='no';
   if(linked&&d.choice==='yes'){await animRun(b,async()=>{await verifyPasswordResetCode(auth,d.code);return d},showRs3);return}
-  await animRun(b,async()=>{await new Promise(r=>setTimeout(r,700));return 1},null,async()=>{rs1.style.display='none';
-    await dust(rs2,()=>{resetRs();lgF.username.value=em;lgF.password.value='';if(!no)noForgot();say(lgF,no?'No changes were made to your password.':'Log in with your new password.',1);loginIn()})})},false)};
+  const wait=async()=>{await new Promise(r=>setTimeout(r,700));return 1};
+  const tail=()=>{resetRs();lgF.username.value=em;lgF.password.value='';if(!no)noForgot();say(lgF,no?'No changes were made to your password.':'Log in with your new password.',1);loginIn()};
+  if(no)await animRun(b,wait,null,async()=>{rs1.style.display='none';await dust(rs2,tail)});
+  else await animRun(b,wait,tail)},false)};
 q('#rs_re').onclick=e=>{const b=e.currentTarget;if(b.dataset.busy)return;if(!T2.ready()){shake(b);return}
   b.dataset.busy=1;
   lineAnim(b,sendPasswordResetEmail(auth,rsMail,ACS())).then(()=>{say(rsF2,'Link sent again. Check Gmail and Spam',1);T2.start(COOL)},err=>{say(rsF2,E[err.code]||'Could not send the link. Try again later');if(err.code==='auth/too-many-requests')T2.start(COOL)}).finally(()=>{delete b.dataset.busy})};
@@ -690,6 +694,23 @@ for(const [fm,id] of [[rsF1,'#rs_send'],[rsF3,'#np_ok']])fm.addEventListener('ke
 const skipIntro=()=>{const w=()=>{if(typeof tl!=='undefined'&&tl)tl.progress(1);else setTimeout(w,50)};w()};
 if(new URLSearchParams(location.search).get('reset')==='done'){history.replaceState(null,'',location.pathname);skipIntro();
   introDone().then(()=>{let em='';try{em=localStorage.getItem('ut_rmail')||''}catch(x){}if(em)lgF.username.value=em;noForgot();say(lgF,'Password changed. Log in with your new password.',1);loginIn()})}
+// Came back from Firebase's email-verified page: Create box spins, then expands into the home page
+if(VERIFIED){history.replaceState(null,'',location.pathname);skipIntro();
+  (async()=>{
+    const until=f=>new Promise(r=>{const w=()=>f()?r():setTimeout(w,50);w()});
+    await auth.authStateReady();await introDone();
+    const u=auth.currentUser;
+    if(!u){say(lgF,'Your email is verified. Log in to continue.',1);loginIn();return}
+    try{await u.reload()}catch(x){}
+    if(!u.emailVerified){showVerify(u);return}
+    try{const d=JSON.parse(localStorage.getItem(PK)||'null');if(d){q('#su_name').value=d.name||'';q('#su_username').value=d.username||'';q('#su_email').value=d.email||'';q('#su_phone').value=d.phone||''}}catch(x){}
+    goSignup(q('#login .signup button'));
+    await until(sgOn);await new Promise(r=>setTimeout(r,1700));
+    working=true;
+    try{await animRun(q('#sgf .btn'),async()=>await getProfile(u)||await makeProfile(u),enter)}
+    catch(err){say(sgF,E[err.code]||'Something went wrong ('+(err.code||err.message)+')')}
+    finally{working=false}
+  })()}
 // Reset link opened (Firebase action URL set to this page): go straight to the new password page and tell the other tab
 {const qs=new URLSearchParams(location.search),code=qs.get('oobCode');
  if(qs.get('mode')==='resetPassword'&&code){
@@ -702,10 +723,10 @@ if(new URLSearchParams(location.search).get('reset')==='done'){history.replaceSt
 q('#back').addEventListener('click',()=>{if(pending){signOut(auth);resetSignup()}});
 for(const f of [lgF,sgF])f.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT'){e.preventDefault();f.querySelector('.btn').click()}});
 q('#h_out').onclick=async()=>{await signOut(auth);location.reload()};
-onAuthStateChanged(auth,async u=>{if(!u||working||pending)return;
+onAuthStateChanged(auth,async u=>{if(!u||working||pending||VERIFIED)return;
   try{const p=u.emailVerified?await getProfile(u):null;await introDone();if(working)return;
     if(p)enter(p);else if(!u.emailVerified)showVerify(u);else enter(await makeProfile(u))}
   catch(e){await signOut(auth)}});
 </script>
 </body>
-        </html>
+                                                                                                                                                </html>
