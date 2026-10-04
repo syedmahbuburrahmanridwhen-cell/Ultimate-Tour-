@@ -436,9 +436,9 @@ Promise.race([
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import {getAuth,GoogleAuthProvider,signInWithPopup,signInWithEmailAndPassword,createUserWithEmailAndPassword,sendPasswordResetEmail,confirmPasswordReset,verifyPasswordResetCode,onAuthStateChanged,signOut,deleteUser,sendEmailVerification} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import {getFirestore,doc,getDoc,runTransaction,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import {initializeFirestore,doc,getDoc,runTransaction,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 const app=initializeApp({apiKey:"AIzaSyB7WRLBVRufPnlFck0dreWcU8-yWh9f7_0",authDomain:"ultimate-tour-1.firebaseapp.com",projectId:"ultimate-tour-1",storageBucket:"ultimate-tour-1.firebasestorage.app",messagingSenderId:"593726515356",appId:"1:593726515356:web:bafe179aed7d77015be559"});
-const auth=getAuth(app),db=getFirestore(app),q=s=>document.querySelector(s),v=i=>q('#su_'+i).value.trim();
+const auth=getAuth(app),db=initializeFirestore(app,{experimentalForceLongPolling:true}),q=s=>document.querySelector(s),v=i=>q('#su_'+i).value.trim();
 const lgF=q('#login .lg'),sgF=q('#sgf'),home=q('#home'),pwF=['#su_pw1','#su_pw2'].map(i=>q(i).closest('.field'));
 const MAIL=/^\S+@\S+\.\S+$/;
 let pending=null,working=false;
@@ -699,9 +699,9 @@ if(new URLSearchParams(location.search).get('reset')==='done'){history.replaceSt
 // Phone browser reloaded the page while Google's account page was open: stay on login (no intro), and finish the login if it went through
 if(GFLAG&&!VERIFIED){skipIntro();
   (async()=>{await auth.authStateReady();await introDone();const u=auth.currentUser;
-    if(!u)return;
+    if(!u){say(lgF,'Google sign-in was not completed. Please try again.');return}
     if(!u.emailVerified){showVerify(u);return}
-    working=true;try{await finishGoogle(q('#login .gbtn'),u)}catch(e){}finally{working=false}})()}
+    working=true;try{await finishGoogle(q('#login .gbtn'),u)}catch(e){say(lgF,E[e.code]||'Login could not finish ('+(e.code||e.message)+'). Tap Continue with Google again.')}finally{working=false}})()}
 // Came back from Firebase's email-verified page: Create box spins, then expands into the home page
 if(VERIFIED){history.replaceState(null,'',location.pathname);skipIntro();
   (async()=>{
@@ -737,4 +737,4 @@ onAuthStateChanged(auth,async u=>{if(!u||working||pending||VERIFIED||GFLAG)retur
   catch(e){await signOut(auth)}});
 </script>
 </body>
-  </html>
+        </html>
