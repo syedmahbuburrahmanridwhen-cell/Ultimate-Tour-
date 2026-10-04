@@ -583,7 +583,7 @@ q('#sgf .btn').onclick=e=>{const b=e.currentTarget;return run(b,sgF,async()=>{
   await animRun(b,async()=>{
     if((await getDoc(doc(db,'usernames',un))).exists())throw{code:'app/username-taken'};
     const {user}=await createUserWithEmailAndPassword(auth,em,p1);
-    mailP=sendEmailVerification(user,VACS());mailP.catch(()=>{});
+    mailP=sendEmailVerification(user);mailP.catch(()=>{});
     try{localStorage.setItem(PK,JSON.stringify({name,username:un,email:em.toLowerCase(),phone:ph}))}catch(e){}
     return user})},false)};
 
@@ -595,7 +595,7 @@ q('#v_ok').onclick=e=>{const b=e.currentTarget;return run(b,vF,async()=>{
 q('#v_re').onclick=e=>{const b=e.currentTarget;if(b.dataset.busy)return;
   if(!T1.ready()){shake(b);return}
   b.dataset.busy=1;
-  lineAnim(b,sendEmailVerification(auth.currentUser,VACS())).then(()=>{say(vF,'Link sent again. Check Gmail and Spam',1);T1.start(COOL)},err=>{say(vF,E[err.code]||'Could not send the link. Try again later');if(err.code==='auth/too-many-requests')T1.start(COOL)}).finally(()=>{delete b.dataset.busy})};
+  lineAnim(b,sendEmailVerification(auth.currentUser)).then(()=>{say(vF,'Link sent again. Check Gmail and Spam',1);T1.start(COOL)},err=>{say(vF,E[err.code]||'Could not send the link. Try again later');if(err.code==='auth/too-many-requests')T1.start(COOL)}).finally(()=>{delete b.dataset.busy})};
 q('#v_x').onclick=e=>{const b=e.currentTarget;if(b.dataset.busy)return;const u=auth.currentUser;
   const job=(async()=>{try{if(u&&!u.emailVerified)await deleteUser(u)}catch(err){}await signOut(auth).catch(()=>{});try{localStorage.removeItem(PK)}catch(err){}})();
   if(!sgOn()){job.then(()=>location.reload());return}
