@@ -443,6 +443,7 @@ const lgF=q('#login .lg'),sgF=q('#sgf'),home=q('#home'),pwF=['#su_pw1','#su_pw2'
 const MAIL=/^\S+@\S+\.\S+$/;
 let pending=null,working=false;
 const VERIFIED=new URLSearchParams(location.search).get('verified')==='1';
+let GFLAG=false;try{GFLAG=sessionStorage.getItem('ut_g')==='1';sessionStorage.removeItem('ut_g')}catch(e){}
 const E={'auth/invalid-credential':'Wrong email or password','auth/wrong-password':'Wrong email or password','auth/user-not-found':'No account with this email','auth/invalid-email':'Enter a valid email','auth/email-already-in-use':'This email already has an account. Log in instead','auth/weak-password':'Password must be at least 6 characters','auth/too-many-requests':'Too many tries. Wait a bit and retry','auth/network-request-failed':'No internet connection','auth/unauthorized-domain':'This website domain is not authorized in Firebase','auth/unauthorized-continue-uri':'This website domain is not authorized in Firebase','app/username-taken':'This username is taken','app/not-verified':'Not verified yet. Open the link in your Gmail first, then come back here','auth/invalid-action-code':'This link is invalid or already used. Send a new link','auth/expired-action-code':'This link has expired. Send a new link','app/no-profile':'Account not found. Create a new account','app/name':'Enter your full name','app/username':'Username: 3-20 letters, numbers, . or _','app/phone':'Enter a valid phone number','app/pw-match':'Passwords do not match','permission-denied':'Permission denied. Check Firestore rules'};
 const say=(root,t,ok)=>{let p=root.querySelector('.msg');if(!p){p=document.createElement('p');p.className='msg';root.querySelector('.btn').before(p)}p.textContent=t||'';p.style.color=ok?'#1e4d3a':'#d6452a'};
 async function run(btn,root,fn,dim){if(working)return;working=true;if(dim!==false)btn.style.opacity='.6';say(root,'');try{await fn()}catch(e){if(!/popup-closed|cancelled-popup/.test(e.code||''))say(root,E[e.code]||'Something went wrong ('+(e.code||e.message)+')')}finally{working=false;btn.style.opacity=''}}
@@ -562,11 +563,12 @@ function gAnim(btn,dark){
       return fin(gsap.to(gx,{left:0,top:0,width:innerWidth,height:innerHeight,borderRadius:0,backgroundColor:'#f4efe9',duration:.85,ease:'power3.inOut'}))},
     fade(){gsap.to(gx,{opacity:0,duration:.45,onComplete:()=>gx.remove()});gsap.from(topPg()===document.body?[]:topPg().querySelectorAll('.lg>*'),{y:24,opacity:0,duration:.6,stagger:.08,ease:'power3.out'})},
     reset(){spin&&spin.kill();gsap.killTweensOf([lg,sp,tick,ring]);sp.remove();gx&&gx.remove();gsap.set(lg,{x:0,scale:1,opacity:1});gsap.set(tx,{x:0,scale:1,opacity:1});tx.style.clipPath='';btn.style.overflow=btn.style.position=''}}}
+async function finishGoogle(btn,user){const g=gAnim(btn);try{await g.eat();const p=await getProfile(user)||await autoProfile(user);await g.done();await g.expand();enter(p);g.fade()}catch(e){g.reset();throw e}}
 const google=btn=>run(btn,sgOn()?sgF:lgF,async()=>{
   const gp=new GoogleAuthProvider();gp.setCustomParameters({prompt:'select_account'});
-  const {user}=await signInWithPopup(auth,gp),g=gAnim(btn);
-  try{await g.eat();const p=await getProfile(user)||await autoProfile(user);await g.done();await g.expand();enter(p);g.fade()}
-  catch(e){g.reset();throw e}},false);
+  try{sessionStorage.setItem('ut_g','1')}catch(x){}
+  let user;try{({user}=await signInWithPopup(auth,gp))}finally{try{sessionStorage.removeItem('ut_g')}catch(x){}}
+  await finishGoogle(btn,user)},false);
 document.querySelectorAll('.gbtn').forEach(b=>b.onclick=()=>google(b));
 
 // Create account: makes the login, emails a verification link, and shows the verify page. Profile is saved only after verification.
@@ -694,6 +696,12 @@ for(const [fm,id] of [[rsF1,'#rs_send'],[rsF3,'#np_ok']])fm.addEventListener('ke
 const skipIntro=()=>{const w=()=>{if(typeof tl!=='undefined'&&tl)tl.progress(1);else setTimeout(w,50)};w()};
 if(new URLSearchParams(location.search).get('reset')==='done'){history.replaceState(null,'',location.pathname);skipIntro();
   introDone().then(()=>{let em='';try{em=localStorage.getItem('ut_rmail')||''}catch(x){}if(em)lgF.username.value=em;noForgot();say(lgF,'Password changed. Log in with your new password.',1);loginIn()})}
+// Phone browser reloaded the page while Google's account page was open: stay on login (no intro), and finish the login if it went through
+if(GFLAG&&!VERIFIED){skipIntro();
+  (async()=>{await auth.authStateReady();await introDone();const u=auth.currentUser;
+    if(!u)return;
+    if(!u.emailVerified){showVerify(u);return}
+    working=true;try{await finishGoogle(q('#login .gbtn'),u)}catch(e){}finally{working=false}})()}
 // Came back from Firebase's email-verified page: Create box spins, then expands into the home page
 if(VERIFIED){history.replaceState(null,'',location.pathname);skipIntro();
   (async()=>{
@@ -723,10 +731,10 @@ if(VERIFIED){history.replaceState(null,'',location.pathname);skipIntro();
 q('#back').addEventListener('click',()=>{if(pending){signOut(auth);resetSignup()}});
 for(const f of [lgF,sgF])f.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT'){e.preventDefault();f.querySelector('.btn').click()}});
 q('#h_out').onclick=async()=>{await signOut(auth);location.reload()};
-onAuthStateChanged(auth,async u=>{if(!u||working||pending||VERIFIED)return;
+onAuthStateChanged(auth,async u=>{if(!u||working||pending||VERIFIED||GFLAG)return;
   try{const p=u.emailVerified?await getProfile(u):null;await introDone();if(working)return;
     if(p)enter(p);else if(!u.emailVerified)showVerify(u);else enter(await makeProfile(u))}
   catch(e){await signOut(auth)}});
 </script>
 </body>
-                                                                                                                                                </html>
+  </html>
