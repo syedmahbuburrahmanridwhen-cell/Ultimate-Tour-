@@ -120,7 +120,7 @@ body{height:100%;margin:0;background:#fff;overflow:hidden}
 #fx i{position:absolute;left:50%;top:50%;border-radius:50%;opacity:0}
 #fx i{will-change:transform,opacity;backface-visibility:hidden}
 #home,#verify,#rs1,#rs2,#rs3,#rs4{position:absolute;inset:0;z-index:90;display:none;background:var(--cream);padding:calc(32px + env(safe-area-inset-top,0px)) 20px calc(32px + env(safe-area-inset-bottom,0px));overflow-y:auto;font-size:16px}
-.msg{margin:0;text-align:center;font:700 12px/1.5 var(--mono);color:#d6452a}.msg:not(.slot):empty{display:none}.slot{min-height:18px;margin:-5px 0}
+.msg{margin:0;text-align:center;font:700 12px/1.5 var(--mono);color:#d6452a}.msg:not(.slot):empty{display:none}.slot{min-height:18px;margin:-6px 0}.slot+.btn{margin-top:0}
 .gsp{position:absolute;left:50%;top:50%;width:30px;height:30px;margin:-15px 0 0 -15px;opacity:0;pointer-events:none;z-index:3}
 .vt{margin:0;text-align:center;font:500 13px/1.6 var(--mono);color:#5d6568}
 #verify .signup,#rs1 .signup,#rs2 .signup{margin-top:22px}#verify .signup button,#rs1 .signup button,#rs2 .signup button{display:inline-block}.vtm{font:700 11px var(--mono);color:#5d6568;margin-left:6px}
@@ -449,7 +449,11 @@ const say=(root,t,ok)=>{let p=root.querySelector('.slot');if(!p){p=document.crea
 const errText=e=>E[e.code]||'Something went wrong ('+(e.code||e.message)+')';
 async function failAnim(btn,root,text){const slot=root.querySelector('.slot');if(!slot){say(root,text);return}
   const g=gAnim(btn,true);try{await g.eat();await new Promise(r=>setTimeout(r,350));await g.fail(text,slot)}catch(x){g.reset();say(root,text)}}
-async function run(btn,root,fn,dim){if(working||UI)return;working=true;if(dim!==false)btn.style.opacity='.6';say(root,'');
+async function absorb(root,btn){const p=root.querySelector('.slot');if(!p||!p.textContent)return;
+  const S=p.getBoundingClientRect(),B=btn.getBoundingClientRect();
+  await fin(gsap.to(p,{y:B.top+B.height/2-(S.top+S.height/2),scale:.15,opacity:0,transformOrigin:'50% 50%',duration:.45,ease:'power3.in'}));
+  p.textContent='';p.style.clipPath='';gsap.set(p,{clearProps:'transform,opacity'})}
+async function run(btn,root,fn,dim){if(working||UI)return;working=true;if(dim!==false)btn.style.opacity='.6';await absorb(root,btn);
   try{await fn()}catch(e){if(!/popup-closed|cancelled-popup/.test(e.code||'')){const t=errText(e);if(e.shown){}else if(btn.matches('.btn'))await failAnim(btn,root,t);else say(root,t)}}
   finally{working=false;btn.style.opacity=''}}
 // one action at a time: while any animation runs, other buttons ignore clicks; leaving a page clears its message
