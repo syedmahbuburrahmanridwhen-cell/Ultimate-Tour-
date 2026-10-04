@@ -435,7 +435,7 @@ Promise.race([
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-import {getAuth,GoogleAuthProvider,signInWithPopup,signInWithEmailAndPassword,createUserWithEmailAndPassword,sendPasswordResetEmail,confirmPasswordReset,verifyPasswordResetCode,onAuthStateChanged,signOut,deleteUser,sendEmailVerification} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import {getAuth,GoogleAuthProvider,signInWithPopup,signInWithEmailAndPassword,createUserWithEmailAndPassword,sendPasswordResetEmail,confirmPasswordReset,verifyPasswordResetCode,fetchSignInMethodsForEmail,onAuthStateChanged,signOut,deleteUser,sendEmailVerification} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import {initializeFirestore,doc,getDoc,runTransaction,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 const app=initializeApp({apiKey:"AIzaSyB7WRLBVRufPnlFck0dreWcU8-yWh9f7_0",authDomain:"ultimate-tour-1.firebaseapp.com",projectId:"ultimate-tour-1",storageBucket:"ultimate-tour-1.firebasestorage.app",messagingSenderId:"593726515356",appId:"1:593726515356:web:bafe179aed7d77015be559"});
 const auth=getAuth(app),db=initializeFirestore(app,{experimentalForceLongPolling:true}),q=s=>document.querySelector(s),v=i=>q('#su_'+i).value.trim();
@@ -458,8 +458,14 @@ async function run(btn,root,fn,dim){if(working||UI)return;working=true;if(dim!==
   finally{working=false;btn.style.opacity=''}}
 // one action at a time: while any animation runs, other buttons ignore clicks; leaving a page clears its message
 document.addEventListener('click',e=>{const b=e.target.closest&&e.target.closest('.btn,.gbtn,.forgot,.signup button,#back');if(!b)return;
+  if(b.dataset.skip){delete b.dataset.skip;return}
   if(UI||working||busy){e.stopImmediatePropagation();e.preventDefault();return}
-  if(b.matches('#login .signup button,#back,.forgot,#rs_back,#rs_x,#v_x'))document.querySelectorAll('.slot').forEach(p=>{p.textContent='';p.style.clipPath=''})},true);
+  if(b.matches('#login .signup button,#back,.forgot,#rs_back,#rs_x,#v_x')){
+    const clr=()=>document.querySelectorAll('.slot').forEach(p=>{p.textContent='';p.style.clipPath=''});
+    const root=b.closest('.lg'),sl=root&&root.querySelector('.slot');
+    if(sl&&sl.textContent){e.stopImmediatePropagation();e.preventDefault();UI=true;
+      absorb(root,sl.nextElementSibling||b).then(()=>{UI=false;clr();b.dataset.skip=1;b.click()});return}
+    clr()}},true);
 const getProfile=async u=>{const s=await getDoc(doc(db,'users',u.uid));return s.exists()?s.data():null};
 const saveProfile=(u,d)=>runTransaction(db,async tx=>{const r=doc(db,'usernames',d.username);if((await tx.get(r)).exists())throw{code:'app/username-taken'};tx.set(r,{uid:u.uid});tx.set(doc(db,'users',u.uid),{...d,createdAt:serverTimestamp()})});
 const enter=p=>{q('#h_name').textContent=p.name;q('#h_meta').textContent='@'+p.username+' · '+p.email;home.style.display='flex';document.querySelectorAll('#verify,#rs1,#rs2,#rs3,#rs4').forEach(x=>x.style.display='none')};
@@ -579,7 +585,7 @@ function gAnim(btn,dark){
       Object.assign(gx.style,{position:'fixed',left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px',background:dark?'#0b0f10':'#fff',borderRadius:'99px',zIndex:95,boxSizing:'border-box'});
       gx.append(sp);document.body.append(gx);gsap.to(sp,{opacity:0,duration:.3,delay:.2});
       return fin(gsap.to(gx,{left:0,top:0,width:innerWidth,height:innerHeight,borderRadius:0,backgroundColor:'#f4efe9',duration:.85,ease:'power3.inOut'}))},
-    fade(){gsap.to(gx,{opacity:0,duration:.45,onComplete:()=>gx.remove()});gsap.from(topPg()===document.body?[]:topPg().querySelectorAll('.lg>*'),{y:24,opacity:0,duration:.6,stagger:.08,ease:'power3.out'})},
+    fade(){gsap.to(gx,{opacity:0,duration:.45,onComplete:()=>gx.remove()});popIn(topPg()===document.body?[]:topPg().querySelectorAll('.lg>*'))},
     async fail(text,slot){
       spin&&spin.kill();
       const S=slot.getBoundingClientRect(),B=btn.getBoundingClientRect(),bx=B.left+B.width/2,by=B.top+B.height/2;
@@ -617,6 +623,7 @@ q('#sgf .btn').onclick=e=>{const b=e.currentTarget;return run(b,sgF,async()=>{
     if((await getDoc(doc(db,'usernames',un))).exists())throw{code:'app/username-taken'};
     if(!em)throw{code:'app/email-empty'};
     if(!MAIL.test(em))throw{code:'auth/invalid-email'};
+    if((await fetchSignInMethodsForEmail(auth,em).catch(()=>[])).length)throw{code:'auth/email-already-in-use'};
     if(ph&&!/^\+?[0-9\s-]{7,15}$/.test(ph))throw{code:'app/phone'};
     if(!p1)throw{code:'app/pw-new-empty'};
     if(p1.length<6)throw{code:'auth/weak-password'};
@@ -655,8 +662,9 @@ let warmed=false;
 const warm=()=>{if(warmed||typeof html2canvas==='undefined')return;warmed=true;
   const go=()=>html2canvas(q('#rs_mail'),{scale:.3,logging:false,backgroundColor:null}).catch(()=>{});
   window.requestIdleCallback?requestIdleCallback(go,{timeout:2500}):setTimeout(go,1500)};
-function loginIn(){const els=[...lgF.children];els.forEach(x=>x.style.transition='none');
-  gsap.from(els,{y:28,opacity:0,duration:.7,stagger:.08,delay:.1,ease:'power3.out',onComplete:()=>els.forEach(x=>{x.style.transition=''})})}
+function popIn(els,delay){els=[...els];els.forEach(x=>{x.style.transition='none'});
+  gsap.from(els,{y:24,opacity:0,duration:.6,stagger:.08,delay:delay||0,ease:'power3.out',onComplete:()=>els.forEach(x=>{x.style.transition='';gsap.set(x,{clearProps:'transform'})})})}
+function loginIn(){popIn(lgF.children,.1)}
 const showRs2=()=>{q('#rs_mail').textContent=rsMail;rs2.style.display='flex';warm();q('#rs_ok').style.display='';
   q('#rs_st').textContent='Open the link in your Gmail (check Spam too) and set your new password on the page that opens. Then come back here and tap the button below.'};
 const showRs3=d=>{rsCode=d.code;rsMail=d.email;q('#rs3_mail').textContent=d.email;rs3.style.display='flex';warm()};
@@ -696,7 +704,7 @@ async function dust(el,onHide){
 
 q('.forgot').onclick=e=>{const b=e.currentTarget;if(b.dataset.busy)return;b.dataset.busy=1;
   q('#rs_email').value=lgF.username.value.trim();
-  lineAnim(b,Promise.resolve(),()=>{rs1.style.display='flex';gsap.from('#rs1 .lg>*',{y:20,opacity:0,duration:.6,stagger:.08,delay:.1,ease:'power3.out'})}).finally(()=>{delete b.dataset.busy})};
+  lineAnim(b,Promise.resolve(),()=>{rs1.style.display='flex';popIn(document.querySelectorAll('#rs1 .lg>*'),.1)}).finally(()=>{delete b.dataset.busy})};
 q('#rs_back').onclick=e=>{const b=e.currentTarget;if(b.dataset.busy)return;b.dataset.busy=1;lineAnim(b,Promise.resolve(),()=>{resetRs();loginIn()}).finally(()=>{delete b.dataset.busy})};
 q('#rs_send').onclick=e=>{const b=e.currentTarget;return run(b,rsF1,async()=>{
   const em=q('#rs_email').value.trim().toLowerCase();
@@ -767,7 +775,7 @@ if(VERIFIED){history.replaceState(null,'',location.pathname);skipIntro();
  if(qs.get('mode')==='resetPassword'&&code){
   verifyPasswordResetCode(auth,code).then(async em=>{
     try{localStorage.setItem(RK,JSON.stringify({code,email:em.toLowerCase()}))}catch(e){}
-    history.replaceState(null,'',location.pathname);await introDone();rs4.style.display='flex';gsap.from('#rs4 .lg>*',{y:20,opacity:0,duration:.6,stagger:.08,ease:'power3.out'})
+    history.replaceState(null,'',location.pathname);await introDone();rs4.style.display='flex';popIn(document.querySelectorAll('#rs4 .lg>*'))
   }).catch(async()=>{history.replaceState(null,'',location.pathname);await introDone();say(lgF,'Reset link invalid or already used.')})}}
 
 // Back from Google registration = cancel; Enter key; logout; stay logged in
@@ -780,4 +788,4 @@ onAuthStateChanged(auth,async u=>{if(!u||working||pending||VERIFIED||GFLAG)retur
   catch(e){await signOut(auth)}});
 </script>
 </body>
-      </html>
+        </html>
