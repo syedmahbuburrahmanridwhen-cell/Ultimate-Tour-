@@ -440,11 +440,11 @@ import {initializeFirestore,doc,getDoc,runTransaction,serverTimestamp} from "htt
 const app=initializeApp({apiKey:"AIzaSyB7WRLBVRufPnlFck0dreWcU8-yWh9f7_0",authDomain:"ultimate-tour-1.firebaseapp.com",projectId:"ultimate-tour-1",storageBucket:"ultimate-tour-1.firebasestorage.app",messagingSenderId:"593726515356",appId:"1:593726515356:web:bafe179aed7d77015be559"});
 const auth=getAuth(app),db=initializeFirestore(app,{experimentalForceLongPolling:true}),q=s=>document.querySelector(s),v=i=>q('#su_'+i).value.trim();
 const lgF=q('#login .lg'),sgF=q('#sgf'),home=q('#home'),pwF=['#su_pw1','#su_pw2'].map(i=>q(i).closest('.field'));
-const MAIL=/^\S+@\S+\.\S+$/;
+const MAIL=/^\S+@\S+\.\S+$/,NAME=/^[\p{L}][\p{L}\p{M}\s.'-]{1,59}$/u;
 let pending=null,working=false,UI=false;
 const VERIFIED=new URLSearchParams(location.search).get('verified')==='1';
 let GFLAG=false;try{GFLAG=sessionStorage.getItem('ut_g')==='1';sessionStorage.removeItem('ut_g')}catch(e){}
-const E={'auth/invalid-credential':'Wrong email or password','auth/wrong-password':'Wrong email or password','auth/user-not-found':'No account with this email','auth/invalid-email':'Enter a valid email','auth/email-already-in-use':'Email already registered. Log in instead','auth/weak-password':'Password must be at least 6 characters','auth/too-many-requests':'Too many tries. Wait a bit and retry','auth/network-request-failed':'No internet connection','auth/unauthorized-domain':'Domain not authorized in Firebase','auth/unauthorized-continue-uri':'Domain not authorized in Firebase','app/username-taken':'This username is taken','app/not-verified':'Not verified yet. Open the Gmail link first','auth/invalid-action-code':'Link invalid or already used','auth/expired-action-code':'Link expired. Send a new one','app/no-profile':'Account not found. Create a new account','app/name':'Enter your full name','app/username':'Username: 3-20 letters, numbers, . or _','app/phone':'Enter a valid phone number','app/pw-match':'Passwords do not match','permission-denied':'Permission denied. Check Firestore rules'};
+const E={'auth/invalid-credential':'Wrong email or password','auth/wrong-password':'Wrong password','auth/user-not-found':'No account found','auth/invalid-email':'Enter a valid email','auth/email-already-in-use':'Email already registered. Log in instead','auth/weak-password':'Password must be at least 6 characters','auth/too-many-requests':'Too many tries. Wait a bit and retry','auth/network-request-failed':'No internet connection','auth/unauthorized-domain':'Domain not authorized in Firebase','auth/unauthorized-continue-uri':'Domain not authorized in Firebase','app/username-taken':'Username already taken. Try another','app/not-verified':'Not verified yet. Open the Gmail link first','auth/invalid-action-code':'Link invalid or already used','auth/expired-action-code':'Link expired. Send a new one','app/no-profile':'Account not found. Create a new account','app/name':'Enter a valid full name','app/name-empty':'Enter your full name','app/username-empty':'Enter your username','app/email-empty':'Enter your Gmail','app/pw-empty':'Enter your password','app/pw-new-empty':'Enter a password','app/pw2-empty':'Confirm your password','app/username':'Username: 3-20 letters, numbers, . or _','app/phone':'Enter a valid phone number','app/pw-match':'Passwords do not match','permission-denied':'Permission denied. Check Firestore rules'};
 const say=(root,t,ok)=>{let p=root.querySelector('.slot');if(!p){p=document.createElement('p');p.className='msg slot';root.querySelector('.btn').before(p)}p.textContent=t||'';p.style.clipPath='';p.style.color=ok?'#1e4d3a':'#d6452a'};
 const errText=e=>E[e.code]||'Something went wrong ('+(e.code||e.message)+')';
 async function failAnim(btn,root,text){const slot=root.querySelector('.slot');if(!slot){say(root,text);return}
@@ -528,8 +528,9 @@ async function makeProfile(u){
   return autoProfile(u)}
 q('#login .btn').onclick=e=>{const b=e.currentTarget;return run(b,lgF,async()=>{
   const em=lgF.username.value.trim(),pw=lgF.password.value;
+  if(!em)throw{code:'app/email-empty'};
   if(!MAIL.test(em))throw{code:'auth/invalid-email'};
-  if(!pw)throw{code:'auth/invalid-credential'};
+  if(!pw)throw{code:'app/pw-empty'};
   await animRun(b,async()=>{const {user}=await signInWithEmailAndPassword(auth,em,pw);
     if(!user.emailVerified)return user;
     return await getProfile(user)||await makeProfile(user)})},false)};
@@ -603,15 +604,20 @@ document.querySelectorAll('.gbtn').forEach(b=>b.onclick=()=>google(b));
 
 // Create account: makes the login, emails a verification link, and shows the verify page. Profile is saved only after verification.
 q('#sgf .btn').onclick=e=>{const b=e.currentTarget;return run(b,sgF,async()=>{
-  const name=v('name'),un=v('username').toLowerCase(),em=v('email'),ph=v('phone'),p1=q('#su_pw1').value;
-  if(name.length<2)throw{code:'app/name'};
-  if(!/^[a-z0-9_.]{3,20}$/.test(un))throw{code:'app/username'};
-  if(!MAIL.test(em))throw{code:'auth/invalid-email'};
-  if(ph&&!/^\+?[0-9\s-]{7,15}$/.test(ph))throw{code:'app/phone'};
-  if(p1.length<6)throw{code:'auth/weak-password'};
-  if(p1!==q('#su_pw2').value)throw{code:'app/pw-match'};
+  const name=v('name'),un=v('username').toLowerCase(),em=v('email'),ph=v('phone'),p1=q('#su_pw1').value,p2=q('#su_pw2').value;
   await animRun(b,async()=>{
+    if(!name)throw{code:'app/name-empty'};
+    if(!NAME.test(name))throw{code:'app/name'};
+    if(!un)throw{code:'app/username-empty'};
+    if(!/^[a-z0-9_.]{3,20}$/.test(un))throw{code:'app/username'};
     if((await getDoc(doc(db,'usernames',un))).exists())throw{code:'app/username-taken'};
+    if(!em)throw{code:'app/email-empty'};
+    if(!MAIL.test(em))throw{code:'auth/invalid-email'};
+    if(ph&&!/^\+?[0-9\s-]{7,15}$/.test(ph))throw{code:'app/phone'};
+    if(!p1)throw{code:'app/pw-new-empty'};
+    if(p1.length<6)throw{code:'auth/weak-password'};
+    if(!p2)throw{code:'app/pw2-empty'};
+    if(p1!==p2)throw{code:'app/pw-match'};
     const {user}=await createUserWithEmailAndPassword(auth,em,p1);
     mailP=sendEmailVerification(user);mailP.catch(()=>{});
     try{localStorage.setItem(PK,JSON.stringify({name,username:un,email:em.toLowerCase(),phone:ph}))}catch(e){}
@@ -690,6 +696,7 @@ q('.forgot').onclick=e=>{const b=e.currentTarget;if(b.dataset.busy)return;b.data
 q('#rs_back').onclick=e=>{const b=e.currentTarget;if(b.dataset.busy)return;b.dataset.busy=1;lineAnim(b,Promise.resolve(),()=>{resetRs();loginIn()}).finally(()=>{delete b.dataset.busy})};
 q('#rs_send').onclick=e=>{const b=e.currentTarget;return run(b,rsF1,async()=>{
   const em=q('#rs_email').value.trim().toLowerCase();
+  if(!em)throw{code:'app/email-empty'};
   if(!MAIL.test(em))throw{code:'auth/invalid-email'};
   await animRun(b,async()=>{await sendPasswordResetEmail(auth,em,ACS());try{localStorage.setItem('ut_rmail',em)}catch(x){}rsMail=em;T2.start(COOL);return 1},showRs2)},false)};
 q('#rs_ok').onclick=e=>{const b=e.currentTarget;return run(b,rsF2,async()=>{
@@ -707,7 +714,9 @@ q('#rs_x').onclick=e=>{const b=e.currentTarget;if(b.dataset.busy)return;b.datase
 q('#np_ok').onclick=e=>{const b=e.currentTarget;return run(b,rsF3,async()=>{
   const p1=q('#np1').value;
   if(!rsCode)throw{code:'auth/invalid-action-code'};
+  if(!p1)throw{code:'app/pw-new-empty'};
   if(p1.length<6)throw{code:'auth/weak-password'};
+  if(!q('#np2').value)throw{code:'app/pw2-empty'};
   if(p1!==q('#np2').value)throw{code:'app/pw-match'};
   await animRun(b,async()=>{await confirmPasswordReset(auth,rsCode,p1);rsClear();return 1},null,async()=>{
     const em=rsMail;rs1.style.display='none';rs2.style.display='none';
@@ -767,4 +776,4 @@ onAuthStateChanged(auth,async u=>{if(!u||working||pending||VERIFIED||GFLAG)retur
   catch(e){await signOut(auth)}});
 </script>
 </body>
-                                               </html>
+      </html>
