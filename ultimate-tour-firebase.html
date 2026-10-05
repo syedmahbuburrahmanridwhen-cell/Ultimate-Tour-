@@ -174,7 +174,7 @@ body{height:100%;margin:0;background:#fff;overflow:hidden}
 .w-b{position:relative;font:800 42px/1.1 var(--sans);margin:8px 0 18px;color:var(--lime)}
 .w-r{position:relative;display:flex;gap:10px}
 .wb{all:unset;box-sizing:border-box;flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 0;border-radius:99px;font:700 12px var(--mono);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .2s}
-.wb .ico{width:18px;height:18px}.wb.add{background:var(--lime);color:var(--ink)}.wb.out{background:linear-gradient(135deg,#2f7d5b,#1e4d3a);border:0;color:#fff;box-shadow:0 6px 16px rgba(30,77,58,.45)}.wb.out .ico{color:var(--lime)}
+.wb .ico{width:18px;height:18px}.wb.add{background:var(--lime);color:var(--ink)}.wb.out{background:var(--lime);border:0;color:var(--ink)}
 .hm-h{margin:8px 0 -6px;font:italic 500 25px var(--serif);color:var(--green)}
 .empty{display:grid;justify-items:center;gap:8px;padding:26px 16px;border:1.5px dashed rgba(11,15,16,.2);border-radius:22px;background:rgba(255,255,255,.55);color:#7a8386;font:500 13px var(--mono);text-align:center}
 .empty p{margin:0}.empty .ico{width:30px;height:30px;opacity:.6}
@@ -973,23 +973,21 @@ async function penalty(){
     T.style.top=(26+D+14)+'px';T.style.width=(w-42)+'px';
     nav.style.visibility='hidden';
     S.style.display='block';gsap.to(S,{opacity:1,duration:.6});
-    await tw(card,{left:cx-nr.width/2,top:cy-nr.height/2,duration:.8,ease});
-    // 3) bar -> card, red ball -> the "no" sign
+    // 3) in ONE smooth motion: the bar grows into the card while flying to the middle, the red ball becomes the "no" sign
     await Promise.all([
-      tw(IN,{opacity:0,duration:.3}),
-      tw(card,{left:cx-w/2,top:cy-h/2,width:w,height:h,borderRadius:30,duration:.7,ease}),
-      tw(ball,{left:(w-2-D)/2,top:26,width:D,height:D,borderRadius:D/2,duration:.7,ease})]);
+      tw(IN,{opacity:0,duration:.35,ease:'power1.out'}),
+      tw(card,{left:cx-w/2,top:cy-h/2,width:w,height:h,borderRadius:30,duration:1,ease}),
+      tw(ball,{left:(w-2-D)/2,top:26,width:D,height:D,borderRadius:D/2,duration:1,ease})]);
     gsap.fromTo(I,{opacity:0,scale:.5},{opacity:1,scale:1,duration:.5,ease:'back.out(2)'});
     gsap.fromTo(T,{opacity:0,y:10},{opacity:1,y:0,duration:.6,delay:.15});
     await wait(3200);
-    // 4) content fades, card -> nav bar, sign -> red ball, carried back to the bottom
+    // 4) content fades, then card shrinks straight back into the nav bar (sign -> red ball) in one motion
     gsap.to([T,I],{opacity:0,duration:.3});gsap.to(S,{opacity:0,duration:.7,delay:.2});
     await wait(250);
     await Promise.all([
-      tw(IN,{opacity:1,duration:.4,delay:.3}),
-      tw(card,{left:cx-nr.width/2,top:cy-nr.height/2,width:nr.width,height:nr.height,borderRadius:32,duration:.7,ease}),
-      tw(ball,{...rel,borderRadius:26,duration:.7,ease})]);
-    await tw(card,{left:nr.left-hr.left,top:nr.top-hr.top,duration:.8,ease});
+      tw(IN,{opacity:1,duration:.4,delay:.6,ease:'power1.in'}),
+      tw(card,{left:nr.left-hr.left,top:nr.top-hr.top,width:nr.width,height:nr.height,borderRadius:32,duration:1,ease}),
+      tw(ball,{...rel,borderRadius:26,duration:1,ease})]);
     nav.style.visibility='';card.remove();card=null;S.style.display='none';
     // 5) back to Home, ball green again
     nb.classList.remove('red');ballTo(0,.6);
@@ -1096,4 +1094,4 @@ if(VERIFIED){history.replaceState(null,'',location.pathname);skipIntro();
 
 </script>
 </body>
-                   </html>
+  </html>
