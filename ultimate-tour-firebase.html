@@ -195,17 +195,6 @@ body{height:100%;margin:0;background:#fff;overflow:hidden}
 #jamtx{position:absolute;left:20px;margin:0;opacity:0;text-align:center;color:var(--cream)}
 #jamtx b{display:block;font:italic 600 26px/1.1 var(--serif);letter-spacing:-.01em;margin-bottom:8px}
 #jamtx span{display:block;font:500 12px/1.6 var(--mono);color:rgba(244,239,233,.65)}
-
-/* @@OFFLINE - "404 Oops / No internet" page */
-#offline{position:absolute;inset:0;z-index:15;display:flex;flex-direction:column;align-items:center;justify-content:center;visibility:hidden;overflow:hidden;text-align:center;color:var(--ink);padding:calc(24px + env(safe-area-inset-top,0px)) 20px calc(24px + env(safe-area-inset-bottom,0px));background:radial-gradient(circle at 92% -4%,rgba(201,222,60,.32),transparent 46%),radial-gradient(circle at -8% 100%,rgba(30,77,58,.14),transparent 50%),var(--cream)}
-#of-art{width:min(92vw,400px);height:auto;overflow:visible;display:block;position:relative;z-index:1}
-.of-oops{position:relative;z-index:1;margin:2px 0 0;font:italic 600 clamp(40px,12vw,58px)/1 var(--serif);color:var(--green);letter-spacing:-.02em}
-.of-no{position:relative;z-index:1;margin:10px 0 0;font:800 clamp(24px,7vw,32px)/1.1 var(--sans);letter-spacing:-.03em}
-.of-sub{position:relative;z-index:1;margin:12px 0 0;max-width:300px;font:500 13px/1.7 var(--mono);color:#5d6568}
-.of-btn{all:unset;box-sizing:border-box;position:relative;z-index:1;margin-top:26px;padding:16px 36px;border-radius:99px;background:var(--ink);color:var(--lime);font:700 13px var(--mono);letter-spacing:.18em;text-transform:uppercase;cursor:pointer;-webkit-tap-highlight-color:transparent;box-shadow:0 10px 24px rgba(0,0,0,.12)}
-.of-lv{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden}
-.of-leaf{position:absolute;left:0;top:0;width:24px;height:16px;opacity:0;will-change:transform}
-.of-wind{position:absolute;left:0;top:0;width:280px;height:24px;opacity:0;overflow:visible}
 </style>
 </head>
 <body>
@@ -255,36 +244,6 @@ body{height:100%;margin:0;background:#fff;overflow:hidden}
 
   <!-- @@SIGNUP - form is built by the script, see @@SIGNUP in the first script -->
   <div id="signup"><form class="lg sg" id="sgf" onsubmit="return false"></form></div>
-  <!-- @@OFFLINE -->
-  <div id="offline" role="alert">
-    <div class="of-lv" id="of_lv"></div>
-    <svg id="of-art" viewBox="0 -14 388 334" aria-hidden="true">
-      <ellipse cx="194" cy="306" rx="150" ry="8" fill="rgba(11,15,16,.10)"/>
-      <g id="of_l1" fill="none" stroke="#0b0f10" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"><path d="M108 290V140L38 242H142"/></g>
-      <g id="of_l2" fill="none" stroke="#1e4d3a" stroke-width="26"><ellipse cx="194" cy="215" rx="44" ry="75"/></g>
-      <g id="of_l3" fill="none" stroke="#0b0f10" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"><path d="M316 290V140L246 242H350"/></g>
-      <g transform="translate(194 127)"><g id="of_p">
-        <path d="M6 -7H-30L-32 28" fill="none" stroke="#1d2733" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M-33 34H-46" stroke="#c9de3c" stroke-width="10" stroke-linecap="round"/>
-        <rect x="-7" y="-62" width="27" height="58" rx="13" fill="#ff6b4a" transform="rotate(-6 6 -4)"/>
-        <circle cx="2" cy="-76" r="12" fill="#f1c9a5"/>
-        <path d="M-10 -78C-10 -92 13 -93 14 -78C8 -84 -2 -83 -10 -78Z" fill="#0b0f10"/>
-        <path d="M4 -52L-8 -34L-23 -54" fill="none" stroke="#e5502f" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
-        <g transform="rotate(-10 -28 -62)"><rect x="-35" y="-74" width="13" height="23" rx="3.5" fill="#0b0f10"/><rect id="of_scr" x="-33" y="-72" width="9" height="19" rx="2" fill="#6f8a96"/></g>
-        <circle cx="-23" cy="-55" r="5" fill="#f1c9a5"/>
-        <g transform="translate(-30 -116)"><g id="of_b" style="filter:drop-shadow(0 6px 8px rgba(11,15,16,.2))">
-          <circle r="19" fill="#fff" stroke="rgba(11,15,16,.1)" stroke-width="1.5"/>
-          <g fill="none" stroke="#0b0f10" stroke-width="2.6" stroke-linecap="round"><path class="of_arc" d="M-11 -3.5a15 15 0 0 1 22 0"/><path class="of_arc" d="M-6.5 1.2a9 9 0 0 1 13 0"/></g>
-          <circle cy="6.5" r="2.2" fill="#0b0f10"/>
-          <path d="M-10 -10L10 10" stroke="#fff" stroke-width="7" stroke-linecap="round"/><path d="M-10 -10L10 10" stroke="#ff4b2e" stroke-width="3" stroke-linecap="round"/>
-        </g></g>
-      </g></g>
-    </svg>
-    <p class="of-oops">Oops!</p>
-    <p class="of-no">No internet</p>
-    <p class="of-sub">Check your Wi-Fi or mobile data. You'll be back in as soon as you're online.</p>
-    <button class="of-btn" id="of_retry" type="button">Try again</button>
-  </div>
   <!-- @@SIGNUP - burst transition layers -->
   <div id="xf"></div><div id="xc"></div><div id="fx"></div><i id="ub"></i>
 
@@ -349,8 +308,7 @@ const lab=$('#lab'),clk=$('#clk'),tw=$('#tw');
 const fmt=v=>{v=Math.round(v);return [v/3600|0,(v%3600)/60|0,v%60].map(p2).join(':')};
 const toC=(e,y)=>{const r=e.getBoundingClientRect();return y?innerHeight/2-r.top-r.height/2:innerWidth/2-r.left-r.width/2};
 let tl;
-window.AUTO={state:'wait',cb:null}; // 'home' = already logged in (open home straight behind the black screen), 'login' = show login, 'offline' = no internet page
-const q0=s=>document.querySelector(s);
+window.AUTO={state:'wait',cb:null}; // set by the module: 'home' = already logged in (open home straight after the intro), 'login' = show login
 function tick(){const t=tl.time();$('#tc').textContent=`TC 00:00:${p2(Math.floor(t))}:${p2(Math.floor((t%1)*60))}`;$('#bar').style.width=tl.progress()*100+'%'}
 function done(){dispatchEvent(new Event('loader:done'))}
 
@@ -438,10 +396,8 @@ function build(){
 
   // 9 — brief black, strips leave the opposite way; login boxes show, then texts float up top→bottom
   const cover=Y+1.7+.8+.45,go=cover+.02;
-  // black time is FIXED (no waiting): whatever the app knows right now decides the page. Still unknown = login page,
-  // and if the account turns out to be logged in a moment later the login button animation takes it to home.
-  tl.call(()=>{if(AUTO.state==='wait')AUTO.state='login'},null,cover-.02)
-    .call(()=>{if(AUTO.state==='offline')showOffline();else q0('#login').style.visibility='visible'},null,cover)
+  tl.call(()=>{if(AUTO.state!=='wait')return;tl.pause();const tm=setTimeout(()=>{AUTO.state='login';AUTO.cb()},5000);AUTO.cb=()=>{clearTimeout(tm);AUTO.cb=null;tl.play()}},null,cover-.02)
+    .set('#login',{visibility:'visible'},cover)
     .call(()=>{if(AUTO.state==='home'&&AUTO.show)AUTO.show()},null,cover+.01)
     .set('#hud',{autoAlpha:0},cover)
     .to('.band',{xPercent:i=>i<3?105:-105,duration:.7,stagger:i=>[0,2,4,1,3,5][i]*.07,ease:'power2.inOut'},go)
@@ -449,42 +405,6 @@ function build(){
     .fromTo('.field,.btn,.gbtn',{y:20,opacity:0},{y:0,opacity:1,duration:.8,ease:'power3.out',stagger:.1,clearProps:'transform'},go+.05)
     .fromTo('.tt',{y:14,opacity:0},{y:0,opacity:1,duration:.7,ease:'power3.out',stagger:(i,el)=>el.dataset.g*.14},go+.85);
 }
-
-// @@OFFLINE - internet check (runs during the loading animation) + the "404 Oops / No internet" page
-const netProbe=()=>new Promise(res=>{
-  if(navigator.onLine===false)return res(false);
-  const c=new AbortController(),t=setTimeout(()=>{res(true);c.abort()},3500);   // slow = weak signal, NOT offline
-  fetch('https://www.gstatic.com/generate_204',{mode:'no-cors',cache:'no-store',signal:c.signal}).then(()=>{clearTimeout(t);res(true)},()=>{clearTimeout(t);res(false)})});
-netProbe().then(ok=>{if(!ok&&AUTO.state==='wait')AUTO.state='offline'});
-const LEAFC=['#c9de3c','#1e4d3a','#8fb84a','#d8c56a','#6f9a52'];
-function gust(){const o=q0('#offline'),lv=q0('#of_lv');if(!o||o.style.visibility!=='visible')return;
-  const W=lv.clientWidth,H=lv.clientHeight,ls=[...lv.querySelectorAll('.of-leaf')].sort(()=>Math.random()-.5).slice(0,4+Math.floor(Math.random()*3));
-  lv.querySelectorAll('.of-wind').forEach((w,i)=>{const y=H*(.2+.17*i)+Math.random()*34;
-    gsap.timeline().fromTo(w,{x:-300,y,opacity:0},{x:W+40,duration:1.9,ease:'sine.inOut'},0).to(w,{opacity:.55,duration:.95,yoyo:true,repeat:1,ease:'none'},0)});
-  ls.forEach((l,i)=>{const y0=H*(.16+Math.random()*.55),amp=(Math.random()<.5?-1:1)*(18+Math.random()*30),dur=3+Math.random()*1.4,d=.2+i*.17+Math.random()*.25,rot=(Math.random()<.5?-1:1)*(300+Math.random()*420);
-    gsap.killTweensOf(l);gsap.set(l,{x:-40,y:y0,rotation:Math.random()*90,scale:.8+Math.random()*.6,opacity:0});
-    gsap.to(l,{x:W+50,duration:dur,delay:d,ease:'power1.inOut'});
-    gsap.to(l,{y:'+='+amp,duration:dur/3.2,delay:d,ease:'sine.inOut',yoyo:true,repeat:3});
-    gsap.to(l,{rotation:'+='+rot,duration:dur,delay:d,ease:'none'});
-    gsap.timeline({delay:d}).to(l,{opacity:1,duration:.3}).to(l,{opacity:0,duration:.5},dur-.5)});
-  gsap.fromTo('#of_b',{rotation:0},{rotation:-14,duration:.8,yoyo:true,repeat:1,ease:'sine.inOut'});
-  gsap.fromTo('#of_p',{rotation:0,svgOrigin:'0 0'},{rotation:-1.6,duration:.8,yoyo:true,repeat:1,ease:'sine.inOut'})}
-function windLoop(){gust();gsap.delayedCall(4.5+Math.random()*3,windLoop)}
-function showOffline(){const o=q0('#offline'),lv=q0('#of_lv');o.style.visibility='visible';
-  lv.innerHTML='<svg class="of-wind" viewBox="0 0 280 24"><path d="M0 12C40 -2 80 26 130 12S220 4 280 12" fill="none" stroke="#8b9497" stroke-width="2" stroke-linecap="round"/></svg>'.repeat(3)
-   +Array.from({length:8},(_,i)=>'<svg class="of-leaf" viewBox="-12 -8 24 16"><path d="M-11 0C-6 -7 5 -7 11 0C5 7 -6 7 -11 0Z" fill="'+LEAFC[i%5]+'"/><path d="M-11 0H9" stroke="rgba(11,15,16,.35)" stroke-width="1" fill="none"/></svg>').join('');
-  gsap.from(['#of_l1','#of_l2','#of_l3'],{y:-70,opacity:0,duration:1,stagger:.12,ease:'bounce.out',delay:.5});
-  gsap.from('#of_p',{y:-36,opacity:0,duration:.7,delay:1.25,ease:'back.out(1.6)'});
-  gsap.from('#of_b',{scale:0,opacity:0,duration:.6,delay:1.6,ease:'back.out(2.2)',svgOrigin:'0 0'});
-  gsap.from('.of-oops,.of-no,.of-sub,.of-btn',{y:22,opacity:0,duration:.7,stagger:.1,delay:1.2,ease:'power3.out',clearProps:'transform,opacity'});
-  gsap.to('#of_b',{y:-5,duration:1.3,yoyo:true,repeat:-1,ease:'sine.inOut',delay:2.2});
-  gsap.fromTo('.of_arc',{opacity:1},{opacity:.2,duration:.7,stagger:{each:.2,repeat:-1,yoyo:true},ease:'sine.inOut',delay:1.8});
-  gsap.to('#of_scr',{opacity:.5,duration:1.1,yoyo:true,repeat:-1,ease:'sine.inOut'});
-  gsap.delayedCall(2.4,windLoop)}
-q0('#of_retry').onclick=async()=>{const b=q0('#of_retry');if(b.dataset.b)return;b.dataset.b=1;b.textContent='Checking...';
-  if(await netProbe()){location.reload();return}
-  b.textContent='Still offline';gsap.fromTo(b,{x:-9},{x:0,duration:.7,ease:'elastic.out(1,.3)'});setTimeout(()=>{b.textContent='Try again';delete b.dataset.b},1500)};
-addEventListener('online',()=>{if(AUTO.state==='offline')netProbe().then(ok=>ok&&location.reload())});
 
 // @@LOGIN - password eye toggle on the login page
 const eye=$('#eye'),pw=$('#pw');
@@ -1079,4 +999,101 @@ async function penalty(){
     Q.length=0;locked=false}}
 
 // drag left/right on the home area: next page follows the finger, then settles (or snaps back).
-// Swiping while pages are still changing just adds to th
+// Swiping while pages are still changing just adds to the queue.
+{const H=q('#home');let sx=0,sy=0,st=0,lock='',side=0,W=1;
+ H.addEventListener('touchstart',e=>{const t=e.touches[0];sx=t.clientX;sy=t.clientY;st=Date.now();side=0;W=H.clientWidth||1;
+  lock=(locked||e.target.closest('#nav'))?'no':(running||Q.length)?'anim':''},{passive:true});
+ H.addEventListener('touchmove',e=>{if(lock==='no'||lock==='anim')return;const t=e.touches[0],dx=t.clientX-sx,dy=t.clientY-sy;
+  if(!lock){if(Math.abs(dx)<8&&Math.abs(dy)<8)return;lock=Math.abs(dx)>Math.abs(dy)*1.2?'x':'y'}
+  if(lock!=='x')return;
+  const s2=dx<0?1:-1,nx=cur+s2,ok=nx>=0&&nx<PG.length,pc=dx/W*100,cl=Math.max(-100,Math.min(100,pc));
+  if(s2!==side){if(side&&PG[cur+side])hideP(cur+side);side=s2;if(ok){PG[nx].classList.add('on');put(nx,s2*100)}}
+  if(!ok){put(cur,pc/4);return}
+  put(cur,cl);put(nx,s2*100+cl)},{passive:true});
+ H.addEventListener('touchend',e=>{const t=e.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy;
+  if(lock==='x'){const nx=cur+(dx<0?1:-1),v=Math.abs(dx)/Math.max(1,Date.now()-st);
+   if(nx>=0&&nx<PG.length&&(Math.abs(dx)>W*.28||(v>.5&&Math.abs(dx)>30)))go(nx);else showTab(cur)}
+  else if(lock==='anim'&&Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.5){const nx=lastTarget()+(dx<0?1:-1);if(nx>=0&&nx<PG.length)go(nx)}},{passive:true});
+ H.addEventListener('touchcancel',()=>{if(lock==='x')showTab(cur)},{passive:true})}
+const toast=t=>{const e=q('#toast');e.textContent=t;e.classList.add('show');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('show'),2000)};
+document.querySelectorAll('[data-toast]').forEach(b=>b.onclick=()=>toast(b.dataset.toast));
+
+// ======================================================================
+// @@STARTUP   On page load: coming back from Firebase pages, Google reload, logout, auth state
+// ======================================================================
+// Came back from Firebase's reset page via the Continue button
+const skipIntro=()=>{const w=()=>{if(typeof tl!=='undefined'&&tl)tl.progress(1);else setTimeout(w,50)};w()};
+if(new URLSearchParams(location.search).get('reset')==='done'){history.replaceState(null,'',location.pathname);skipIntro();
+  introDone().then(()=>{let em='';try{em=localStorage.getItem('ut_rmail')||''}catch(x){}if(em)lgF.username.value=em;noForgot();say(lgF,'Password changed. Please log in.',1);loginIn()})}
+// Phone browser reloaded the page while Google's account page was open: stay on login (no intro), and finish the login if it went through
+if(GFLAG&&!VERIFIED){skipIntro();
+  (async()=>{await auth.authStateReady();await introDone();const u=auth.currentUser;
+    if(!u){say(lgF,'Google sign-in not completed. Try again.');return}
+    if(!u.emailVerified){showVerify(u);return}
+    working=true;try{await finishGoogle(q('#login .gbtn'),u)}catch(e){say(lgF,E[e.code]||'Login could not finish ('+(e.code||e.message)+'). Tap Continue with Google again.')}finally{working=false}})()}
+// Back from Google registration = cancel; Enter key; logout; stay logged in
+q('#back').addEventListener('click',()=>{if(pending){signOut(auth);resetSignup()}});
+for(const f of [lgF,sgF])f.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT'){e.preventDefault();f.querySelector('.btn').click()}});
+q('#h_out').onclick=async()=>{await signOut(auth);location.reload()};
+onAuthStateChanged(auth,async u=>{
+  if(!u){if(AUTO.state==='wait')settle('login');return}
+  if(working||pending||VERIFIED||GFLAG)return;
+  try{const p=u.emailVerified?await getProfile(u):null;
+    // already logged in: tell the intro to open home directly (no login page flash)
+    if(AUTO.state==='wait'){if(p){settle('home',p);return}settle('login')}
+    await introDone();if(working)return;
+    if(p)enter(p);else if(!u.emailVerified)showVerify(u);else enter(await makeProfile(u))}
+  catch(e){if(AUTO.state==='wait')settle('login');if(!/unavailable|network/.test(e.code||''))await signOut(auth)}});
+
+
+// ======================================================================
+// @@DORMANT   INACTIVE until a domain is bought and Firebase "Customize action URL" is saved
+//   Yes/No page, in-app new password page, link-verified flow, ?mode=resetPassword handler.
+// ======================================================================
+const VACS=()=>({url:location.origin+location.pathname+'?verified=1'});
+q('#np_ok').onclick=e=>{const b=e.currentTarget;return run(b,rsF3,async()=>{
+  const p1=q('#np1').value;
+  if(!rsCode)throw{code:'auth/invalid-action-code'};
+  if(!p1)throw{code:'app/pw-new-empty'};
+  if(p1.length<6)throw{code:'auth/weak-password'};
+  if(!q('#np2').value)throw{code:'app/pw2-empty'};
+  if(p1!==q('#np2').value)throw{code:'app/pw-match'};
+  const em=rsMail;
+  await animRun(b,async()=>{await confirmPasswordReset(auth,rsCode,p1);rsClear();return 1},()=>{resetRs();lgF.username.value=em;lgF.password.value='';noForgot();say(lgF,'Password changed. Please log in.',1);loginIn()})},false)};
+q('#rs4_go').onclick=e=>{const b=e.currentTarget;return run(b,rsF4,async()=>{
+  await animRun(b,async()=>{const d=rsSaved();if(!d)throw{code:'auth/invalid-action-code'};await verifyPasswordResetCode(auth,d.code);return d},showRs3)},false)};
+const rsChoice=c=>{const d=rsSaved();if(d){try{localStorage.setItem(RK,JSON.stringify({...d,choice:c}))}catch(e){}}};
+q('#rs4_yes').onclick=()=>{rsChoice('yes');gsap.to(rsF4,{opacity:0,duration:.25,onComplete:()=>{
+  q('#rs4_q').textContent='Great. Now go back to the Ultimate Tour app and tap Verify to enter your new password. Cannot find it? Continue here.';
+  q('#rs4_yes').style.display='none';q('#rs4_no').style.display='none';q('#rs4_go').style.display='';gsap.to(rsF4,{opacity:1,duration:.4})}})};
+q('#rs4_no').onclick=()=>{rsChoice('no');
+  gsap.to(rs4,{opacity:0,duration:.4,onComplete:()=>{rs4.style.display='none';gsap.set(rs4,{opacity:1});lgF.password.value='';say(lgF,'No changes were made to your password.',1);loginIn()}})};
+addEventListener('storage',e=>{try{if(e.key===RK&&e.newValue&&JSON.parse(e.newValue).choice&&rs2.style.display==='flex')q('#rs_st').textContent='Done on the link page. Tap the button below to continue.'}catch(x){}});
+// Came back from Firebase's email-verified page: Create box spins, then expands into the home page
+if(VERIFIED){history.replaceState(null,'',location.pathname);skipIntro();
+  (async()=>{
+    const until=f=>new Promise(r=>{const w=()=>f()?r():setTimeout(w,50);w()});
+    await auth.authStateReady();await introDone();
+    const u=auth.currentUser;
+    if(!u){say(lgF,'Email verified. Log in to continue.',1);loginIn();return}
+    try{await u.reload()}catch(x){}
+    if(!u.emailVerified){showVerify(u);return}
+    try{const d=JSON.parse(localStorage.getItem(PK)||'null');if(d){q('#su_name').value=d.name||'';q('#su_username').value=d.username||'';q('#su_email').value=d.email||'';q('#su_phone').value=d.phone||''}}catch(x){}
+    goSignup(q('#login .signup button'));
+    await until(sgOn);await new Promise(r=>setTimeout(r,1700));
+    working=true;
+    try{await animRun(q('#sgf .btn'),async()=>await getProfile(u)||await makeProfile(u),enter)}
+    catch(err){say(sgF,E[err.code]||'Something went wrong ('+(err.code||err.message)+')')}
+    finally{working=false}
+  })()}
+// Reset link opened (Firebase action URL set to this page): go straight to the new password page and tell the other tab
+{const qs=new URLSearchParams(location.search),code=qs.get('oobCode');
+ if(qs.get('mode')==='resetPassword'&&code){
+  verifyPasswordResetCode(auth,code).then(async em=>{
+    try{localStorage.setItem(RK,JSON.stringify({code,email:em.toLowerCase()}))}catch(e){}
+    history.replaceState(null,'',location.pathname);await introDone();rs4.style.display='flex';popIn(document.querySelectorAll('#rs4 .lg>*'))
+  }).catch(async()=>{history.replaceState(null,'',location.pathname);await introDone();say(lgF,'Reset link invalid or already used.')})}}
+
+</script>
+</body>
+                                                                                                  </html>
