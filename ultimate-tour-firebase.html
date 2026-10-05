@@ -187,9 +187,9 @@ body{height:100%;margin:0;background:#fff;overflow:hidden}
 #navball{position:absolute;z-index:0;top:6px;bottom:6px;left:6px;width:0;border-radius:26px;background:var(--lime);box-shadow:0 0 18px rgba(201,222,60,.5);transition:left .55s cubic-bezier(.34,1.2,.5,1),width .55s cubic-bezier(.34,1.2,.5,1),background .4s,box-shadow .4s}
 #navball.red{background:#ff3b30;box-shadow:0 0 20px rgba(255,59,48,.6)}
 #jamsc{position:absolute;inset:0;z-index:6;display:none;opacity:0;background:rgba(11,15,16,.6)}
-#jam{position:absolute;z-index:8;display:none;place-items:center;background:#ff3b30;box-shadow:0 0 36px rgba(255,59,48,.6);overflow:hidden}
-#jam svg{width:64px;height:64px;flex:none;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;opacity:0}
-#jamtx{position:absolute;z-index:8;left:50%;width:min(300px,80%);transform:translateX(-50%);display:none;opacity:0;text-align:center;color:#fff;font:600 15px/1.55 system-ui,"Noto Sans Bengali","Hind Siliguri",sans-serif;margin:0}
+#jam{position:absolute;z-index:8;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;box-sizing:border-box;padding:18px;background:#ff3b30;box-shadow:0 0 36px rgba(255,59,48,.6),inset 0 1px 0 rgba(255,255,255,.28);overflow:hidden}
+#jam svg{width:54px;height:54px;flex:none;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;opacity:0}
+#jamtx{flex:none;opacity:0;text-align:center;color:#fff;font:600 14px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;margin:0}
 </style>
 </head>
 <body>
@@ -245,7 +245,7 @@ body{height:100%;margin:0;background:#fff;overflow:hidden}
   <!-- @@HOME - home page after login: tabs hm0 Home, hm1 Tours, hm2 Results, hm3 Profile + glass nav bar -->
   <div id="home">
     <div id="toast"></div>
-    <div id="jamsc"></div><div id="jam"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg></div><p id="jamtx">এরকম করছো কেনো? কী সমস্যা? কোনো সমস্যা থাকলে বা কিছু জানতে চাইলে আমাকে বলো 🙄</p>
+    <div id="jamsc"></div><div id="jam"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg><p id="jamtx">Why are you doing this? What's the problem? If something is bothering you or you want to know anything, just tell me 🙄</p></div>
     <div class="hm-pg on" id="hm0"><div class="hm-sc">
       <header class="hm-top"><div class="hm-av" id="hm_av">P</div><div class="hm-who"><small>WELCOME BACK</small><b id="hm_user">Player</b></div>
         <div class="hm-ic"><button class="ib" type="button" aria-label="Notifications" data-toast="Notifications are coming soon"><svg class="ico" viewBox="0 0 24 24"><path d="M6 9a6 6 0 1 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg></button><button class="ib" type="button" aria-label="Messages" data-toast="Messages are coming soon"><svg class="ico" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4V5z"/></svg></button></div></header>
@@ -905,7 +905,7 @@ for(const [fm,id] of [[rsF1,'#rs_send'],[rsF3,'#np_ok']])fm.addEventListener('ke
 // Tab switch: pages sit side by side like a carousel. Right tab = old page leaves LEFT, new page arrives from RIGHT; left tab = reverse.
 // Every tap goes into a queue and the pages change ONE BY ONE (faster when many are waiting), so animations never overlap.
 // If 10 taps are waiting (spam): finish the next page, stop, go Home, then the red "stop" animation plays and input is locked.
-let cur=0;const SLIDE={d:.55,e:'power3.out'},LIM=10;
+let cur=0;const SLIDE={d:.38,e:'power3.out'},LIM=10;
 const PG=[...document.querySelectorAll('.hm-pg')],X=PG.map(()=>0),TW=PG.map(()=>null),DONE=PG.map(()=>null);
 const put=(i,x)=>{X[i]=x;PG[i].style.transform='translate3d('+x+'%,0,0)'};
 const hideP=i=>{if(TW[i])TW[i].kill();TW[i]=null;if(DONE[i]){DONE[i]();DONE[i]=null}PG[i].classList.remove('on');X[i]=0;PG[i].style.transform=''};
@@ -916,7 +916,7 @@ function ballTo(n,d){const items=[...document.querySelectorAll('#nav .nv')],nb=q
   items.forEach((b,i)=>b.classList.toggle('on',i===n));
   nb.style.transitionDuration=d?d+'s':'';nb.style.left=(bt.offsetLeft+2)+'px';nb.style.width=(bt.offsetWidth-4)+'px'}
 function showTab(n,instant,d){
-  d=d||SLIDE.d;ballTo(n,instant?0:Math.max(.3,d));
+  d=d||SLIDE.d;if(instant)ballTo(n,0);
   if(instant){PG.forEach((p,i)=>{hideP(i);if(i===n)p.classList.add('on')});cur=n;Q.length=0;return Promise.resolve()}
   const old=cur,dir=n>old?1:n<old?-1:0;cur=n;
   let parked=false;
@@ -933,11 +933,12 @@ function showTab(n,instant,d){
 const Q=[];let running=false,locked=false;
 const lastTarget=()=>Q.length?Q[Q.length-1]:cur;
 async function pump(){if(running)return;running=true;
-  while(Q.length){const n=Q.shift(),pend=Q.length;await showTab(n,false,pend>2?.26:pend>0?.36:SLIDE.d)}
+  while(Q.length){const n=Q.shift(),pend=Q.length;await showTab(n,false,pend>2?.2:pend>0?.28:SLIDE.d)}
   running=false;if(locked)await penalty()}
 function go(i){if(locked||i===lastTarget())return;
+  ballTo(i,.4);   // green ball goes to the tapped icon right away (it can change its mind mid-way)
   Q.push(i);
-  if(Q.length>=LIM){locked=true;Q.splice(1)}   // too many: keep only the very next page, then stop
+  if(Q.length>=LIM){locked=true;Q.splice(1);ballTo(Q[0],.4)}   // too many: keep only the very next page, then stop
   pump()}
 document.querySelectorAll('#nav .nv').forEach((b,i)=>b.onclick=()=>{if(locked)return;try{navigator.vibrate&&navigator.vibrate(8)}catch(x){}go(i)});
 
@@ -947,37 +948,37 @@ const tw=(el,v)=>new Promise(r=>gsap.to(el,{...v,onComplete:r}));
 async function penalty(){
   const nav=q('#nav'),nb=q('#navball'),H=q('#home'),J=q('#jam'),S=q('#jamsc'),T=q('#jamtx'),I=q('#jam svg');
   try{
-    if(cur!==0)await showTab(0,false,.5);
+    if(cur!==0){ballTo(0,.45);await showTab(0,false,.4)}
     await wait(150);
     // 1) green ball -> middle of the nav bar, turns red
     document.querySelectorAll('#nav .nv').forEach(b=>b.classList.remove('on'));
     nb.style.transitionDuration='.6s';nb.style.left=((nav.clientWidth-nb.offsetWidth)/2)+'px';nb.classList.add('red');
     await wait(750);
     // 2) red ball -> middle of the screen
-    const hr=H.getBoundingClientRect(),br=nb.getBoundingClientRect(),D=132;
+    const hr=H.getBoundingClientRect(),br=nb.getBoundingClientRect();
     const r0={left:br.left-hr.left,top:br.top-hr.top,width:br.width,height:br.height};
-    const cx=hr.width/2,cy=hr.height/2-36;
-    gsap.set(J,{display:'grid',left:r0.left,top:r0.top,width:r0.width,height:r0.height,borderRadius:26,opacity:1});
+    const w=Math.min(320,hr.width-40),h=Math.round(w/1.586)+12,cx=hr.width/2,cy=hr.height/2-20;
+    T.style.width=(w-36)+'px';
+    gsap.set(J,{display:'flex',left:r0.left,top:r0.top,width:r0.width,height:r0.height,borderRadius:26,opacity:1});
     nb.style.visibility='hidden';
     S.style.display='block';gsap.to(S,{opacity:1,duration:.6});
     await tw(J,{left:cx-r0.width/2,top:cy-r0.height/2,duration:.75,ease:'power3.inOut'});
-    // 3) grows into a big circle with the "no" sign + message
-    await tw(J,{left:cx-D/2,top:cy-D/2,width:D,height:D,borderRadius:D/2,duration:.6,ease:'back.out(1.5)'});
-    T.style.display='block';T.style.top=(cy+D/2+18)+'px';
-    gsap.fromTo(I,{opacity:0,scale:.4},{opacity:1,scale:1,duration:.5,ease:'back.out(2)'});
-    await tw(T,{opacity:1,duration:.5});
+    // 3) grows into a card-shaped box; the sign + message float up inside it
+    await tw(J,{left:cx-w/2,top:cy-h/2,width:w,height:h,borderRadius:24,duration:.6,ease:'back.out(1.3)'});
+    gsap.fromTo(I,{opacity:0,y:14,scale:.6},{opacity:1,y:0,scale:1,duration:.55,ease:'back.out(2)'});
+    await tw(T,{opacity:1,duration:.5,delay:.12});
     await wait(3000);
-    // 4) text + sign fade, circle shrinks back to the ball and returns to the nav bar
+    // 4) content fades, box shrinks back to the ball and returns to the nav bar
     gsap.to([T,I],{opacity:0,duration:.3});gsap.to(S,{opacity:0,duration:.6});
     await wait(250);
     await tw(J,{left:cx-r0.width/2,top:cy-r0.height/2,width:r0.width,height:r0.height,borderRadius:26,duration:.5,ease:'power3.inOut'});
     await tw(J,{left:r0.left,top:r0.top,duration:.7,ease:'power3.inOut'});
-    nb.style.visibility='';J.style.display='none';T.style.display='none';S.style.display='none';
+    nb.style.visibility='';J.style.display='none';S.style.display='none';
     // 5) back to Home, ball green again
     nb.classList.remove('red');ballTo(0,.6);
     await wait(700);
   }finally{
-    J.style.display=T.style.display=S.style.display='none';nb.style.visibility='';nb.classList.remove('red');ballTo(cur,.4);
+    J.style.display=S.style.display='none';nb.style.visibility='';nb.classList.remove('red');gsap.set([T,I],{clearProps:'all'});ballTo(cur,.4);
     Q.length=0;locked=false}}
 
 // drag left/right on the home area: next page follows the finger, then settles (or snaps back).
@@ -1078,4 +1079,4 @@ if(VERIFIED){history.replaceState(null,'',location.pathname);skipIntro();
 
 </script>
 </body>
-                                           </html>
+    </html>
