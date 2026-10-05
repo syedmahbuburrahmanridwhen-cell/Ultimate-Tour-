@@ -184,7 +184,12 @@ body{height:100%;margin:0;background:#fff;overflow:hidden}
 .nv{all:unset;position:relative;z-index:1;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 0 9px;cursor:pointer;color:#8b9497;-webkit-tap-highlight-color:transparent;transition:color .35s}
 .nv .ico{width:24px;height:24px;transition:transform .5s cubic-bezier(.34,1.56,.64,1)}.nv span{font:700 9.5px var(--mono);letter-spacing:.14em;text-transform:uppercase}
 .nv.on{color:var(--ink)}.nv.on .ico{transform:translateY(-1px) scale(1.1)}
-#navball{position:absolute;z-index:0;top:6px;bottom:6px;left:6px;width:0;border-radius:26px;background:var(--lime);box-shadow:0 0 18px rgba(201,222,60,.5);transition:left .55s cubic-bezier(.34,1.2,.5,1),width .55s cubic-bezier(.34,1.2,.5,1)}
+#navball{position:absolute;z-index:0;top:6px;bottom:6px;left:6px;width:0;border-radius:26px;background:var(--lime);box-shadow:0 0 18px rgba(201,222,60,.5);transition:left .55s cubic-bezier(.34,1.2,.5,1),width .55s cubic-bezier(.34,1.2,.5,1),background .4s,box-shadow .4s}
+#navball.red{background:#ff3b30;box-shadow:0 0 20px rgba(255,59,48,.6)}
+#jamsc{position:absolute;inset:0;z-index:6;display:none;opacity:0;background:rgba(11,15,16,.6)}
+#jam{position:absolute;z-index:8;display:none;place-items:center;background:#ff3b30;box-shadow:0 0 36px rgba(255,59,48,.6);overflow:hidden}
+#jam svg{width:64px;height:64px;flex:none;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;opacity:0}
+#jamtx{position:absolute;z-index:8;left:50%;width:min(300px,80%);transform:translateX(-50%);display:none;opacity:0;text-align:center;color:#fff;font:600 15px/1.55 system-ui,"Noto Sans Bengali","Hind Siliguri",sans-serif;margin:0}
 </style>
 </head>
 <body>
@@ -240,6 +245,7 @@ body{height:100%;margin:0;background:#fff;overflow:hidden}
   <!-- @@HOME - home page after login: tabs hm0 Home, hm1 Tours, hm2 Results, hm3 Profile + glass nav bar -->
   <div id="home">
     <div id="toast"></div>
+    <div id="jamsc"></div><div id="jam"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg></div><p id="jamtx">এরকম করছো কেনো? কী সমস্যা? কোনো সমস্যা থাকলে বা কিছু জানতে চাইলে আমাকে বলো 🙄</p>
     <div class="hm-pg on" id="hm0"><div class="hm-sc">
       <header class="hm-top"><div class="hm-av" id="hm_av">P</div><div class="hm-who"><small>WELCOME BACK</small><b id="hm_user">Player</b></div>
         <div class="hm-ic"><button class="ib" type="button" aria-label="Notifications" data-toast="Notifications are coming soon"><svg class="ico" viewBox="0 0 24 24"><path d="M6 9a6 6 0 1 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg></button><button class="ib" type="button" aria-label="Messages" data-toast="Messages are coming soon"><svg class="ico" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4V5z"/></svg></button></div></header>
@@ -896,38 +902,89 @@ for(const [fm,id] of [[rsF1,'#rs_send'],[rsF3,'#np_ok']])fm.addEventListener('ke
 // @@PAGE-HOME   Home page: tabs (Home, Tours, Results, Profile), glass nav bar with sliding ball, toast
 //   HTML: <!-- @@HOME -->  CSS: /* @@HOME */  Filled by enter() in @@DATA.
 // ======================================================================
-// Tab switch: pages sit side by side like a carousel. Only the leaving page and the arriving page are ever visible.
-// Right tab = old page leaves LEFT, new page arrives from RIGHT. Left tab = the reverse. Finger drag follows live.
-// Positions are kept in our own array X (percent) so nothing depends on GSAP's cache.
-let cur=0;const SLIDE={d:.55,e:'power3.out'};
-const PG=[...document.querySelectorAll('.hm-pg')],X=PG.map(()=>0),TW=PG.map(()=>null);
+// Tab switch: pages sit side by side like a carousel. Right tab = old page leaves LEFT, new page arrives from RIGHT; left tab = reverse.
+// Every tap goes into a queue and the pages change ONE BY ONE (faster when many are waiting), so animations never overlap.
+// If 10 taps are waiting (spam): finish the next page, stop, go Home, then the red "stop" animation plays and input is locked.
+let cur=0;const SLIDE={d:.55,e:'power3.out'},LIM=10;
+const PG=[...document.querySelectorAll('.hm-pg')],X=PG.map(()=>0),TW=PG.map(()=>null),DONE=PG.map(()=>null);
 const put=(i,x)=>{X[i]=x;PG[i].style.transform='translate3d('+x+'%,0,0)'};
-const hideP=i=>{if(TW[i])TW[i].kill();TW[i]=null;PG[i].classList.remove('on');X[i]=0;PG[i].style.transform=''};
-const busy=()=>TW.some(Boolean);
-function move(i,to,dur){if(TW[i])TW[i].kill();const o={x:X[i]};
+const hideP=i=>{if(TW[i])TW[i].kill();TW[i]=null;if(DONE[i]){DONE[i]();DONE[i]=null}PG[i].classList.remove('on');X[i]=0;PG[i].style.transform=''};
+function move(i,to,dur){return new Promise(res=>{if(TW[i])TW[i].kill();if(DONE[i])DONE[i]();DONE[i]=res;const o={x:X[i]};
   TW[i]=gsap.to(o,{x:to,duration:dur,ease:SLIDE.e,onUpdate:()=>put(i,o.x),
-    onComplete:()=>{TW[i]=null;if(i===cur){X[i]=0;PG[i].style.transform=''}else hideP(i)}})}
-function showTab(n,instant){
-  const items=[...document.querySelectorAll('#nav .nv')];
+    onComplete:()=>{TW[i]=null;DONE[i]=null;if(i===cur){X[i]=0;PG[i].style.transform=''}else hideP(i);res()}})})}
+function ballTo(n,d){const items=[...document.querySelectorAll('#nav .nv')],nb=q('#navball'),bt=items[n];
   items.forEach((b,i)=>b.classList.toggle('on',i===n));
-  const nb=q('#navball'),bt=items[n];nb.style.left=(bt.offsetLeft+2)+'px';nb.style.width=(bt.offsetWidth-4)+'px';
-  if(instant){PG.forEach((p,i)=>{hideP(i);if(i===n)p.classList.add('on')});cur=n;return}
+  nb.style.transitionDuration=d?d+'s':'';nb.style.left=(bt.offsetLeft+2)+'px';nb.style.width=(bt.offsetWidth-4)+'px'}
+function showTab(n,instant,d){
+  d=d||SLIDE.d;ballTo(n,instant?0:Math.max(.3,d));
+  if(instant){PG.forEach((p,i)=>{hideP(i);if(i===n)p.classList.add('on')});cur=n;Q.length=0;return Promise.resolve()}
   const old=cur,dir=n>old?1:n<old?-1:0;cur=n;
   let parked=false;
   if(!PG[n].classList.contains('on')){PG[n].classList.add('on');put(n,(dir||1)*100);parked=true}
   const jobs=[[n,0]];
   PG.forEach((p,i)=>{if(i===n||!p.classList.contains('on'))return;
     const side=i===old?-dir:(X[i]<0?-1:1);
-    if(parked&&i!==old&&side===dir){hideP(i);return}   // never let a third page collide with the arriving one
+    if(parked&&i!==old&&side===dir){hideP(i);return}
     jobs.push([i,side*100])});
-  const far=Math.max(...jobs.map(([i,t])=>Math.abs(t-X[i]))),dur=SLIDE.d*(.4+.6*Math.min(1,far/100));
-  jobs.forEach(([i,t])=>move(i,t,dur))}
-document.querySelectorAll('#nav .nv').forEach((b,i)=>b.onclick=()=>{try{navigator.vibrate&&navigator.vibrate(8)}catch(x){}showTab(i)});
+  const far=Math.max(...jobs.map(([i,t])=>Math.abs(t-X[i]))),dur=d*(.4+.6*Math.min(1,far/100));
+  return Promise.all(jobs.map(([i,t])=>move(i,t,dur)))}
+
+// ---- tap queue
+const Q=[];let running=false,locked=false;
+const lastTarget=()=>Q.length?Q[Q.length-1]:cur;
+async function pump(){if(running)return;running=true;
+  while(Q.length){const n=Q.shift(),pend=Q.length;await showTab(n,false,pend>2?.26:pend>0?.36:SLIDE.d)}
+  running=false;if(locked)await penalty()}
+function go(i){if(locked||i===lastTarget())return;
+  Q.push(i);
+  if(Q.length>=LIM){locked=true;Q.splice(1)}   // too many: keep only the very next page, then stop
+  pump()}
+document.querySelectorAll('#nav .nv').forEach((b,i)=>b.onclick=()=>{if(locked)return;try{navigator.vibrate&&navigator.vibrate(8)}catch(x){}go(i)});
+
+// ---- "stop spamming" animation
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+const tw=(el,v)=>new Promise(r=>gsap.to(el,{...v,onComplete:r}));
+async function penalty(){
+  const nav=q('#nav'),nb=q('#navball'),H=q('#home'),J=q('#jam'),S=q('#jamsc'),T=q('#jamtx'),I=q('#jam svg');
+  try{
+    if(cur!==0)await showTab(0,false,.5);
+    await wait(150);
+    // 1) green ball -> middle of the nav bar, turns red
+    document.querySelectorAll('#nav .nv').forEach(b=>b.classList.remove('on'));
+    nb.style.transitionDuration='.6s';nb.style.left=((nav.clientWidth-nb.offsetWidth)/2)+'px';nb.classList.add('red');
+    await wait(750);
+    // 2) red ball -> middle of the screen
+    const hr=H.getBoundingClientRect(),br=nb.getBoundingClientRect(),D=132;
+    const r0={left:br.left-hr.left,top:br.top-hr.top,width:br.width,height:br.height};
+    const cx=hr.width/2,cy=hr.height/2-36;
+    gsap.set(J,{display:'grid',left:r0.left,top:r0.top,width:r0.width,height:r0.height,borderRadius:26,opacity:1});
+    nb.style.visibility='hidden';
+    S.style.display='block';gsap.to(S,{opacity:1,duration:.6});
+    await tw(J,{left:cx-r0.width/2,top:cy-r0.height/2,duration:.75,ease:'power3.inOut'});
+    // 3) grows into a big circle with the "no" sign + message
+    await tw(J,{left:cx-D/2,top:cy-D/2,width:D,height:D,borderRadius:D/2,duration:.6,ease:'back.out(1.5)'});
+    T.style.display='block';T.style.top=(cy+D/2+18)+'px';
+    gsap.fromTo(I,{opacity:0,scale:.4},{opacity:1,scale:1,duration:.5,ease:'back.out(2)'});
+    await tw(T,{opacity:1,duration:.5});
+    await wait(3000);
+    // 4) text + sign fade, circle shrinks back to the ball and returns to the nav bar
+    gsap.to([T,I],{opacity:0,duration:.3});gsap.to(S,{opacity:0,duration:.6});
+    await wait(250);
+    await tw(J,{left:cx-r0.width/2,top:cy-r0.height/2,width:r0.width,height:r0.height,borderRadius:26,duration:.5,ease:'power3.inOut'});
+    await tw(J,{left:r0.left,top:r0.top,duration:.7,ease:'power3.inOut'});
+    nb.style.visibility='';J.style.display='none';T.style.display='none';S.style.display='none';
+    // 5) back to Home, ball green again
+    nb.classList.remove('red');ballTo(0,.6);
+    await wait(700);
+  }finally{
+    J.style.display=T.style.display=S.style.display='none';nb.style.visibility='';nb.classList.remove('red');ballTo(cur,.4);
+    Q.length=0;locked=false}}
+
 // drag left/right on the home area: next page follows the finger, then settles (or snaps back).
-// Swiping while a slide is still running works too: it just starts the next slide from where the pages are.
+// Swiping while pages are still changing just adds to the queue.
 {const H=q('#home');let sx=0,sy=0,st=0,lock='',side=0,W=1;
  H.addEventListener('touchstart',e=>{const t=e.touches[0];sx=t.clientX;sy=t.clientY;st=Date.now();side=0;W=H.clientWidth||1;
-  lock=e.target.closest('#nav')?'no':busy()?'anim':''},{passive:true});
+  lock=(locked||e.target.closest('#nav'))?'no':(running||Q.length)?'anim':''},{passive:true});
  H.addEventListener('touchmove',e=>{if(lock==='no'||lock==='anim')return;const t=e.touches[0],dx=t.clientX-sx,dy=t.clientY-sy;
   if(!lock){if(Math.abs(dx)<8&&Math.abs(dy)<8)return;lock=Math.abs(dx)>Math.abs(dy)*1.2?'x':'y'}
   if(lock!=='x')return;
@@ -935,10 +992,10 @@ document.querySelectorAll('#nav .nv').forEach((b,i)=>b.onclick=()=>{try{navigato
   if(s2!==side){if(side&&PG[cur+side])hideP(cur+side);side=s2;if(ok){PG[nx].classList.add('on');put(nx,s2*100)}}
   if(!ok){put(cur,pc/4);return}
   put(cur,cl);put(nx,s2*100+cl)},{passive:true});
- H.addEventListener('touchend',e=>{const t=e.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy,nx=cur+(dx<0?1:-1);
-  if(lock==='x'){const v=Math.abs(dx)/Math.max(1,Date.now()-st);
-   showTab(nx>=0&&nx<PG.length&&(Math.abs(dx)>W*.28||(v>.5&&Math.abs(dx)>30))?nx:cur)}
-  else if(lock==='anim'){if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.5&&nx>=0&&nx<PG.length)showTab(nx)}},{passive:true});
+ H.addEventListener('touchend',e=>{const t=e.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy;
+  if(lock==='x'){const nx=cur+(dx<0?1:-1),v=Math.abs(dx)/Math.max(1,Date.now()-st);
+   if(nx>=0&&nx<PG.length&&(Math.abs(dx)>W*.28||(v>.5&&Math.abs(dx)>30)))go(nx);else showTab(cur)}
+  else if(lock==='anim'&&Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.5){const nx=lastTarget()+(dx<0?1:-1);if(nx>=0&&nx<PG.length)go(nx)}},{passive:true});
  H.addEventListener('touchcancel',()=>{if(lock==='x')showTab(cur)},{passive:true})}
 const toast=t=>{const e=q('#toast');e.textContent=t;e.classList.add('show');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('show'),2000)};
 document.querySelectorAll('[data-toast]').forEach(b=>b.onclick=()=>toast(b.dataset.toast));
@@ -1021,4 +1078,4 @@ if(VERIFIED){history.replaceState(null,'',location.pathname);skipIntro();
 
 </script>
 </body>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </html>
+                                           </html>
