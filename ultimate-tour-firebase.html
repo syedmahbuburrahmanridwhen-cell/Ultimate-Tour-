@@ -896,42 +896,49 @@ for(const [fm,id] of [[rsF1,'#rs_send'],[rsF3,'#np_ok']])fm.addEventListener('ke
 // @@PAGE-HOME   Home page: tabs (Home, Tours, Results, Profile), glass nav bar with sliding ball, toast
 //   HTML: <!-- @@HOME -->  CSS: /* @@HOME */  Filled by enter() in @@DATA.
 // ======================================================================
-// Tab switch: pages sit side by side like a carousel. Only the leaving page and the arriving page are ever visible,
-// the arriving page is always waiting just beside the screen, and the finger can drag it in live.
+// Tab switch: pages sit side by side like a carousel. Only the leaving page and the arriving page are ever visible.
+// Right tab = old page leaves LEFT, new page arrives from RIGHT. Left tab = the reverse. Finger drag follows live.
+// Positions are kept in our own array X (percent) so nothing depends on GSAP's cache.
 let cur=0;const SLIDE={d:.55,e:'power3.out'};
-const pgX=p=>+gsap.getProperty(p,'xPercent')||0;
+const PG=[...document.querySelectorAll('.hm-pg')],X=PG.map(()=>0),TW=PG.map(()=>null);
+const put=(i,x)=>{X[i]=x;PG[i].style.transform='translate3d('+x+'%,0,0)'};
+const hideP=i=>{if(TW[i])TW[i].kill();TW[i]=null;PG[i].classList.remove('on');X[i]=0;PG[i].style.transform=''};
+const busy=()=>TW.some(Boolean);
+function move(i,to,dur){if(TW[i])TW[i].kill();const o={x:X[i]};
+  TW[i]=gsap.to(o,{x:to,duration:dur,ease:SLIDE.e,onUpdate:()=>put(i,o.x),
+    onComplete:()=>{TW[i]=null;if(i===cur){X[i]=0;PG[i].style.transform=''}else hideP(i)}})}
 function showTab(n,instant){
-  const pgs=[...document.querySelectorAll('.hm-pg')],items=[...document.querySelectorAll('#nav .nv')];
+  const items=[...document.querySelectorAll('#nav .nv')];
   items.forEach((b,i)=>b.classList.toggle('on',i===n));
   const nb=q('#navball'),bt=items[n];nb.style.left=(bt.offsetLeft+2)+'px';nb.style.width=(bt.offsetWidth-4)+'px';
-  if(instant){pgs.forEach((p,i)=>{gsap.killTweensOf(p);gsap.set(p,{clearProps:'transform'});p.classList.toggle('on',i===n)});cur=n;return}
-  const dir=n>cur?1:n<cur?-1:0,to=pgs[n];cur=n;
-  // arriving page: if it is not already on screen, park it just beside the screen first
-  if(!to.classList.contains('on')||Math.abs(pgX(to))>=100){gsap.killTweensOf(to);to.classList.add('on');gsap.set(to,{xPercent:(dir||1)*100})}
-  // leaving pages keep the side they are already heading to (no sweeping back across the screen)
-  const jobs=[{p:to,i:n,x:0}];
-  pgs.forEach((p,i)=>{if(i===n||!p.classList.contains('on'))return;
-    const x=pgX(p);jobs.push({p,i,x:(x>.5?1:x<-.5?-1:-dir||-1)*100})});
-  const far=Math.max(...jobs.map(j=>Math.abs(j.x-pgX(j.p)))),dur=SLIDE.d*(.4+.6*Math.min(1,far/100));
-  jobs.forEach(({p,i,x})=>gsap.to(p,{xPercent:x,duration:dur,ease:SLIDE.e,force3D:true,overwrite:true,
-    onComplete:()=>{if(i===cur)gsap.set(p,{clearProps:'transform'});else{p.classList.remove('on');gsap.set(p,{clearProps:'transform'})}}}))}
+  if(instant){PG.forEach((p,i)=>{hideP(i);if(i===n)p.classList.add('on')});cur=n;return}
+  const old=cur,dir=n>old?1:n<old?-1:0;cur=n;
+  let parked=false;
+  if(!PG[n].classList.contains('on')){PG[n].classList.add('on');put(n,(dir||1)*100);parked=true}
+  const jobs=[[n,0]];
+  PG.forEach((p,i)=>{if(i===n||!p.classList.contains('on'))return;
+    const side=i===old?-dir:(X[i]<0?-1:1);
+    if(parked&&i!==old&&side===dir){hideP(i);return}   // never let a third page collide with the arriving one
+    jobs.push([i,side*100])});
+  const far=Math.max(...jobs.map(([i,t])=>Math.abs(t-X[i]))),dur=SLIDE.d*(.4+.6*Math.min(1,far/100));
+  jobs.forEach(([i,t])=>move(i,t,dur))}
 document.querySelectorAll('#nav .nv').forEach((b,i)=>b.onclick=()=>{try{navigator.vibrate&&navigator.vibrate(8)}catch(x){}showTab(i)});
-// drag left/right on the home area: the next page follows the finger, then settles (or snaps back)
-{const H=q('#home');let sx=0,sy=0,st=0,lock='',side=0,W=1,pgs=[];
- const hide=p=>{p.classList.remove('on');gsap.set(p,{clearProps:'transform'})};
- H.addEventListener('touchstart',e=>{const t=e.touches[0];sx=t.clientX;sy=t.clientY;st=Date.now();lock='';side=0;W=H.clientWidth||1;pgs=[...document.querySelectorAll('.hm-pg')];
-  if(pgs.some(p=>gsap.isTweening(p)))lock='no'},{passive:true});
- H.addEventListener('touchmove',e=>{if(lock==='no')return;const t=e.touches[0],dx=t.clientX-sx,dy=t.clientY-sy;
+// drag left/right on the home area: next page follows the finger, then settles (or snaps back).
+// Swiping while a slide is still running works too: it just starts the next slide from where the pages are.
+{const H=q('#home');let sx=0,sy=0,st=0,lock='',side=0,W=1;
+ H.addEventListener('touchstart',e=>{const t=e.touches[0];sx=t.clientX;sy=t.clientY;st=Date.now();side=0;W=H.clientWidth||1;
+  lock=e.target.closest('#nav')?'no':busy()?'anim':''},{passive:true});
+ H.addEventListener('touchmove',e=>{if(lock==='no'||lock==='anim')return;const t=e.touches[0],dx=t.clientX-sx,dy=t.clientY-sy;
   if(!lock){if(Math.abs(dx)<8&&Math.abs(dy)<8)return;lock=Math.abs(dx)>Math.abs(dy)*1.2?'x':'y'}
   if(lock!=='x')return;
-  const s2=dx<0?1:-1,nx=cur+s2,ok=nx>=0&&nx<pgs.length,pc=pgs[cur];
-  if(s2!==side){if(side&&pgs[cur+side])hide(pgs[cur+side]);side=s2;
-   if(ok){const np=pgs[nx];np.classList.add('on');gsap.set(np,{xPercent:s2*100})}}
-  if(!ok){gsap.set(pc,{xPercent:dx/W*25});return}
-  gsap.set(pc,{xPercent:dx/W*100});gsap.set(pgs[nx],{xPercent:s2*100+dx/W*100})},{passive:true});
- H.addEventListener('touchend',e=>{if(lock!=='x')return;const t=e.changedTouches[0],dx=t.clientX-sx,v=Math.abs(dx)/Math.max(1,Date.now()-st);
-  const nx=cur+(dx<0?1:-1),ok=nx>=0&&nx<pgs.length&&(Math.abs(dx)>W*.28||(v>.5&&Math.abs(dx)>30));
-  showTab(ok?nx:cur)},{passive:true});
+  const s2=dx<0?1:-1,nx=cur+s2,ok=nx>=0&&nx<PG.length,pc=dx/W*100,cl=Math.max(-100,Math.min(100,pc));
+  if(s2!==side){if(side&&PG[cur+side])hideP(cur+side);side=s2;if(ok){PG[nx].classList.add('on');put(nx,s2*100)}}
+  if(!ok){put(cur,pc/4);return}
+  put(cur,cl);put(nx,s2*100+cl)},{passive:true});
+ H.addEventListener('touchend',e=>{const t=e.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy,nx=cur+(dx<0?1:-1);
+  if(lock==='x'){const v=Math.abs(dx)/Math.max(1,Date.now()-st);
+   showTab(nx>=0&&nx<PG.length&&(Math.abs(dx)>W*.28||(v>.5&&Math.abs(dx)>30))?nx:cur)}
+  else if(lock==='anim'){if(Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.5&&nx>=0&&nx<PG.length)showTab(nx)}},{passive:true});
  H.addEventListener('touchcancel',()=>{if(lock==='x')showTab(cur)},{passive:true})}
 const toast=t=>{const e=q('#toast');e.textContent=t;e.classList.add('show');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('show'),2000)};
 document.querySelectorAll('[data-toast]').forEach(b=>b.onclick=()=>toast(b.dataset.toast));
@@ -1014,4 +1021,4 @@ if(VERIFIED){history.replaceState(null,'',location.pathname);skipIntro();
 
 </script>
 </body>
-  </html>
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </html>
