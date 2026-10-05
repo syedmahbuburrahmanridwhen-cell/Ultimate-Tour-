@@ -18,11 +18,11 @@ This is ONE file with 4 zones, in this order:
 @@SIGNUP      create-account page + burst transition  CSS+HTML+first script
 @@VERIFY      Check your Gmail page after Create      CSS+HTML+module (@@PAGE-VERIFY)
 @@RESET       Forgot password pages                   CSS+HTML+module (@@PAGE-RESET)
-@@HOME        home page (placeholder for now)         CSS+HTML+module (enter() in @@DATA)
+@@HOME        home page, tabs, wallet, glass nav bar  CSS+HTML+module (@@PAGE-HOME, enter() in @@DATA)
 @@MESSAGES    red/green message line                  CSS + module (@@HELPER-MESSAGES, message table in @@STATE)
 @@ANIM        button/link animations                  CSS + module (@@ANIM-BUTTON, @@ANIM-LINK, @@HELPER-BUTTONS)
 Module sections in order: FIREBASE, STATE, HELPER-MESSAGES, HELPER-BUTTONS, HELPER-RUN, ANIM-BUTTON, ANIM-LINK, DATA,
-  PAGE-LOGIN, PAGE-GOOGLE, PAGE-CREATE, PAGE-VERIFY, PAGE-RESET, STARTUP, DORMANT.
+  PAGE-LOGIN, PAGE-GOOGLE, PAGE-CREATE, PAGE-VERIFY, PAGE-RESET, PAGE-HOME, STARTUP, DORMANT.
 @@DORMANT = code kept but INACTIVE until a domain is bought and Firebase "Customize action URL" is saved:
   Yes/No page (#rs4), in-app new password page (#rs3 + np_ok), ?mode=resetPassword handler, ?verified=1 return flow, VACS.
 =====================================================================================================================
@@ -155,6 +155,36 @@ body{height:100%;margin:0;background:#fff;overflow:hidden}
 #verify .signup,#rs1 .signup,#rs2 .signup{margin-top:22px}#verify .signup button,#rs1 .signup button,#rs2 .signup button{display:inline-block}.vtm{font:700 11px var(--mono);color:#5d6568;margin-left:6px}
 /* @@ANIM - fixed space for the button countdown */
 .cdt{display:inline-block;width:calc(4ch + .8em);text-align:left;font-style:normal;white-space:pre;overflow:hidden;vertical-align:bottom}
+/* @@HOME - home page: header, wallet card, empty cards, tabs, glass nav bar */
+#home{padding:0;flex-direction:column;overflow:hidden;background:radial-gradient(circle at 92% -4%,rgba(201,222,60,.32),transparent 46%),radial-gradient(circle at -8% 100%,rgba(30,77,58,.14),transparent 50%),var(--cream)}
+.ico{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.hm-pg{position:absolute;inset:0;opacity:0;pointer-events:none;transform:translateY(14px);transition:opacity .35s ease,transform .5s cubic-bezier(.2,.8,.2,1)}
+.hm-pg.on{opacity:1;pointer-events:auto;transform:none}
+.hm-sc{height:100%;box-sizing:border-box;overflow-y:auto;padding:calc(18px + env(safe-area-inset-top,0px)) 20px 130px;display:flex;flex-direction:column;gap:18px}
+.hm-top{display:flex;align-items:center;gap:12px}
+.hm-av{width:46px;height:46px;border-radius:50%;background:var(--ink);color:var(--lime);display:grid;place-items:center;font:800 20px var(--sans);box-shadow:0 8px 18px rgba(0,0,0,.14)}
+.hm-who{flex:1;min-width:0;display:grid;gap:2px}.hm-who small{font:700 10px var(--mono);letter-spacing:.2em;color:#7a8386}
+.hm-who b{font:800 18px var(--sans);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hm-ic{display:flex;gap:10px}
+.ib{all:unset;box-sizing:border-box;width:44px;height:44px;border-radius:50%;background:#fff;display:grid;place-items:center;color:var(--ink);box-shadow:0 8px 18px rgba(0,0,0,.08);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .2s}
+.ib:active,.wb:active{transform:scale(.95)}
+.wallet{position:relative;overflow:hidden;background:var(--ink);color:#fff;border-radius:28px;padding:22px 22px 20px;box-shadow:0 18px 36px rgba(11,15,16,.24)}
+.wallet:before{content:"";position:absolute;right:-50px;top:-60px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(201,222,60,.4),transparent 70%)}
+.w-l{font:700 11px var(--mono);letter-spacing:.2em;color:rgba(255,255,255,.55)}
+.w-b{position:relative;font:800 42px/1.1 var(--sans);margin:8px 0 18px;color:var(--lime)}
+.w-r{position:relative;display:flex;gap:10px}
+.wb{all:unset;box-sizing:border-box;flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 0;border-radius:99px;font:700 12px var(--mono);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .2s}
+.wb .ico{width:18px;height:18px}.wb.add{background:var(--lime);color:var(--ink)}.wb.out{border:1.5px solid rgba(255,255,255,.38);color:#fff}
+.hm-h{margin:8px 0 -6px;font:italic 500 25px var(--serif);color:var(--green)}
+.empty{display:grid;justify-items:center;gap:8px;padding:26px 16px;border:1.5px dashed rgba(11,15,16,.2);border-radius:22px;background:rgba(255,255,255,.55);color:#7a8386;font:500 13px var(--mono);text-align:center}
+.empty p{margin:0}.empty .ico{width:30px;height:30px;opacity:.6}
+#toast{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));left:50%;z-index:9;transform:translate(-50%,-24px);opacity:0;pointer-events:none;background:var(--ink);color:var(--lime);padding:10px 18px;border-radius:99px;font:700 12px var(--mono);letter-spacing:.06em;transition:opacity .3s,transform .4s cubic-bezier(.2,.8,.2,1);white-space:nowrap}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+#nav{position:absolute;left:16px;right:16px;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:5;display:grid;grid-template-columns:repeat(4,1fr);padding:0 6px;border-radius:30px;background:rgba(255,255,255,.4);-webkit-backdrop-filter:blur(22px) saturate(1.8);backdrop-filter:blur(22px) saturate(1.8);border:1px solid rgba(255,255,255,.75);box-shadow:0 14px 34px rgba(11,15,16,.16),inset 0 1px 0 rgba(255,255,255,.9)}
+.nv{all:unset;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;padding:10px 0 9px;cursor:pointer;color:#7a8386;-webkit-tap-highlight-color:transparent;transition:color .4s}
+.nv .ico{margin-bottom:12px;transition:filter .4s,color .4s}.nv span{font:700 10px var(--mono);letter-spacing:.14em;text-transform:uppercase}
+.nv.on{color:var(--ink)}.nv.on .ico{color:var(--green);filter:drop-shadow(0 0 7px rgba(201,222,60,.95)) drop-shadow(0 0 2px rgba(201,222,60,.9))}
+#navball{position:absolute;top:37px;left:0;width:6px;height:6px;border-radius:50%;background:var(--lime);box-shadow:0 0 8px rgba(201,222,60,.95);transition:left .6s cubic-bezier(.34,1.3,.5,1)}
 </style>
 </head>
 <body>
@@ -207,8 +237,30 @@ body{height:100%;margin:0;background:#fff;overflow:hidden}
   <!-- @@SIGNUP - burst transition layers -->
   <div id="xf"></div><div id="xc"></div><div id="fx"></div><i id="ub"></i>
 
-  <!-- @@HOME - shown after login (placeholder welcome screen) -->
-  <div id="home"><div class="lg"><h2 class="ttl">Ultimate <span class="hl">Tour</span></h2><p class="sub" id="h_name"></p><p class="msg" id="h_meta" style="color:#5d6568"></p><button class="btn" id="h_out" type="button"><i></i><span>Log out</span></button></div></div>
+  <!-- @@HOME - home page after login: tabs hm0 Home, hm1 Tours, hm2 Results, hm3 Profile + glass nav bar -->
+  <div id="home">
+    <div id="toast"></div>
+    <div class="hm-pg on" id="hm0"><div class="hm-sc">
+      <header class="hm-top"><div class="hm-av" id="hm_av">P</div><div class="hm-who"><small>WELCOME BACK</small><b id="hm_user">Player</b></div>
+        <div class="hm-ic"><button class="ib" type="button" aria-label="Notifications" data-toast="Notifications are coming soon"><svg class="ico" viewBox="0 0 24 24"><path d="M6 9a6 6 0 1 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg></button><button class="ib" type="button" aria-label="Messages" data-toast="Messages are coming soon"><svg class="ico" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4V5z"/></svg></button></div></header>
+      <section class="wallet"><div class="w-l">WALLET BALANCE</div><div class="w-b" id="hm_bal">৳ 0.00</div>
+        <div class="w-r"><button class="wb add" type="button" data-toast="Add money is coming soon"><svg class="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Add money</button><button class="wb out" type="button" data-toast="Withdraw is coming soon"><svg class="ico" viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8"/></svg>Withdraw</button></div></section>
+      <h3 class="hm-h">Upcoming matches</h3>
+      <!-- @@HOME-MATCHES: replace this empty card with the match list once the tournament system exists -->
+      <div class="empty"><svg class="ico" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M9 3v4M15 3v4"/></svg><p>No upcoming matches yet</p></div>
+      <h3 class="hm-h">All rules</h3>
+      <!-- @@HOME-RULES: replace this empty card with the rules list once rules can be added -->
+      <div class="empty"><svg class="ico" viewBox="0 0 24 24"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4z"/><path d="M9 8h6"/></svg><p>No rules added yet</p></div>
+    </div></div>
+    <div class="hm-pg" id="hm1"><div class="hm-sc"><h3 class="hm-h">Tours</h3><div class="empty"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><p>Tournaments will appear here</p></div></div></div>
+    <div class="hm-pg" id="hm2"><div class="hm-sc"><h3 class="hm-h">Results</h3><div class="empty"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><p>Match results will appear here</p></div></div></div>
+    <div class="hm-pg" id="hm3"><div class="hm-sc"><h3 class="hm-h">Profile</h3>
+      <div class="empty" style="gap:6px"><p class="sub" id="h_name" style="margin:0"></p><p class="vt" id="h_meta"></p></div>
+      <button class="btn" id="h_out" type="button"><i></i><span>Log out</span></button></div></div>
+    <nav id="nav"><i id="navball"></i>
+      <button class="nv on" type="button"><svg class="ico" viewBox="0 0 24 24"><path d="M3.5 11 12 4l8.5 7v9h-6v-6h-5v6h-6z"/></svg><span>Home</span></button><button class="nv" type="button"><svg class="ico" viewBox="0 0 24 24"><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3M12 14v4M8 20h8"/></svg><span>Tours</span></button>
+      <button class="nv" type="button"><svg class="ico" viewBox="0 0 24 24"><path d="M5 20V11M12 20V4M19 20v-6"/></svg><span>Results</span></button><button class="nv" type="button"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c1-4 4-6 8-6s7 2 8 6"/></svg><span>Profile</span></button></nav>
+  </div>
   <!-- @@VERIFY - Check your Gmail page after Create -->
   <div id="verify"><div class="lg"><h2 class="ttl">Check your <span class="hl">Gmail</span></h2><p class="sub">We sent a verification link to</p><p class="vt" id="v_mail" style="color:#0b0f10;font-weight:700"></p><p class="vt" id="v_st"></p><p class="msg slot"></p><button class="btn" id="v_ok" type="button"><i></i><span>Confirm</span></button><p class="signup"><button type="button" id="v_re">Resend link</button><span class="vtm" id="v_t"></span> &nbsp;·&nbsp; <button type="button" id="v_x">Use another email</button></p></div></div>
   <!-- @@RESET - Forgot password pages: rs1 email page, rs2 check Gmail -->
@@ -678,7 +730,12 @@ async function lineAnim0(btn,job,cover){
 // ======================================================================
 const getProfile=async u=>{const s=await getDoc(doc(db,'users',u.uid));return s.exists()?s.data():null};
 const saveProfile=(u,d)=>runTransaction(db,async tx=>{const r=doc(db,'usernames',d.username);if((await tx.get(r)).exists())throw{code:'app/username-taken'};tx.set(r,{uid:u.uid});tx.set(doc(db,'users',u.uid),{...d,createdAt:serverTimestamp()})});
-const enter=p=>{q('#h_name').textContent=p.name;q('#h_meta').textContent='@'+p.username+' · '+p.email;home.style.display='flex';document.querySelectorAll('#verify,#rs1,#rs2,#rs3,#rs4').forEach(x=>x.style.display='none')};
+const enter=p=>{const u=p.username||'player';q('#hm_user').textContent=u;q('#hm_av').textContent=u[0].toUpperCase();
+  q('#h_name').textContent=p.name;q('#h_meta').textContent='@'+u+' · '+p.email;
+  q('#hm_bal').textContent='৳ '+Number(p.balance||0).toLocaleString('en-US',{minimumFractionDigits:2});
+  document.querySelectorAll('#verify,#rs1,#rs2,#rs3,#rs4').forEach(x=>x.style.display='none');home.style.display='flex';
+  const nb=q('#navball');nb.style.transition='none';showTab(0);nb.offsetWidth;nb.style.transition='';
+  popIn(document.querySelectorAll('#hm0 .hm-sc>*'),.15)};
 const sgOn=()=>getComputedStyle(q('#signup')).visibility==='visible';
 function resetSignup(){pending=null;pwF.forEach(f=>f.style.display='');q('#su_email').readOnly=false;q('#signup .sub').textContent='Create new account';sgF.querySelectorAll('input').forEach(i=>i.value='')}
 const introDone=()=>new Promise(r=>{const w=()=>typeof tl!=='undefined'&&tl&&tl.progress()>=1?r():setTimeout(w,300);w()});
@@ -826,6 +883,17 @@ q('#rs_x').onclick=e=>{const b=e.currentTarget;if(b.dataset.busy)return;b.datase
 for(const [fm,id] of [[rsF1,'#rs_send'],[rsF3,'#np_ok']])fm.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT'){e.preventDefault();q(id).click()}});
 
 // ======================================================================
+// @@PAGE-HOME   Home page: tabs (Home, Tours, Results, Profile), glass nav bar with sliding ball, toast
+//   HTML: <!-- @@HOME -->  CSS: /* @@HOME */  Filled by enter() in @@DATA.
+// ======================================================================
+function showTab(n){document.querySelectorAll('.hm-pg').forEach((p,i)=>p.classList.toggle('on',i===n));
+  const items=[...document.querySelectorAll('#nav .nv')];items.forEach((b,i)=>b.classList.toggle('on',i===n));
+  const b=items[n];q('#navball').style.left=(b.offsetLeft+b.offsetWidth/2-3)+'px'}
+document.querySelectorAll('#nav .nv').forEach((b,i)=>b.onclick=()=>showTab(i));
+const toast=t=>{const e=q('#toast');e.textContent=t;e.classList.add('show');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('show'),2000)};
+document.querySelectorAll('[data-toast]').forEach(b=>b.onclick=()=>toast(b.dataset.toast));
+
+// ======================================================================
 // @@STARTUP   On page load: coming back from Firebase pages, Google reload, logout, auth state
 // ======================================================================
 // Came back from Firebase's reset page via the Continue button
@@ -898,4 +966,4 @@ if(VERIFIED){history.replaceState(null,'',location.pathname);skipIntro();
 
 </script>
 </body>
-                                                                                                                                </html>
+        </html>
