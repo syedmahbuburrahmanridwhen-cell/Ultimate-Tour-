@@ -158,15 +158,15 @@ body{height:100%;margin:0;background:#fff;overflow:hidden}
 /* @@HOME - home page: header, wallet card, empty cards, tabs, glass nav bar */
 #home{padding:0;flex-direction:column;overflow:hidden;background:radial-gradient(circle at 92% -4%,rgba(201,222,60,.32),transparent 46%),radial-gradient(circle at -8% 100%,rgba(30,77,58,.14),transparent 50%),var(--cream)}
 .ico{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.hm-pg{position:absolute;inset:0;opacity:0;pointer-events:none;transform:translateY(14px);transition:opacity .35s ease,transform .5s cubic-bezier(.2,.8,.2,1)}
-.hm-pg.on{opacity:1;pointer-events:auto;transform:none}
+.hm-pg{position:absolute;inset:0;visibility:hidden;pointer-events:none;will-change:transform;backface-visibility:hidden}
+.hm-pg.on{visibility:visible;pointer-events:auto}
 .hm-sc{height:100%;box-sizing:border-box;overflow-y:auto;padding:calc(18px + env(safe-area-inset-top,0px)) 20px 130px;display:flex;flex-direction:column;gap:18px}
 .hm-top{display:flex;align-items:center;gap:12px}
 .hm-av{width:46px;height:46px;border-radius:50%;background:var(--ink);color:var(--lime);display:grid;place-items:center;font:800 20px var(--sans);box-shadow:0 8px 18px rgba(0,0,0,.14)}
 .hm-who{flex:1;min-width:0;display:grid;gap:2px}.hm-who small{font:700 10px var(--mono);letter-spacing:.2em;color:#7a8386}
 .hm-who b{font:800 18px var(--sans);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hm-ic{display:flex;gap:10px}
-.ib{all:unset;box-sizing:border-box;width:44px;height:44px;border-radius:50%;background:#fff;display:grid;place-items:center;color:var(--ink);box-shadow:0 8px 18px rgba(0,0,0,.08);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .2s}
+.ib{all:unset;box-sizing:border-box;width:44px;height:44px;border-radius:50%;background:var(--ink);display:grid;place-items:center;color:var(--lime);box-shadow:0 8px 18px rgba(11,15,16,.24);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .2s}
 .ib:active,.wb:active{transform:scale(.95)}
 .wallet{position:relative;overflow:hidden;background:var(--ink);color:#fff;border-radius:28px;padding:22px 22px 20px;box-shadow:0 18px 36px rgba(11,15,16,.24)}
 .wallet:before{content:"";position:absolute;right:-50px;top:-60px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(201,222,60,.4),transparent 70%)}
@@ -174,17 +174,17 @@ body{height:100%;margin:0;background:#fff;overflow:hidden}
 .w-b{position:relative;font:800 42px/1.1 var(--sans);margin:8px 0 18px;color:var(--lime)}
 .w-r{position:relative;display:flex;gap:10px}
 .wb{all:unset;box-sizing:border-box;flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 0;border-radius:99px;font:700 12px var(--mono);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .2s}
-.wb .ico{width:18px;height:18px}.wb.add{background:var(--lime);color:var(--ink)}.wb.out{border:1.5px solid rgba(255,255,255,.38);color:#fff}
+.wb .ico{width:18px;height:18px}.wb.add{background:var(--lime);color:var(--ink)}.wb.out{background:linear-gradient(135deg,#2f7d5b,#1e4d3a);border:1.5px solid rgba(201,222,60,.5);color:#fff;box-shadow:0 6px 16px rgba(30,77,58,.45)}.wb.out .ico{color:var(--lime)}
 .hm-h{margin:8px 0 -6px;font:italic 500 25px var(--serif);color:var(--green)}
 .empty{display:grid;justify-items:center;gap:8px;padding:26px 16px;border:1.5px dashed rgba(11,15,16,.2);border-radius:22px;background:rgba(255,255,255,.55);color:#7a8386;font:500 13px var(--mono);text-align:center}
 .empty p{margin:0}.empty .ico{width:30px;height:30px;opacity:.6}
 #toast{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));left:50%;z-index:9;transform:translate(-50%,-24px);opacity:0;pointer-events:none;background:var(--ink);color:var(--lime);padding:10px 18px;border-radius:99px;font:700 12px var(--mono);letter-spacing:.06em;transition:opacity .3s,transform .4s cubic-bezier(.2,.8,.2,1);white-space:nowrap}
 #toast.show{opacity:1;transform:translate(-50%,0)}
-#nav{position:absolute;left:16px;right:16px;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:5;display:grid;grid-template-columns:repeat(4,1fr);padding:0 6px;border-radius:30px;background:rgba(255,255,255,.4);-webkit-backdrop-filter:blur(22px) saturate(1.8);backdrop-filter:blur(22px) saturate(1.8);border:1px solid rgba(255,255,255,.75);box-shadow:0 14px 34px rgba(11,15,16,.16),inset 0 1px 0 rgba(255,255,255,.9)}
-.nv{all:unset;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;padding:10px 0 9px;cursor:pointer;color:#7a8386;-webkit-tap-highlight-color:transparent;transition:color .4s}
-.nv .ico{margin-bottom:12px;transition:filter .4s,color .4s}.nv span{font:700 10px var(--mono);letter-spacing:.14em;text-transform:uppercase}
-.nv.on{color:var(--ink)}.nv.on .ico{color:var(--green);filter:drop-shadow(0 0 7px rgba(201,222,60,.95)) drop-shadow(0 0 2px rgba(201,222,60,.9))}
-#navball{position:absolute;top:37px;left:0;width:6px;height:6px;border-radius:50%;background:var(--lime);box-shadow:0 0 8px rgba(201,222,60,.95);transition:left .6s cubic-bezier(.34,1.3,.5,1)}
+#nav{position:absolute;left:16px;right:16px;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:5;display:grid;grid-template-columns:repeat(4,1fr);padding:6px;border-radius:32px;background:rgba(11,15,16,.94);-webkit-backdrop-filter:blur(18px) saturate(1.6);backdrop-filter:blur(18px) saturate(1.6);border:1px solid rgba(255,255,255,.08);box-shadow:0 18px 38px rgba(11,15,16,.34),inset 0 1px 0 rgba(255,255,255,.08)}
+.nv{all:unset;position:relative;z-index:1;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 0 9px;cursor:pointer;color:#8b9497;-webkit-tap-highlight-color:transparent;transition:color .35s}
+.nv .ico{width:24px;height:24px;transition:transform .5s cubic-bezier(.34,1.56,.64,1)}.nv span{font:700 9.5px var(--mono);letter-spacing:.14em;text-transform:uppercase}
+.nv.on{color:var(--ink)}.nv.on .ico{transform:translateY(-1px) scale(1.1)}
+#navball{position:absolute;z-index:0;top:6px;bottom:6px;left:6px;width:0;border-radius:26px;background:var(--lime);box-shadow:0 0 18px rgba(201,222,60,.5);transition:left .55s cubic-bezier(.34,1.2,.5,1),width .55s cubic-bezier(.34,1.2,.5,1)}
 </style>
 </head>
 <body>
@@ -258,8 +258,7 @@ body{height:100%;margin:0;background:#fff;overflow:hidden}
       <div class="empty" style="gap:6px"><p class="sub" id="h_name" style="margin:0"></p><p class="vt" id="h_meta"></p></div>
       <button class="btn" id="h_out" type="button"><i></i><span>Log out</span></button></div></div>
     <nav id="nav"><i id="navball"></i>
-      <button class="nv on" type="button"><svg class="ico" viewBox="0 0 24 24"><path d="M3.5 11 12 4l8.5 7v9h-6v-6h-5v6h-6z"/></svg><span>Home</span></button><button class="nv" type="button"><svg class="ico" viewBox="0 0 24 24"><path d="M7 4h10v5a5 5 0 0 1-10 0V4z"/><path d="M7 6H4v2a3 3 0 0 0 3 3M17 6h3v2a3 3 0 0 1-3 3M12 14v4M8 20h8"/></svg><span>Tours</span></button>
-      <button class="nv" type="button"><svg class="ico" viewBox="0 0 24 24"><path d="M5 20V11M12 20V4M19 20v-6"/></svg><span>Results</span></button><button class="nv" type="button"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c1-4 4-6 8-6s7 2 8 6"/></svg><span>Profile</span></button></nav>
+      <button class="nv on" type="button"><svg class="ico" viewBox="0 0 24 24"><path d="M3 11.5 12 3.6l9 7.9"/><path d="M5.5 10v9.6h13V10"/><path d="M10 19.6v-4.4a2 2 0 0 1 4 0v4.4"/></svg><span>Home</span></button><button class="nv" type="button"><svg class="ico" viewBox="0 0 24 24"><rect x="3" y="4.5" width="4" height="4" rx="1"/><rect x="3" y="15.5" width="4" height="4" rx="1"/><path d="M7 6.5h2.5A2.5 2.5 0 0 1 12 9v6a2.5 2.5 0 0 1-2.5 2.5H7M12 12h3"/><rect x="15" y="9.5" width="6" height="5" rx="1.4"/></svg><span>Tours</span></button><button class="nv" type="button"><svg class="ico" viewBox="0 0 24 24"><path d="M3 20.5h18"/><rect x="3.5" y="14" width="5" height="6.5" rx="1"/><rect x="9.5" y="10.5" width="5" height="10" rx="1"/><rect x="15.5" y="15.5" width="5" height="5" rx="1"/><path d="M12 3 12.76 4.95 14.85 5.07 13.24 6.4 13.76 8.43 12 7.3 10.24 8.43 10.76 6.4 9.15 5.07 11.24 4.95Z" fill="currentColor" stroke-width="1"/></svg><span>Results</span></button><button class="nv" type="button"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="10" r="3.2"/><path d="M5.2 20.5c.9-3.4 3.5-5.2 6.8-5.2s5.9 1.8 6.8 5.2"/><path d="M6.6 10.4a5.4 5.4 0 0 1 10.8 0"/><rect x="4.6" y="9.6" width="2.2" height="4" rx="1.1"/><rect x="17.2" y="9.6" width="2.2" height="4" rx="1.1"/></svg><span>Profile</span></button></nav>
   </div>
   <!-- @@VERIFY - Check your Gmail page after Create -->
   <div id="verify"><div class="lg"><h2 class="ttl">Check your <span class="hl">Gmail</span></h2><p class="sub">We sent a verification link to</p><p class="vt" id="v_mail" style="color:#0b0f10;font-weight:700"></p><p class="vt" id="v_st"></p><p class="msg slot"></p><button class="btn" id="v_ok" type="button"><i></i><span>Confirm</span></button><p class="signup"><button type="button" id="v_re">Resend link</button><span class="vtm" id="v_t"></span> &nbsp;·&nbsp; <button type="button" id="v_x">Use another email</button></p></div></div>
@@ -298,6 +297,7 @@ const lab=$('#lab'),clk=$('#clk'),tw=$('#tw');
 const fmt=v=>{v=Math.round(v);return [v/3600|0,(v%3600)/60|0,v%60].map(p2).join(':')};
 const toC=(e,y)=>{const r=e.getBoundingClientRect();return y?innerHeight/2-r.top-r.height/2:innerWidth/2-r.left-r.width/2};
 let tl;
+window.AUTO={state:'wait',cb:null}; // set by the module: 'home' = already logged in (open home straight after the intro), 'login' = show login
 function tick(){const t=tl.time();$('#tc').textContent=`TC 00:00:${p2(Math.floor(t))}:${p2(Math.floor((t%1)*60))}`;$('#bar').style.width=tl.progress()*100+'%'}
 function done(){dispatchEvent(new Event('loader:done'))}
 
@@ -385,9 +385,12 @@ function build(){
 
   // 9 — brief black, strips leave the opposite way; login boxes show, then texts float up top→bottom
   const cover=Y+1.7+.8+.45,go=cover+.02;
-  tl.set('#login',{visibility:'visible'},cover)
+  tl.call(()=>{if(AUTO.state!=='wait')return;tl.pause();const tm=setTimeout(()=>{AUTO.state='login';AUTO.cb()},5000);AUTO.cb=()=>{clearTimeout(tm);AUTO.cb=null;tl.play()}},null,cover-.3)
+    .set('#login',{visibility:'visible'},cover)
+    .call(()=>{if(AUTO.state==='home'&&AUTO.show)AUTO.show()},null,cover+.01)
     .set('#hud',{autoAlpha:0},cover)
     .to('.band',{xPercent:i=>i<3?105:-105,duration:.7,stagger:i=>[0,2,4,1,3,5][i]*.07,ease:'power2.inOut'},go)
+    .call(()=>{if(AUTO.state==='home'&&AUTO.reveal)AUTO.reveal()},null,go+.15)
     .fromTo('.field,.btn,.gbtn',{y:20,opacity:0},{y:0,opacity:1,duration:.8,ease:'power3.out',stagger:.1,clearProps:'transform'},go+.05)
     .fromTo('.tt',{y:14,opacity:0},{y:0,opacity:1,duration:.7,ease:'power3.out',stagger:(i,el)=>el.dataset.g*.14},go+.85);
 }
@@ -547,6 +550,8 @@ const MAIL=/^\S+@\S+\.\S+$/,NAME=/^[\p{L}][\p{L}\p{M}\s.'-]{1,59}$/u;
 let pending=null,working=false,UI=false;
 const VERIFIED=new URLSearchParams(location.search).get('verified')==='1';
 let GFLAG=false;try{GFLAG=sessionStorage.getItem('ut_g')==='1';sessionStorage.removeItem('ut_g')}catch(e){}
+const NOAUTO=VERIFIED||GFLAG||new URLSearchParams(location.search).get('reset')==='done'||new URLSearchParams(location.search).has('oobCode');
+if(NOAUTO)AUTO.state='login';
 const E={'auth/invalid-credential':'Wrong email or password','auth/wrong-password':'Wrong password','auth/user-not-found':'No account found','auth/invalid-email':'Enter a valid email','auth/email-already-in-use':'Email already registered. Log in instead','auth/weak-password':'Password must be at least 6 characters','auth/too-many-requests':'Too many tries. Wait a bit and retry','auth/network-request-failed':'No internet connection','auth/unauthorized-domain':'Domain not authorized in Firebase','auth/unauthorized-continue-uri':'Domain not authorized in Firebase','app/username-taken':'Username already taken. Try another','app/not-verified':'Not verified yet. Open the Gmail link first','auth/invalid-action-code':'Link invalid or already used','auth/expired-action-code':'Link expired. Send a new one','app/no-profile':'Account not found. Create a new account','app/name':'Enter a valid full name','app/name-empty':'Enter your full name','app/use-google':'Log in to this account with Google','app/username-empty':'Enter your username','app/email-empty':'Enter your Gmail','app/pw-empty':'Enter your password','app/pw-new-empty':'Enter a password','app/pw2-empty':'Confirm your password','app/username':'Username: 3-20 letters, numbers, . or _','app/phone':'Enter a valid phone number','app/pw-match':'Passwords do not match','permission-denied':'Permission denied. Check Firestore rules'};
 
 // ======================================================================
@@ -730,12 +735,17 @@ async function lineAnim0(btn,job,cover){
 // ======================================================================
 const getProfile=async u=>{const s=await getDoc(doc(db,'users',u.uid));return s.exists()?s.data():null};
 const saveProfile=(u,d)=>runTransaction(db,async tx=>{const r=doc(db,'usernames',d.username);if((await tx.get(r)).exists())throw{code:'app/username-taken'};tx.set(r,{uid:u.uid});tx.set(doc(db,'users',u.uid),{...d,createdAt:serverTimestamp()})});
-const enter=p=>{const u=p.username||'player';q('#hm_user').textContent=u;q('#hm_av').textContent=u[0].toUpperCase();
+const enter=(p,np)=>{const u=p.username||'player';q('#hm_user').textContent=u;q('#hm_av').textContent=u[0].toUpperCase();
   q('#h_name').textContent=p.name;q('#h_meta').textContent='@'+u+' · '+p.email;
   q('#hm_bal').textContent='৳ '+Number(p.balance||0).toLocaleString('en-US',{minimumFractionDigits:2});
   document.querySelectorAll('#verify,#rs1,#rs2,#rs3,#rs4').forEach(x=>x.style.display='none');home.style.display='flex';
-  const nb=q('#navball');nb.style.transition='none';showTab(0);nb.offsetWidth;nb.style.transition='';
-  popIn(document.querySelectorAll('#hm0 .hm-sc>*'),.15)};
+  const nb=q('#navball');nb.style.transition='none';showTab(0,true);nb.offsetWidth;nb.style.transition='';
+  if(!np)homeIn()};
+// home entrance: cards pop up, nav bar rises
+function homeIn(){popIn(document.querySelectorAll('#hm0 .hm-sc>*'),.15);gsap.from('#nav',{y:70,opacity:0,duration:.8,delay:.25,ease:'power3.out',clearProps:'transform,opacity'})}
+// Already logged in: the intro calls show() while the black strips cover the screen, reveal() when they leave
+const settle=(st,p)=>{AUTO.state=st;AUTO.p=p||null;if(AUTO.cb)AUTO.cb()};
+Object.assign(AUTO,{show(){q('#login').style.visibility='hidden';home.style.zIndex=35;enter(AUTO.p,true)},reveal(){homeIn();setTimeout(()=>{home.style.zIndex=''},1600)}});
 const sgOn=()=>getComputedStyle(q('#signup')).visibility==='visible';
 function resetSignup(){pending=null;pwF.forEach(f=>f.style.display='');q('#su_email').readOnly=false;q('#signup .sub').textContent='Create new account';sgF.querySelectorAll('input').forEach(i=>i.value='')}
 const introDone=()=>new Promise(r=>{const w=()=>typeof tl!=='undefined'&&tl&&tl.progress()>=1?r():setTimeout(w,300);w()});
@@ -886,10 +896,26 @@ for(const [fm,id] of [[rsF1,'#rs_send'],[rsF3,'#np_ok']])fm.addEventListener('ke
 // @@PAGE-HOME   Home page: tabs (Home, Tours, Results, Profile), glass nav bar with sliding ball, toast
 //   HTML: <!-- @@HOME -->  CSS: /* @@HOME */  Filled by enter() in @@DATA.
 // ======================================================================
-function showTab(n){document.querySelectorAll('.hm-pg').forEach((p,i)=>p.classList.toggle('on',i===n));
-  const items=[...document.querySelectorAll('#nav .nv')];items.forEach((b,i)=>b.classList.toggle('on',i===n));
-  const b=items[n];q('#navball').style.left=(b.offsetLeft+b.offsetWidth/2-3)+'px'}
-document.querySelectorAll('#nav .nv').forEach((b,i)=>b.onclick=()=>showTab(i));
+// Tab switch: pages slide sideways (right tab = old page goes left, new comes from right; left tab = the reverse). Nav bar never moves.
+let cur=0;const SLIDE={d:.65,e:'power4.out'};
+function showTab(n,instant){
+  const pgs=[...document.querySelectorAll('.hm-pg')],items=[...document.querySelectorAll('#nav .nv')];
+  items.forEach((b,i)=>b.classList.toggle('on',i===n));
+  const nb=q('#navball'),bt=items[n];nb.style.left=(bt.offsetLeft+2)+'px';nb.style.width=(bt.offsetWidth-4)+'px';
+  if(instant){pgs.forEach((p,i)=>{gsap.killTweensOf(p);gsap.set(p,{clearProps:'transform'});p.classList.toggle('on',i===n)});cur=n;return}
+  if(n===cur)return;
+  const dir=n>cur?1:-1,to=pgs[n];cur=n;
+  pgs.forEach((p,i)=>{if(i===n||!p.classList.contains('on'))return;
+    gsap.to(p,{xPercent:-100*dir,duration:SLIDE.d,ease:SLIDE.e,force3D:true,overwrite:true,onComplete:()=>{if(cur!==i){p.classList.remove('on');gsap.set(p,{clearProps:'transform'})}}})});
+  const fin=()=>gsap.set(to,{clearProps:'transform'});
+  if(to.classList.contains('on'))gsap.to(to,{xPercent:0,duration:SLIDE.d,ease:SLIDE.e,force3D:true,overwrite:true,onComplete:fin});
+  else{to.classList.add('on');gsap.fromTo(to,{xPercent:100*dir},{xPercent:0,duration:SLIDE.d,ease:SLIDE.e,force3D:true,overwrite:true,onComplete:fin})}}
+document.querySelectorAll('#nav .nv').forEach((b,i)=>b.onclick=()=>{try{navigator.vibrate&&navigator.vibrate(8)}catch(x){}showTab(i)});
+// swipe left/right on the home area to change tab
+{let sx=0,sy=0,st=0;const H=q('#home');
+ H.addEventListener('touchstart',e=>{const t=e.touches[0];sx=t.clientX;sy=t.clientY;st=Date.now()},{passive:true});
+ H.addEventListener('touchend',e=>{const t=e.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy;
+  if(Math.abs(dx)>70&&Math.abs(dx)>Math.abs(dy)*1.6&&Date.now()-st<600){const n=cur+(dx<0?1:-1);if(n>=0&&n<4)showTab(n)}},{passive:true})}
 const toast=t=>{const e=q('#toast');e.textContent=t;e.classList.add('show');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('show'),2000)};
 document.querySelectorAll('[data-toast]').forEach(b=>b.onclick=()=>toast(b.dataset.toast));
 
@@ -910,10 +936,15 @@ if(GFLAG&&!VERIFIED){skipIntro();
 q('#back').addEventListener('click',()=>{if(pending){signOut(auth);resetSignup()}});
 for(const f of [lgF,sgF])f.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT'){e.preventDefault();f.querySelector('.btn').click()}});
 q('#h_out').onclick=async()=>{await signOut(auth);location.reload()};
-onAuthStateChanged(auth,async u=>{if(!u||working||pending||VERIFIED||GFLAG)return;
-  try{const p=u.emailVerified?await getProfile(u):null;await introDone();if(working)return;
+onAuthStateChanged(auth,async u=>{
+  if(!u){if(AUTO.state==='wait')settle('login');return}
+  if(working||pending||VERIFIED||GFLAG)return;
+  try{const p=u.emailVerified?await getProfile(u):null;
+    // already logged in: tell the intro to open home directly (no login page flash)
+    if(AUTO.state==='wait'){if(p){settle('home',p);return}settle('login')}
+    await introDone();if(working)return;
     if(p)enter(p);else if(!u.emailVerified)showVerify(u);else enter(await makeProfile(u))}
-  catch(e){await signOut(auth)}});
+  catch(e){if(AUTO.state==='wait')settle('login');if(!/unavailable|network/.test(e.code||''))await signOut(auth)}});
 
 
 // ======================================================================
@@ -966,4 +997,4 @@ if(VERIFIED){history.replaceState(null,'',location.pathname);skipIntro();
 
 </script>
 </body>
-        </html>
+                 </html>
