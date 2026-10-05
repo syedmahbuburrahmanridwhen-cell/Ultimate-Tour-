@@ -186,6 +186,7 @@ body{height:100%;margin:0;background:#fff;overflow:hidden}
 .nv.on{color:var(--ink)}.nv.on .ico{transform:translateY(-1px) scale(1.1)}
 #navball{position:absolute;z-index:0;top:6px;bottom:6px;left:6px;width:0;border-radius:26px;background:var(--lime);box-shadow:0 0 18px rgba(201,222,60,.5);transition:left .55s cubic-bezier(.34,1.2,.5,1),width .55s cubic-bezier(.34,1.2,.5,1),background .4s,box-shadow .4s}
 #navball.red{background:#ff3b30;box-shadow:0 0 20px rgba(255,59,48,.6)}
+#home.busy .hm-pg{pointer-events:none}
 #jamsc{position:absolute;inset:0;z-index:6;display:none;opacity:0;background:rgba(11,15,16,.6)}
 #jam{position:absolute;z-index:8;box-sizing:border-box;border-radius:32px;background:rgba(11,15,16,.94);border:1px solid rgba(255,255,255,.08);box-shadow:0 18px 38px rgba(11,15,16,.34),inset 0 1px 0 rgba(255,255,255,.08);overflow:hidden}
 #jamin{position:absolute;inset:5px;z-index:1;display:grid;grid-template-columns:repeat(4,1fr)}
@@ -936,9 +937,10 @@ function showTab(n,instant,d){
 // ---- tap queue
 const Q=[];let running=false,locked=false;
 const lastTarget=()=>Q.length?Q[Q.length-1]:cur;
-async function pump(){if(running)return;running=true;
+async function pump(){if(running)return;running=true;q('#home').classList.add('busy');
   while(Q.length){const n=Q.shift(),pend=Q.length;await showTab(n,false,pend>2?.2:pend>0?.28:SLIDE.d)}
-  running=false;if(locked)await penalty()}
+  running=false;if(locked)await penalty();
+  if(!running&&!Q.length)q('#home').classList.remove('busy')}
 function go(i){if(locked||i===lastTarget())return;
   ballTo(i,.4);   // green ball goes to the tapped icon right away (it can change its mind mid-way)
   Q.push(i);
