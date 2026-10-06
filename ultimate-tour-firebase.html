@@ -19,10 +19,11 @@ This is ONE file with 4 zones, in this order:
 @@VERIFY      Check your Gmail page after Create      CSS+HTML+module (@@PAGE-VERIFY)
 @@RESET       Forgot password pages                   CSS+HTML+module (@@PAGE-RESET)
 @@HOME        home page, tabs, wallet, glass nav bar  CSS+HTML+module (@@PAGE-HOME, enter() in @@DATA)
+@@PROFILE    profile card in the Profile tab         CSS+HTML+module (@@PAGE-PROFILE)
 @@MESSAGES    red/green message line                  CSS + module (@@HELPER-MESSAGES, message table in @@STATE)
 @@ANIM        button/link animations                  CSS + module (@@ANIM-BUTTON, @@ANIM-LINK, @@HELPER-BUTTONS)
 Module sections in order: FIREBASE, STATE, HELPER-MESSAGES, HELPER-BUTTONS, HELPER-RUN, ANIM-BUTTON, ANIM-LINK, DATA,
-  PAGE-LOGIN, PAGE-GOOGLE, PAGE-CREATE, PAGE-VERIFY, PAGE-RESET, PAGE-HOME, STARTUP, DORMANT.
+  PAGE-LOGIN, PAGE-GOOGLE, PAGE-CREATE, PAGE-VERIFY, PAGE-RESET, PAGE-HOME, PAGE-PROFILE, STARTUP, DORMANT.
 @@DORMANT = code kept but INACTIVE until a domain is bought and Firebase "Customize action URL" is saved:
   Yes/No page (#rs4), in-app new password page (#rs3 + np_ok), ?mode=resetPassword handler, ?verified=1 return flow, VACS.
 =====================================================================================================================
@@ -195,6 +196,23 @@ body{height:100%;margin:0;background:#fff;overflow:hidden}
 #jamtx{position:absolute;left:20px;margin:0;opacity:0;text-align:center;color:var(--cream)}
 #jamtx b{display:block;font:italic 600 26px/1.1 var(--serif);letter-spacing:-.01em;margin-bottom:8px}
 #jamtx span{display:block;font:500 12px/1.6 var(--mono);color:rgba(244,239,233,.65)}
+/* @@PROFILE - profile card */
+.pf{position:relative;background:#fff;border-radius:28px;box-shadow:0 18px 36px rgba(11,15,16,.12);overflow:hidden}
+.pf-ban{height:112px;background:radial-gradient(circle at 85% 0,rgba(201,222,60,.55),transparent 55%),linear-gradient(135deg,#0b0f10,var(--green))}
+.pf-ed{position:absolute;top:12px;right:12px;width:40px;height:40px;background:rgba(11,15,16,.55);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.pf-ed .x,.pf.ed .pf-ed .pen{display:none}.pf.ed .pf-ed .x{display:block}
+.pf-av{position:relative;width:84px;height:84px;margin:-42px 0 0 20px;box-sizing:border-box;border-radius:50%;background:var(--ink);color:var(--lime);border:4px solid #fff;display:grid;place-items:center;font:800 34px var(--sans);box-shadow:0 8px 18px rgba(0,0,0,.14)}
+.pf-body{padding:16px 14px 18px;display:grid;gap:14px}.pf-rows{display:grid;gap:10px}
+.pf-row{display:flex;align-items:center;gap:14px;padding:10px;border-radius:18px;background:var(--cream);transition:box-shadow .3s}
+.pf-row .tx{flex:1;min-width:0;display:grid;gap:5px}
+.pf-v{display:block;min-height:21px;font:600 16px/1.3 var(--sans);overflow-wrap:anywhere}
+.pf .tx .pf-in,.pf .tx .pf-n{display:none}
+.pf.ed .tx .pf-in{display:block}.pf.ed .pf-v{display:none}
+.pf.ed .pf-row:not(.ro):not(.lk){background:#fff;box-shadow:inset 0 0 0 1.5px var(--lime),0 6px 14px rgba(0,0,0,.06)}
+.pf-row.lk input{color:#9aa1a4}
+.pf-n{font:700 10px/1.4 var(--mono);letter-spacing:.04em;color:#7a8386;font-style:normal}
+.pf.ed .pf-row.ro .pf-n,.pf.ed .pf-row.lk .pf-n{display:block}
+.pf-act{display:none}.pf.ed .pf-act{display:block}
 </style>
 </head>
 <body>
@@ -266,7 +284,11 @@ body{height:100%;margin:0;background:#fff;overflow:hidden}
     <div class="hm-pg" id="hm1"><div class="hm-sc"><h3 class="hm-h">Tours</h3><div class="empty"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><p>Tournaments will appear here</p></div></div></div>
     <div class="hm-pg" id="hm2"><div class="hm-sc"><h3 class="hm-h">Results</h3><div class="empty"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><p>Match results will appear here</p></div></div></div>
     <div class="hm-pg" id="hm3"><div class="hm-sc"><h3 class="hm-h">Profile</h3>
-      <div class="empty" style="gap:6px"><p class="sub" id="h_name" style="margin:0"></p><p class="vt" id="h_meta"></p></div>
+      <!-- @@PROFILE - info card: banner space, round avatar (first letter), details, pen icon > edit mode -->
+      <section class="pf" id="pf"><div class="pf-ban"><button class="ib pf-ed" id="pf_ed" type="button" aria-label="Edit profile"><svg class="ico pen" viewBox="0 0 24 24"><path d="M4 20h4L19.5 8.5a2.1 2.1 0 0 0-3-3L5 17v3z"/><path d="m14.5 7.5 3 3"/></svg><svg class="ico x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+        <div class="pf-av" id="pf_av">P</div>
+        <div class="pf-body"><div class="pf-rows" id="pf_rows"></div>
+          <div class="pf-act" id="pf_act"><p class="msg slot"></p><button class="btn" id="pf_ok" type="button"><i></i><span>Update</span></button><p class="signup"><button type="button" id="pf_x">Cancel</button></p></div></div></section>
       <button class="btn" id="h_out" type="button"><i></i><span>Log out</span></button></div></div>
     <nav id="nav"><i id="navball"></i>
       <button class="nv on" type="button"><svg class="ico" viewBox="0 0 24 24"><path d="M3 11.5 12 3.6l9 7.9"/><path d="M5.5 10v9.6h13V10"/><path d="M10 19.6v-4.4a2 2 0 0 1 4 0v4.4"/></svg><span>Home</span></button><button class="nv" type="button"><svg class="ico" viewBox="0 0 24 24"><path d="M8 21h8M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M7 6H4v1.5A3.5 3.5 0 0 0 7.5 11M17 6h3v1.5a3.5 3.5 0 0 1-3.5 3.5"/></svg><span>Tours</span></button><button class="nv" type="button"><svg class="ico" viewBox="0 0 24 24"><rect x="4.5" y="4" width="15" height="17" rx="3"/><path d="M9 2.8h6v3.4H9z"/><path d="m8.8 13.2 2.3 2.3 4.2-4.6"/><path d="M9 18.3h6"/></svg><span>Results</span></button><button class="nv" type="button"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.8"/><path d="M4.5 20.5c0-4.1 3.4-6.6 7.5-6.6s7.5 2.5 7.5 6.6"/></svg><span>Profile</span></button></nav>
@@ -747,7 +769,7 @@ async function lineAnim0(btn,job,cover){
 const getProfile=async u=>{const s=await getDoc(doc(db,'users',u.uid));return s.exists()?s.data():null};
 const saveProfile=(u,d)=>runTransaction(db,async tx=>{const r=doc(db,'usernames',d.username);if((await tx.get(r)).exists())throw{code:'app/username-taken'};tx.set(r,{uid:u.uid});tx.set(doc(db,'users',u.uid),{...d,createdAt:serverTimestamp()})});
 const enter=(p,np)=>{const u=p.username||'player';q('#hm_user').textContent=u;q('#hm_av').textContent=u[0].toUpperCase();
-  q('#h_name').textContent=p.name;q('#h_meta').textContent='@'+u+' · '+p.email;
+  fillPf(p);
   q('#hm_bal').textContent='BDT '+Number(p.balance||0).toLocaleString('en-US',{minimumFractionDigits:2});
   document.querySelectorAll('#verify,#rs1,#rs2,#rs3,#rs4').forEach(x=>x.style.display='none');home.style.display='flex';
   const nb=q('#navball');nb.style.transition='none';showTab(0,true);nb.offsetWidth;nb.style.transition='';
@@ -1019,81 +1041,49 @@ const toast=t=>{const e=q('#toast');e.textContent=t;e.classList.add('show');clea
 document.querySelectorAll('[data-toast]').forEach(b=>b.onclick=()=>toast(b.dataset.toast));
 
 // ======================================================================
+// @@PAGE-PROFILE   Profile tab: info card, pen icon > edit mode > Update. A changed (already filled) detail locks for 24h.
+//   HTML: <!-- @@PROFILE -->  CSS: /* @@PROFILE */  Filled by fillPf() (called from enter() in @@DATA).
+//   Email is shown but cannot be edited. Empty details can be added any time (no lock); lock starts only when a filled detail is changed.
+// ======================================================================
+const DAY=864e5,pf=q('#pf'),pfAct=q('#pf_act'),PF=[['name','Aa','Full Name'],['username','@','Username'],['email','G','Gmail'],['phone','#','Phone Number']];
+Object.assign(E,{'app/pf-same':'Nothing changed yet','app/pf-locked':'This detail was changed recently. Try again later'});
+let ME=null;
+const lockAt=(p,k)=>{const t=p.locks&&p.locks[k];return t?(t.toMillis?t.toMillis():+t):0};
+const lockLeft=(p,k)=>p[k]?lockAt(p,k)+DAY-Date.now():0;
+q('#pf_rows').innerHTML=PF.map(([k,ic,lb])=>`<label class="pf-row${k==='email'?' ro':''}" data-k="${k}"><i class="ic"><b>${ic}</b></i><span class="tx"><small>${lb}</small><b class="pf-v"></b>${k==='email'?'':`<input class="pf-in" type="${k==='phone'?'tel':'text'}" autocapitalize="none" spellcheck="false" autocomplete="off">`}<em class="pf-n"></em></span></label>`).join('');
+function fillPf(p){ME=p;const u=p.username||'player';
+  q('#hm_user').textContent=u;q('#hm_av').textContent=q('#pf_av').textContent=u[0].toUpperCase();
+  pf.querySelectorAll('.pf-row').forEach(r=>r.querySelector('.pf-v').textContent=p[r.dataset.k]||'');
+  pf.classList.remove('ed')}
+function pfMode(on){pfAct.querySelector('.slot').textContent='';pf.classList.toggle('ed',on);
+  if(on)pf.querySelectorAll('.pf-row').forEach(r=>{const k=r.dataset.k,i=r.querySelector('input'),n=r.querySelector('.pf-n'),L=lockLeft(ME,k),lk=L>0;
+    r.classList.toggle('lk',lk);if(i){i.value=ME[k]||'';i.disabled=lk}
+    if(k==='email')n.textContent="Can't be changed";
+    else if(lk){const m=Math.ceil(L/6e4);n.textContent='Locked · change again in '+(m>=60?Math.floor(m/60)+'h '+m%60+'m':m+'m')}})}
+// Save changed details (one transaction: re-checks the 24h lock on the server copy, swaps the username record if it changed)
+const updProfile=(u,ch)=>runTransaction(db,async tx=>{
+  const ref=doc(db,'users',u.uid),cur=(await tx.get(ref)).data()||{},L={...(cur.locks||{})},loc={...L},nu=ch.username;
+  let nr=null;if(nu){nr=doc(db,'usernames',nu);if((await tx.get(nr)).exists())throw{code:'app/username-taken'}}
+  for(const k in ch)if(cur[k]){if(lockLeft(cur,k)>0)throw{code:'app/pf-locked'};L[k]=serverTimestamp();loc[k]=Date.now()}
+  if(nu){tx.set(nr,{uid:u.uid});if(cur.username)tx.delete(doc(db,'usernames',cur.username))}
+  tx.update(ref,{...ch,locks:L});return {...cur,...ch,locks:loc}});
+q('#pf_ed').onclick=()=>{if(working||UI||!ME)return;pfMode(!pf.classList.contains('ed'))};
+q('#pf_x').onclick=()=>pfMode(false);
+pf.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.matches('input')){e.preventDefault();q('#pf_ok').click()}});
+q('#pf_ok').onclick=e=>{const b=e.currentTarget;return run(b,pfAct,async()=>{
+  await animRun(b,async()=>{const ch={};
+    for(const [k] of PF){const i=pf.querySelector('[data-k="'+k+'"] input');if(!i||i.disabled)continue;
+      let val=i.value.trim();if(k==='username')val=val.toLowerCase();
+      if(val===(ME[k]||''))continue;
+      if(k==='name'){if(!val)throw{code:'app/name-empty'};if(!NAME.test(val))throw{code:'app/name'}}
+      if(k==='username'){if(!val)throw{code:'app/username-empty'};if(!/^[a-z0-9_.]{3,20}$/.test(val))throw{code:'app/username'}}
+      if(k==='phone'&&val&&!/^\+?[0-9\s-]{7,15}$/.test(val))throw{code:'app/phone'};
+      ch[k]=val}
+    if(!Object.keys(ch).length)throw{code:'app/pf-same'};
+    return updProfile(auth.currentUser,ch)},null,async r=>{fillPf(r);toast('Profile updated')})},false)};
+
+
+// ======================================================================
 // @@STARTUP   On page load: coming back from Firebase pages, Google reload, logout, auth state
 // ======================================================================
-// Came back from Firebase's reset page via the Continue button
-const skipIntro=()=>{const w=()=>{if(typeof tl!=='undefined'&&tl)tl.progress(1);else setTimeout(w,50)};w()};
-if(new URLSearchParams(location.search).get('reset')==='done'){history.replaceState(null,'',location.pathname);skipIntro();
-  introDone().then(()=>{let em='';try{em=localStorage.getItem('ut_rmail')||''}catch(x){}if(em)lgF.username.value=em;noForgot();say(lgF,'Password changed. Please log in.',1);loginIn()})}
-// Phone browser reloaded the page while Google's account page was open: stay on login (no intro), and finish the login if it went through
-if(GFLAG&&!VERIFIED){skipIntro();
-  (async()=>{await auth.authStateReady();await introDone();const u=auth.currentUser;
-    if(!u){say(lgF,'Google sign-in not completed. Try again.');return}
-    if(!u.emailVerified){showVerify(u);return}
-    working=true;try{await finishGoogle(q('#login .gbtn'),u)}catch(e){say(lgF,E[e.code]||'Login could not finish ('+(e.code||e.message)+'). Tap Continue with Google again.')}finally{working=false}})()}
-// Back from Google registration = cancel; Enter key; logout; stay logged in
-q('#back').addEventListener('click',()=>{if(pending){signOut(auth);resetSignup()}});
-for(const f of [lgF,sgF])f.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT'){e.preventDefault();f.querySelector('.btn').click()}});
-q('#h_out').onclick=async()=>{await signOut(auth);location.reload()};
-onAuthStateChanged(auth,async u=>{
-  if(!u){if(AUTO.state==='wait')settle('login');return}
-  if(working||pending||VERIFIED||GFLAG)return;
-  try{const p=u.emailVerified?await getProfile(u):null;
-    // already logged in: tell the intro to open home directly (no login page flash)
-    if(AUTO.state==='wait'){if(p){settle('home',p);return}settle('login')}
-    await introDone();if(working)return;
-    if(p)enter(p);else if(!u.emailVerified)showVerify(u);else enter(await makeProfile(u))}
-  catch(e){if(AUTO.state==='wait')settle('login');if(!/unavailable|network/.test(e.code||''))await signOut(auth)}});
-
-
-// ======================================================================
-// @@DORMANT   INACTIVE until a domain is bought and Firebase "Customize action URL" is saved
-//   Yes/No page, in-app new password page, link-verified flow, ?mode=resetPassword handler.
-// ======================================================================
-const VACS=()=>({url:location.origin+location.pathname+'?verified=1'});
-q('#np_ok').onclick=e=>{const b=e.currentTarget;return run(b,rsF3,async()=>{
-  const p1=q('#np1').value;
-  if(!rsCode)throw{code:'auth/invalid-action-code'};
-  if(!p1)throw{code:'app/pw-new-empty'};
-  if(p1.length<6)throw{code:'auth/weak-password'};
-  if(!q('#np2').value)throw{code:'app/pw2-empty'};
-  if(p1!==q('#np2').value)throw{code:'app/pw-match'};
-  const em=rsMail;
-  await animRun(b,async()=>{await confirmPasswordReset(auth,rsCode,p1);rsClear();return 1},()=>{resetRs();lgF.username.value=em;lgF.password.value='';noForgot();say(lgF,'Password changed. Please log in.',1);loginIn()})},false)};
-q('#rs4_go').onclick=e=>{const b=e.currentTarget;return run(b,rsF4,async()=>{
-  await animRun(b,async()=>{const d=rsSaved();if(!d)throw{code:'auth/invalid-action-code'};await verifyPasswordResetCode(auth,d.code);return d},showRs3)},false)};
-const rsChoice=c=>{const d=rsSaved();if(d){try{localStorage.setItem(RK,JSON.stringify({...d,choice:c}))}catch(e){}}};
-q('#rs4_yes').onclick=()=>{rsChoice('yes');gsap.to(rsF4,{opacity:0,duration:.25,onComplete:()=>{
-  q('#rs4_q').textContent='Great. Now go back to the Ultimate Tour app and tap Verify to enter your new password. Cannot find it? Continue here.';
-  q('#rs4_yes').style.display='none';q('#rs4_no').style.display='none';q('#rs4_go').style.display='';gsap.to(rsF4,{opacity:1,duration:.4})}})};
-q('#rs4_no').onclick=()=>{rsChoice('no');
-  gsap.to(rs4,{opacity:0,duration:.4,onComplete:()=>{rs4.style.display='none';gsap.set(rs4,{opacity:1});lgF.password.value='';say(lgF,'No changes were made to your password.',1);loginIn()}})};
-addEventListener('storage',e=>{try{if(e.key===RK&&e.newValue&&JSON.parse(e.newValue).choice&&rs2.style.display==='flex')q('#rs_st').textContent='Done on the link page. Tap the button below to continue.'}catch(x){}});
-// Came back from Firebase's email-verified page: Create box spins, then expands into the home page
-if(VERIFIED){history.replaceState(null,'',location.pathname);skipIntro();
-  (async()=>{
-    const until=f=>new Promise(r=>{const w=()=>f()?r():setTimeout(w,50);w()});
-    await auth.authStateReady();await introDone();
-    const u=auth.currentUser;
-    if(!u){say(lgF,'Email verified. Log in to continue.',1);loginIn();return}
-    try{await u.reload()}catch(x){}
-    if(!u.emailVerified){showVerify(u);return}
-    try{const d=JSON.parse(localStorage.getItem(PK)||'null');if(d){q('#su_name').value=d.name||'';q('#su_username').value=d.username||'';q('#su_email').value=d.email||'';q('#su_phone').value=d.phone||''}}catch(x){}
-    goSignup(q('#login .signup button'));
-    await until(sgOn);await new Promise(r=>setTimeout(r,1700));
-    working=true;
-    try{await animRun(q('#sgf .btn'),async()=>await getProfile(u)||await makeProfile(u),enter)}
-    catch(err){say(sgF,E[err.code]||'Something went wrong ('+(err.code||err.message)+')')}
-    finally{working=false}
-  })()}
-// Reset link opened (Firebase action URL set to this page): go straight to the new password page and tell the other tab
-{const qs=new URLSearchParams(location.search),code=qs.get('oobCode');
- if(qs.get('mode')==='resetPassword'&&code){
-  verifyPasswordResetCode(auth,code).then(async em=>{
-    try{localStorage.setItem(RK,JSON.stringify({code,email:em.toLowerCase()}))}catch(e){}
-    history.replaceState(null,'',location.pathname);await introDone();rs4.style.display='flex';popIn(document.querySelectorAll('#rs4 .lg>*'))
-  }).catch(async()=>{history.replaceState(null,'',location.pathname);await introDone();say(lgF,'Reset link invalid or already used.')})}}
-
-</script>
-</body>
-  </html>
+// Came back from Firebase's reset page via the Continue butto
