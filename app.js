@@ -203,7 +203,8 @@ async function lineAnim0(btn,job,cover){
 const getProfile=async u=>{const s=await getDoc(doc(db,'users',u.uid));return s.exists()?s.data():null};
 const saveProfile=(u,d)=>runTransaction(db,async tx=>{const r=doc(db,'usernames',d.username);if((await tx.get(r)).exists())throw{code:'app/username-taken'};tx.set(r,{uid:u.uid});tx.set(doc(db,'users',u.uid),{...d,createdAt:serverTimestamp()})});
 const enter=(p,np)=>{const u=p.username||'player';q('#hm_user').textContent=u;q('#hm_av').textContent=u[0].toUpperCase();
-  fillPf(p);
+  try{fillPf(p)}catch(e){console.error(e)}   // a card problem must never block login/home
+  
   q('#hm_bal').textContent='BDT '+Number(p.balance||0).toLocaleString('en-US',{minimumFractionDigits:2});
   document.querySelectorAll('#verify,#rs1,#rs2,#rs3,#rs4').forEach(x=>x.style.display='none');home.style.display='flex';
   const nb=q('#navball');nb.style.transition='none';showTab(0,true);nb.offsetWidth;nb.style.transition='';
@@ -488,7 +489,7 @@ q('#pf_rows').innerHTML=PF.map(([k,ic,lb])=>`<label class="pf-row${k==='email'?'
 function fillPf(p){ME=p;const u=p.username||'player';
   q('#hm_user').textContent=u;q('#hm_av').textContent=q('#pf_av').textContent=u[0].toUpperCase();
   pf.querySelectorAll('.pf-row').forEach(r=>r.querySelector('.pf-v').textContent=p[r.dataset.k]||'');
-  q('#pf_nm').textContent=p.name||'';q('#pf_em').textContent=p.provider==='google'?(p.email||''):'';q('#pf_un').textContent='@'+u;
+  q('#pf_nm').textContent=p.name||'';q('#pf_em').textContent=p.email||'';q('#pf_un').textContent='@'+u;
   const ph=q('#pf_ph');ph.hidden=!p.phone;ph.classList.toggle('ok',!!p.phoneVerified);ph.querySelector('b').textContent=p.phone||'';ph.querySelector('span').textContent=p.phoneVerified?'Verified number':'Verify your number';
   pf.classList.remove('ed')}
 // tap the @username to copy it
