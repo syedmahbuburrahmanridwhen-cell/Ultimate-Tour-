@@ -488,7 +488,11 @@ q('#pf_rows').innerHTML=PF.map(([k,ic,lb])=>`<label class="pf-row${k==='email'?'
 function fillPf(p){ME=p;const u=p.username||'player';
   q('#hm_user').textContent=u;q('#hm_av').textContent=q('#pf_av').textContent=u[0].toUpperCase();
   pf.querySelectorAll('.pf-row').forEach(r=>r.querySelector('.pf-v').textContent=p[r.dataset.k]||'');
+  q('#pf_nm').textContent=p.name||'';q('#pf_em').textContent=p.provider==='google'?(p.email||''):'';q('#pf_un').textContent='@'+u;
+  const ph=q('#pf_ph');ph.hidden=!p.phone;ph.classList.toggle('ok',!!p.phoneVerified);ph.querySelector('b').textContent=p.phone||'';ph.querySelector('span').textContent=p.phoneVerified?'Verified number':'Verify your number';
   pf.classList.remove('ed')}
+// tap the @username to copy it
+q('#pf_un').onclick=async()=>{const t=q('#pf_un').textContent;try{await navigator.clipboard.writeText(t)}catch(e){const a=document.createElement('textarea');a.value=t;a.style.cssText='position:fixed;opacity:0';document.body.append(a);a.select();try{document.execCommand('copy')}catch(x){}a.remove()}toast('Username copied')};
 function pfMode(on){pfAct.querySelector('.slot').textContent='';pf.classList.toggle('ed',on);
   if(on)pf.querySelectorAll('.pf-row').forEach(r=>{const k=r.dataset.k,i=r.querySelector('input'),n=r.querySelector('.pf-n'),L=lockLeft(ME,k),lk=L>0;
     r.classList.toggle('lk',lk);if(i){i.value=ME[k]||'';i.disabled=lk}
