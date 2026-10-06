@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ultimate Team — Loading</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@700;800&family=Newsreader:ital,wght@1,500;1,600&family=JetBrains+Mono:wght@400;700&display=swap">
+<!--
+=====================  FILE MAP  (search the @@TAG to jump; each tag appears in CSS, HTML and JS)  =====================
+This is ONE file with 4 zones, in this order:
+  1) <style>            CSS
+  2) <body>             HTML pages (login, signup, home, verify, reset)
+  3) first <script>     classic script: intro animation (loading) + signup form + login/signup burst transitions
+  4) <script module>    Firebase + all page logic, in tagged sections
+
+@@LOADING     intro/loading animation                 CSS+HTML+first script
+@@LOGIN       login page and the shared form look     CSS+HTML+first script+module (@@PAGE-LOGIN)
+@@SIGNUP      create-account page + burst transition  CSS+HTML+first script
+@@VERIFY      Check your Gmail page after Create      CSS+HTML+module (@@PAGE-VERIFY)
+@@RESET       Forgot password pages                   CSS+HTML+module (@@PAGE-RESET)
+@@HOME        home page, tabs, wallet, glass nav bar  CSS+HTML+module (@@PAGE-HOME, enter() in @@DATA)
+@@PROFILE    profile card in the Profile tab         CSS+HTML+module (@@PAGE-PROFILE)
+@@MESSAGES    red/green message line                  CSS + module (@@HELPER-MESSAGES, message table in @@STATE)
+@@ANIM        button/link animations                  CSS + module (@@ANIM-BUTTON, @@ANIM-LINK, @@HELPER-BUTTONS)
+Module sections in order: FIREBASE, STATE, HELPER-MESSAGES, HELPER-BUTTONS, HELPER-RUN, ANIM-BUTTON, ANIM-LINK, DATA,
+  PAGE-LOGIN, PAGE-GOOGLE, PAGE-CREATE, PAGE-VERIFY, PAGE-RESET, PAGE-HOME, PAGE-PROFILE, STARTUP, DORMANT.
+@@DORMANT = code kept but INACTIVE until a domain is bought and Firebase "Customize action URL" is saved:
+  Yes/No page (#rs4), in-app new password page (#rs3 + np_ok), ?mode=resetPassword handler, ?verified=1 return flow, VACS.
+=====================================================================================================================
+-->
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="stage">
+  <!-- @@LOADING - intro animation layers (hud, flood, scenes) -->
+  <div id="hud">
+    <i class="k tl"></i><i class="k tr"></i><i class="k bl"></i><i class="k br"></i>
+    <div class="row top"><span>Ultimate Team &nbsp;/&nbsp; <span class="dim">Motion' 1092</span></span><span><i class="rec"></i><span id="tc">TC 00:00:00:00</span></span></div>
+    <div class="row bot"><span id="lab">01 Loading</span><div id="trk"><u id="bar"></u></div><span>1920 × 1080 · 60 FPS</span></div>
+  </div>
+
+  <div class="c" id="s1">
+    <i id="r2"></i><i id="r1"></i><i id="orb"></i>
+    <div id="deb"></div>
+    <div id="g"></div>
+    <i id="sh"></i><i id="ball"></i>
+    <div id="tw"></div>
+  </div>
+
+  <div id="flood"></div><div id="hole"></div>
+
+  <div id="s2"><div id="cl"></div>
+    <div id="dl">
+      <i id="hl"></i>
+      <h1 id="word" aria-label="Ultimate Tour"></h1>
+      <div id="pill"><i id="pdot"></i><span id="pl">Loading</span><span id="clk">10:00:00</span></div>
+    </div>
+  </div>
+
+  <div id="t2">
+    <div class="ln"><span id="a1">Ultimate Esports Arena</span></div>
+    <div class="ln"><span id="a2">Created By <span id="mk">Ridwhen</span></span></div>
+  </div>
+
+  <!-- @@LOGIN -->
+  <div id="login">
+    <form class="lg" onsubmit="return false">
+      <h2 class="ttl tt" data-g="0">Ultimate <span class="hl">Tour</span></h2>
+      <label class="field"><i class="ic"><b class="tt" data-g="1">@</b></i><span class="tx"><small class="tt" data-g="1">Gmail / Email</small><input class="tt" data-g="1" type="text" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" inputmode="email" placeholder="you@gmail.com"></span><i class="glow"></i></label>
+      <label class="field"><i class="ic"><b class="tt" data-g="2">***</b></i><span class="tx"><small class="tt" data-g="2">Password</small><input id="pw" class="tt" data-g="2" type="password" name="password" autocomplete="current-password" placeholder="••••••••"></span><button id="eye" class="eye tt" data-g="2" type="button" aria-label="Show password" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1.5 12S5.5 4.5 12 4.5 22.5 12 22.5 12 18.5 19.5 12 19.5 1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/><path class="sl" pathLength="1" d="M3.5 3.5l17 17"/></svg></button><i class="glow"></i></label>
+      <button class="forgot tt" data-g="3" type="button">Forgot password?</button>
+      <p class="msg slot"></p><button class="btn" type="button"><i class="tt" data-g="4"></i><span class="tt" data-g="4">Log in</span></button>
+      <button class="gbtn" type="button"><svg class="tt" data-g="5" viewBox="0 0 48 48" width="20" height="20" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.2 5.5-4.7 7.2l7.6 5.9c4.4-4.1 6.9-10.1 6.9-17.6z"/><path fill="#FBBC05" d="M10.5 28.7c-.5-1.4-.8-3-.8-4.7s.3-3.2.8-4.7l-7.9-6.1C.9 16.4 0 20.100 0 24s.9 7.600 2.600 10.800l7.900-6.100z"/><path fill="#34A853" d="M24 48c6.500 0 11.900-2.100 15.900-5.800l-7.600-5.900c-2.100 1.400-4.900 2.300-8.300 2.300-6.300 0-11.600-4.100-13.500-9.800l-7.900 6.100C6.500 42.600 14.600 48 24 48z"/></svg><span class="tt" data-g="5">Continue with Google</span></button>
+      <p class="signup tt" data-g="6">Don't have an account - <button type="button">Create new account</button></p>
+    </form>
+  </div>
+
+  <!-- @@SIGNUP - form is built by the script, see @@SIGNUP in the first script -->
+  <div id="signup"><form class="lg sg" id="sgf" onsubmit="return false"></form></div>
+  <!-- @@SIGNUP - burst transition layers -->
+  <div id="xf"></div><div id="xc"></div><div id="fx"></div><i id="ub"></i>
+
+  <!-- @@HOME - home page after login: tabs hm0 Home, hm1 Tours, hm2 Results, hm3 Profile + glass nav bar -->
+  <div id="home">
+    <div id="toast"></div>
+    <div id="jamsc"></div>
+    <div class="hm-pg on" id="hm0"><div class="hm-sc">
+      <header class="hm-top"><div class="hm-av" id="hm_av">P</div><div class="hm-who"><small>WELCOME BACK</small><b id="hm_user">Player</b></div>
+        <div class="hm-ic"><button class="ib" type="button" aria-label="Notifications" data-toast="Notifications are coming soon"><svg class="ico" viewBox="0 0 24 24"><path d="M6 9a6 6 0 1 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg></button><button class="ib" type="button" aria-label="Messages" data-toast="Messages are coming soon"><svg class="ico" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4V5z"/></svg></button></div></header>
+      <section class="wallet"><div class="w-l">WALLET BALANCE</div><div class="w-b" id="hm_bal">BDT 0.00</div>
+        <div class="w-r"><button class="wb add" type="button" data-toast="Add money is coming soon"><svg class="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Add money</button><button class="wb out" type="button" data-toast="Withdraw is coming soon"><svg class="ico" viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8"/></svg>Withdraw</button></div></section>
+      <h3 class="hm-h">Upcoming matches</h3>
+      <!-- @@HOME-MATCHES: replace this empty card with the match list once the tournament system exists -->
+      <div class="empty"><svg class="ico" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M9 3v4M15 3v4"/></svg><p>No upcoming matches yet</p></div>
+      <h3 class="hm-h">All rules</h3>
+      <!-- @@HOME-RULES: replace this empty card with the rules list once rules can be added -->
+      <div class="empty"><svg class="ico" viewBox="0 0 24 24"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4z"/><path d="M9 8h6"/></svg><p>No rules added yet</p></div>
+    </div></div>
+    <div class="hm-pg" id="hm1"><div class="hm-sc"><h3 class="hm-h">Tours</h3><div class="empty"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><p>Tournaments will appear here</p></div></div></div>
+    <div class="hm-pg" id="hm2"><div class="hm-sc"><h3 class="hm-h">Results</h3><div class="empty"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><p>Match results will appear here</p></div></div></div>
+    <div class="hm-pg" id="hm3"><div class="hm-sc"><h3 class="hm-h">Profile</h3>
+      <!-- @@PROFILE - info card: banner space, round avatar (first letter), details, pen icon > edit mode -->
+      <section class="pf" id="pf"><div class="pf-ban"><button class="ib pf-ed" id="pf_ed" type="button" aria-label="Edit profile"><svg class="ico pen" viewBox="0 0 24 24"><path d="M4 20h4L19.5 8.5a2.1 2.1 0 0 0-3-3L5 17v3z"/><path d="m14.5 7.5 3 3"/></svg><svg class="ico x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+        <div class="pf-av" id="pf_av">P</div>
+        <div class="pf-body"><div class="pf-rows" id="pf_rows"></div>
+          <div class="pf-act" id="pf_act"><p class="msg slot"></p><button class="btn" id="pf_ok" type="button"><i></i><span>Update</span></button><p class="signup"><button type="button" id="pf_x">Cancel</button></p></div></div></section>
+      <button class="btn" id="h_out" type="button"><i></i><span>Log out</span></button></div></div>
+    <nav id="nav"><i id="navball"></i>
+      <button class="nv on" type="button"><svg class="ico" viewBox="0 0 24 24"><path d="M3 11.5 12 3.6l9 7.9"/><path d="M5.5 10v9.6h13V10"/><path d="M10 19.6v-4.4a2 2 0 0 1 4 0v4.4"/></svg><span>Home</span></button><button class="nv" type="button"><svg class="ico" viewBox="0 0 24 24"><path d="M8 21h8M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M7 6H4v1.5A3.5 3.5 0 0 0 7.5 11M17 6h3v1.5a3.5 3.5 0 0 1-3.5 3.5"/></svg><span>Tours</span></button><button class="nv" type="button"><svg class="ico" viewBox="0 0 24 24"><rect x="4.5" y="4" width="15" height="17" rx="3"/><path d="M9 2.8h6v3.4H9z"/><path d="m8.8 13.2 2.3 2.3 4.2-4.6"/><path d="M9 18.3h6"/></svg><span>Results</span></button><button class="nv" type="button"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.8"/><path d="M4.5 20.5c0-4.1 3.4-6.6 7.5-6.6s7.5 2.5 7.5 6.6"/></svg><span>Profile</span></button></nav>
+  </div>
+  <!-- @@VERIFY - Check your Gmail page after Create -->
+  <div id="verify"><div class="lg"><h2 class="ttl">Check your <span class="hl">Gmail</span></h2><p class="sub">We sent a verification link to</p><p class="vt" id="v_mail" style="color:#0b0f10;font-weight:700"></p><p class="vt" id="v_st"></p><p class="msg slot"></p><button class="btn" id="v_ok" type="button"><i></i><span>Confirm</span></button><p class="signup"><button type="button" id="v_re">Resend link</button><span class="vtm" id="v_t"></span> &nbsp;·&nbsp; <button type="button" id="v_x">Use another email</button></p></div></div>
+  <!-- @@RESET - Forgot password pages: rs1 email page, rs2 check Gmail -->
+  <div id="rs1"><div class="lg"><h2 class="ttl">Reset <span class="hl">password</span></h2><p class="vt">Enter your Gmail. We will send you a verification link.</p><label class="field"><i class="ic"><b>@</b></i><span class="tx"><small>Gmail / Email</small><input id="rs_email" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" inputmode="email" placeholder="you@gmail.com"></span><i class="glow"></i></label><p class="msg slot"></p><button class="btn" id="rs_send" type="button" style="font-size:12px;letter-spacing:.1em"><i></i><span>Send verification link</span></button><p class="signup"><button type="button" id="rs_back">Back to login</button></p></div></div>
+  <div id="rs2"><div class="lg"><h2 class="ttl">Check your <span class="hl">Gmail</span></h2><p class="sub">We sent a reset link to</p><p class="vt" id="rs_mail" style="color:#0b0f10;font-weight:700"></p><p class="vt" id="rs_st"></p><p class="msg slot"></p><button class="btn" id="rs_ok" type="button" style="font-size:12px;letter-spacing:.08em"><i></i><span>I changed my password</span></button><p class="signup"><button type="button" id="rs_re">Resend link</button><span class="vtm" id="rs_t"></span> &nbsp;·&nbsp; <button type="button" id="rs_x">Use another email</button></p></div></div>
+  <!-- @@DORMANT - rs3 new password page and rs4 Yes/No page (inactive until Customize action URL works) -->
+  <div id="rs3"><div class="lg"><h2 class="ttl">New <span class="hl">password</span></h2><p class="vt" id="rs3_mail" style="color:#0b0f10;font-weight:700"></p><label class="field"><i class="ic"><b>***</b></i><span class="tx"><small>New password</small><input id="np1" type="password" autocomplete="new-password" placeholder="••••••••"></span><button class="eye" data-t="np1" type="button" aria-label="Show password" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1.5 12S5.5 4.5 12 4.5 22.5 12 22.5 12 18.5 19.5 12 19.5 1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/><path class="sl" pathLength="1" d="M3.5 3.5l17 17"/></svg></button><i class="glow"></i></label><label class="field"><i class="ic"><b>***</b></i><span class="tx"><small>Confirm password</small><input id="np2" type="password" autocomplete="new-password" placeholder="••••••••"></span><button class="eye" data-t="np2" type="button" aria-label="Show password" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1.5 12S5.5 4.5 12 4.5 22.5 12 22.5 12 18.5 19.5 12 19.5 1.5 12 1.5 12z"/><circle cx="12" cy="12" r="3"/><path class="sl" pathLength="1" d="M3.5 3.5l17 17"/></svg></button><i class="glow"></i></label><p class="msg slot"></p><button class="btn" id="np_ok" type="button"><i></i><span>Confirm</span></button></div></div>
+  <div id="rs4"><div class="lg"><h2 class="ttl">Change <span class="hl">password?</span></h2><p class="vt" id="rs4_q">Do you want to change your Ultimate Tour password?</p><p class="msg slot"></p><button class="btn" id="rs4_yes" type="button"><i></i><span>Yes</span></button><button class="gbtn" id="rs4_no" type="button"><span>No</span></button><button class="btn" id="rs4_go" type="button" style="display:none"><i></i><span>Continue here</span></button></div></div>
+  <!-- @@LOADING - wipe bands -->
+  <div id="wipe"><i class="band"></i><i class="band"></i><i class="band"></i><i class="band"></i><i class="band"></i><i class="band"></i></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="intro.js"></script>
+<script type="module" src="app.js"></script>
+</body>
+                                                                                               </html>
