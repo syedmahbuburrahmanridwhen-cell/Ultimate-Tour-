@@ -485,7 +485,7 @@ Object.assign(E,{'app/pf-same':'Nothing changed yet','app/pf-locked':'This detai
 let ME=null;
 const lockAt=(p,k)=>{const t=p.locks&&p.locks[k];return t?(t.toMillis?t.toMillis():+t):0};
 const lockLeft=(p,k)=>p[k]?lockAt(p,k)+DAY-Date.now():0;
-q('#pf_rows').innerHTML=PF.map(([k,ic,lb])=>`<label class="pf-row${k==='email'?' ro':''}" data-k="${k}"><i class="ic"><b>${ic}</b></i><span class="tx"><small>${lb}</small><b class="pf-v"></b>${k==='email'?'':`<input class="pf-in" type="${k==='phone'?'tel':'text'}" autocapitalize="none" spellcheck="false" autocomplete="off">`}<em class="pf-n"></em></span></label>`).join('');
+q('#pf_rows').innerHTML=PF.map(([k,ic,lb])=>`<label class="pf-row${k==='email'?' ro':''}" data-k="${k}"><i class="ic"><b>${ic}</b></i><span class="tx"><small>${lb}<em class="pf-n"></em></small><b class="pf-v"></b>${k==='email'?'':`<input class="pf-in" type="${k==='phone'?'tel':'text'}" autocapitalize="none" spellcheck="false" placeholder="${k==='phone'?'Not uploaded yet':''}" autocomplete="off">`}</span></label>`).join('');
 function fillPf(p){ME=p;const u=p.username||'player';
   q('#hm_user').textContent=u;q('#hm_av').textContent=q('#pf_av').textContent=u[0].toUpperCase();
   pf.querySelectorAll('.pf-row').forEach(r=>r.querySelector('.pf-v').textContent=p[r.dataset.k]||'');
@@ -524,23 +524,24 @@ function pfToggle(open){
   const tl=gsap.timeline({onComplete(){pf.style.height='';if(!open){pf.classList.remove('ed');pfAct.querySelector('.slot').textContent=''}gsap.set(pfPen,{autoAlpha:0});pfBusy=false}});
   let t=0;
   if(!open){tl.to(xI,{rotation:-180,scale:0,duration:.35,ease:'back.in(1.7)'},0).fromTo(penI,{rotation:180,scale:0,autoAlpha:1},{rotation:0,scale:1,duration:.4,ease:'back.out(1.7)'},.2);t=.7}
-  // 1) pen squeezes out of the white jelly ball, the ball shrinks to a small ball, the pen drops onto it
-  tl.to(pfBall,{scaleX:1.25,scaleY:.75,duration:.12,ease:'power2.out'},t).to(penI,{scale:0,autoAlpha:0,duration:.15},t)
-    .set(pfPen,{x:bx,y:by,rotation:0,scale:0,autoAlpha:1},t+.05)
-    .to(pfBall,{scale:.5,duration:.6,ease:'elastic.out(1,.35)'},t+.12)
-    .to(pfPen,{scale:1,y:by-38,duration:.55,ease:'elastic.out(1,.4)'},t+.1)
-    .to(pfPen,{y:by-14,duration:.35,ease:'bounce.out'},t+.7)
-    .to(pfBall,{scaleY:.4,duration:.07,yoyo:true,repeat:1},t+.75);
+  // 1) jelly: the ball stretches up, the pen is pulled out and flies up, then falls under gravity onto the ball, which dents like jelly
+  tl.to(pfBall,{scaleX:.8,scaleY:1.35,y:-6,duration:.16,ease:'power2.out'},t).to(penI,{scale:0,autoAlpha:0,duration:.14},t+.02)
+    .set(pfPen,{x:bx,y:by,rotation:0,scaleX:.5,scaleY:.2,autoAlpha:1},t+.06)
+    .to(pfPen,{scaleX:1,scaleY:1.2,y:by-62,duration:.38,ease:'power2.out'},t+.08)
+    .to(pfBall,{scale:.5,y:0,duration:.5,ease:'elastic.out(1,.3)'},t+.18)
+    .to(pfPen,{scaleY:1,y:by-14,duration:.3,ease:'power2.in'},t+.46)
+    .to(pfBall,{scaleX:.62,scaleY:.34,duration:.08,yoyo:true,repeat:1,ease:'power1.out'},t+.76);
   // 2) jump to the middle of the card's bottom line, pull it down (open) or push it up (close)
-  let f=pfFly(tl,t+1.1,W/2,a,by-14);
+  let f=pfFly(tl,t+.76,W/2,a,by-14);   // bounces straight off the jelly into the jump
   tl.to(pfPen,{scaleX:1.25,scaleY:.7,duration:.09,yoyo:true,repeat:1},f)
     .to(P,{h:b,duration:1.05,ease:open?'back.out(1.15)':'power2.inOut',onUpdate(){pf.style.height=P.h+'px';gsap.set(pfPen,{y:P.h})}},f+.1);
   // 3) jump back onto the ball, dive in, ball grows, the icon turns into X (open) / pen (close)
   f=pfFly(tl,f+1.25,bx,by-14,b);
-  tl.to(pfPen,{y:by,scale:0,duration:.2,ease:'power2.in'},f).to(pfBall,{scale:1,duration:.8,ease:'elastic.out(1,.4)'},f+.12)
-    .fromTo(open?xI:penI,{rotation:-180,scale:0,autoAlpha:1},{rotation:0,scale:1,duration:.6,ease:'back.out(1.8)'},f+.18)}
+  tl.to(pfBall,{scaleX:.62,scaleY:.34,duration:.08,yoyo:true,repeat:1},f)   // lands on the jelly: dent
+    .to(pfPen,{y:by-36,duration:.18,ease:'power2.out'},f+.04).to(pfPen,{y:by,scale:0,duration:.2,ease:'power2.in'},f+.22)   // small bounce, then dives in
+    .to(pfBall,{scale:1,duration:.8,ease:'elastic.out(1,.4)'},f+.3)
+    .fromTo(open?xI:penI,{rotation:-180,scale:0,autoAlpha:1},{rotation:0,scale:1,duration:.6,ease:'back.out(1.8)'},f+.38)}
 q('#pf_ed').onclick=()=>{if(working||UI)return;pfToggle(!pf.classList.contains('ed'))};
-q('#pf_x').onclick=()=>pfToggle(false);
 pf.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.matches('input')){e.preventDefault();q('#pf_ok').click()}});
 q('#pf_ok').onclick=e=>{const b=e.currentTarget;return run(b,pfAct,async()=>{
   await animRun(b,async()=>{const ch={};
