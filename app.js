@@ -480,11 +480,12 @@ document.querySelectorAll('[data-toast]').forEach(b=>b.onclick=()=>toast(b.datas
 //   HTML: <!-- @@PROFILE -->  CSS: /* @@PROFILE */  Filled by fillPf() (called from enter() in @@DATA).
 //   Email is shown but cannot be edited. Empty details can be added any time (no lock); lock starts only when a filled detail is changed.
 // ======================================================================
-const DAY=864e5,pf=q('#pf'),pfAct=q('#pf_act'),PF=[['name','Aa','Full Name'],['username','@','Username'],['email','G','Gmail'],['phone','#','Phone Number']];
+const DAY=864e5,pf=q('#pf'),pfAct=q('#pf_act'),PF=[['name','Aa','Full Name'],['username','@','Username'],['phone','#','Phone Number']];
 Object.assign(E,{'app/pf-same':'Nothing changed yet','app/pf-locked':'This detail was changed recently. Try again later'});
 let ME=null;
 const lockAt=(p,k)=>{const t=p.locks&&p.locks[k];return t?(t.toMillis?t.toMillis():+t):0};
-const lockLeft=(p,k)=>p[k]?lockAt(p,k)+DAY-Date.now():0;
+const LOCK_ON=false;   // 24h lock is OFF for now (testing). Set true to turn it on.
+const lockLeft=(p,k)=>LOCK_ON&&p[k]?lockAt(p,k)+DAY-Date.now():0;
 q('#pf_rows').innerHTML=PF.map(([k,ic,lb])=>`<label class="pf-row${k==='email'?' ro':''}" data-k="${k}"><i class="ic"><b>${ic}</b></i><span class="tx"><small>${lb}<em class="pf-n"></em></small><b class="pf-v"></b>${k==='email'?'':`<input class="pf-in" type="${k==='phone'?'tel':'text'}" autocapitalize="none" spellcheck="false" placeholder="${k==='phone'?'Not uploaded yet':''}" autocomplete="off">`}</span></label>`).join('');
 function fillPf(p){ME=p;const u=p.username||'player';
   q('#hm_user').textContent=u;q('#hm_av').textContent=q('#pf_av').textContent=u[0].toUpperCase();
@@ -502,7 +503,7 @@ function pfMode(on){pfAct.querySelector('.slot').textContent='';
 const updProfile=(u,ch)=>runTransaction(db,async tx=>{
   const ref=doc(db,'users',u.uid),cur=(await tx.get(ref)).data()||{},L={...(cur.locks||{})},loc={...L},nu=ch.username;
   let nr=null;if(nu){nr=doc(db,'usernames',nu);if((await tx.get(nr)).exists())throw{code:'app/username-taken'}}
-  for(const k in ch)if(cur[k]){if(lockLeft(cur,k)>0)throw{code:'app/pf-locked'};L[k]=serverTimestamp();loc[k]=Date.now()}
+  for(const k in ch)if(LOCK_ON&&cur[k]){if(lockLeft(cur,k)>0)throw{code:'app/pf-locked'};L[k]=serverTimestamp();loc[k]=Date.now()}
   if(nu){tx.set(nr,{uid:u.uid});if(cur.username)tx.delete(doc(db,'usernames',cur.username))}
   tx.update(ref,{...ch,locks:L});return {...cur,...ch,locks:loc}});
 // ---- pen animation: pfToggle(true) opens the card, pfToggle(false) closes it (exact reverse). Pen = #pf_pen, ball = #pf_ed
