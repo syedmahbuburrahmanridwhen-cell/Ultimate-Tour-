@@ -203,7 +203,7 @@ async function lineAnim0(btn,job,cover){
 const getProfile=async u=>{const s=await getDoc(doc(db,'users',u.uid));return s.exists()?s.data():null};
 const saveProfile=(u,d)=>runTransaction(db,async tx=>{const r=doc(db,'usernames',d.username);if((await tx.get(r)).exists())throw{code:'app/username-taken'};tx.set(r,{uid:u.uid});tx.set(doc(db,'users',u.uid),{...d,createdAt:serverTimestamp()})});
 const enter=(p,np)=>{const u=p.username||'player';q('#hm_user').textContent=u;q('#hm_av').textContent=u[0].toUpperCase();
-  try{fillPf(p)}catch(e){console.error(e)}   // a card problem must never block login/home
+  try{pfReset();fillPf(p)}catch(e){console.error(e)}   // a card problem must never block login/home
   
   q('#hm_bal').textContent='BDT '+Number(p.balance||0).toLocaleString('en-US',{minimumFractionDigits:2});
   document.querySelectorAll('#verify,#rs1,#rs2,#rs3,#rs4').forEach(x=>x.style.display='none');home.style.display='flex';
@@ -490,11 +490,10 @@ function fillPf(p){ME=p;const u=p.username||'player';
   q('#hm_user').textContent=u;q('#hm_av').textContent=q('#pf_av').textContent=u[0].toUpperCase();
   pf.querySelectorAll('.pf-row').forEach(r=>r.querySelector('.pf-v').textContent=p[r.dataset.k]||'');
   q('#pf_nm').textContent=p.name||'';q('#pf_em').textContent=p.email||'';q('#pf_un').textContent='@'+u;
-  const ph=q('#pf_ph');ph.hidden=!p.phone;ph.classList.toggle('ok',!!p.phoneVerified);ph.querySelector('b').textContent=p.phone||'';ph.querySelector('span').textContent=p.phoneVerified?'Verified number':'Verify your number';
-  pf.classList.remove('ed')}
+  const ph=q('#pf_ph');ph.hidden=!p.phone;ph.classList.toggle('ok',!!p.phoneVerified);ph.querySelector('b').textContent=p.phone||'';ph.querySelector('span').textContent=p.phoneVerified?'Verified number':'Verify your number'}
 // tap the @username to copy it
 q('#pf_un').onclick=async()=>{const t=q('#pf_un').textContent;try{await navigator.clipboard.writeText(t)}catch(e){const a=document.createElement('textarea');a.value=t;a.style.cssText='position:fixed;opacity:0';document.body.append(a);a.select();try{document.execCommand('copy')}catch(x){}a.remove()}toast('Username copied')};
-function pfMode(on){pfAct.querySelector('.slot').textContent='';pf.classList.toggle('ed',on);
+function pfMode(on){pfAct.querySelector('.slot').textContent='';
   if(on)pf.querySelectorAll('.pf-row').forEach(r=>{const k=r.dataset.k,i=r.querySelector('input'),n=r.querySelector('.pf-n'),L=lockLeft(ME,k),lk=L>0;
     r.classList.toggle('lk',lk);if(i){i.value=ME[k]||'';i.disabled=lk}
     if(k==='email')n.textContent="Can't be changed";
@@ -506,8 +505,42 @@ const updProfile=(u,ch)=>runTransaction(db,async tx=>{
   for(const k in ch)if(cur[k]){if(lockLeft(cur,k)>0)throw{code:'app/pf-locked'};L[k]=serverTimestamp();loc[k]=Date.now()}
   if(nu){tx.set(nr,{uid:u.uid});if(cur.username)tx.delete(doc(db,'usernames',cur.username))}
   tx.update(ref,{...ch,locks:L});return {...cur,...ch,locks:loc}});
-q('#pf_ed').onclick=()=>{if(working||UI||!ME)return;pfMode(!pf.classList.contains('ed'))};
-q('#pf_x').onclick=()=>pfMode(false);
+// ---- pen animation: pfToggle(true) opens the card, pfToggle(false) closes it (exact reverse). Pen = #pf_pen, ball = #pf_ed
+const pfBall=q('#pf_ed'),pfPen=q('#pf_pen'),pfWrap=q('#pf_wrap'),penI=pfBall.querySelector('.pen'),xI=pfBall.querySelector('.x');
+let pfBusy=false;
+function pfReset(){pf.classList.remove('ed');pf.style.height='';
+  gsap.set(pfBall,{scale:1});gsap.set(penI,{autoAlpha:1,scale:1,rotation:0});gsap.set(xI,{autoAlpha:0,scale:0,rotation:0});
+  gsap.set(pfPen,{autoAlpha:0,xPercent:-50,yPercent:-50,x:0,y:0,rotation:0,scale:1})}
+pfReset();
+function pfFly(tl,t,x1,y1,y0){const d=.75,pk=Math.min(y0,y1)-50;   // jump in an arc while spinning
+  tl.to(pfPen,{x:x1,duration:d,ease:'power1.inOut'},t).to(pfPen,{y:pk,duration:d*.45,ease:'power2.out'},t)
+    .to(pfPen,{y:y1,duration:d*.55,ease:'power2.in'},t+d*.45).to(pfPen,{rotation:'+=720',duration:d,ease:'power1.inOut'},t);return t+d}
+function pfToggle(open){
+  if(pfBusy||!ME)return;pfBusy=true;
+  const W=pfWrap.offsetWidth,bx=W-32,by=32;let h0,h1;
+  if(open){pfMode(true);h0=pf.offsetHeight;pf.classList.add('ed');pf.style.height='';h1=pf.offsetHeight}
+  else{h1=pf.offsetHeight;pf.classList.remove('ed');pf.style.height='';h0=pf.offsetHeight;pf.classList.add('ed')}
+  const a=open?h0:h1,b=open?h1:h0,P={h:a};pf.style.height=a+'px';
+  const tl=gsap.timeline({onComplete(){pf.style.height='';if(!open){pf.classList.remove('ed');pfAct.querySelector('.slot').textContent=''}gsap.set(pfPen,{autoAlpha:0});pfBusy=false}});
+  let t=0;
+  if(!open){tl.to(xI,{rotation:-180,scale:0,duration:.35,ease:'back.in(1.7)'},0).fromTo(penI,{rotation:180,scale:0,autoAlpha:1},{rotation:0,scale:1,duration:.4,ease:'back.out(1.7)'},.2);t=.7}
+  // 1) pen squeezes out of the white jelly ball, the ball shrinks to a small ball, the pen drops onto it
+  tl.to(pfBall,{scaleX:1.25,scaleY:.75,duration:.12,ease:'power2.out'},t).to(penI,{scale:0,autoAlpha:0,duration:.15},t)
+    .set(pfPen,{x:bx,y:by,rotation:0,scale:0,autoAlpha:1},t+.05)
+    .to(pfBall,{scale:.5,duration:.6,ease:'elastic.out(1,.35)'},t+.12)
+    .to(pfPen,{scale:1,y:by-38,duration:.55,ease:'elastic.out(1,.4)'},t+.1)
+    .to(pfPen,{y:by-14,duration:.35,ease:'bounce.out'},t+.7)
+    .to(pfBall,{scaleY:.4,duration:.07,yoyo:true,repeat:1},t+.75);
+  // 2) jump to the middle of the card's bottom line, pull it down (open) or push it up (close)
+  let f=pfFly(tl,t+1.1,W/2,a,by-14);
+  tl.to(pfPen,{scaleX:1.25,scaleY:.7,duration:.09,yoyo:true,repeat:1},f)
+    .to(P,{h:b,duration:1.05,ease:open?'back.out(1.15)':'power2.inOut',onUpdate(){pf.style.height=P.h+'px';gsap.set(pfPen,{y:P.h})}},f+.1);
+  // 3) jump back onto the ball, dive in, ball grows, the icon turns into X (open) / pen (close)
+  f=pfFly(tl,f+1.25,bx,by-14,b);
+  tl.to(pfPen,{y:by,scale:0,duration:.2,ease:'power2.in'},f).to(pfBall,{scale:1,duration:.8,ease:'elastic.out(1,.4)'},f+.12)
+    .fromTo(open?xI:penI,{rotation:-180,scale:0,autoAlpha:1},{rotation:0,scale:1,duration:.6,ease:'back.out(1.8)'},f+.18)}
+q('#pf_ed').onclick=()=>{if(working||UI)return;pfToggle(!pf.classList.contains('ed'))};
+q('#pf_x').onclick=()=>pfToggle(false);
 pf.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.matches('input')){e.preventDefault();q('#pf_ok').click()}});
 q('#pf_ok').onclick=e=>{const b=e.currentTarget;return run(b,pfAct,async()=>{
   await animRun(b,async()=>{const ch={};
@@ -519,7 +552,7 @@ q('#pf_ok').onclick=e=>{const b=e.currentTarget;return run(b,pfAct,async()=>{
       if(k==='phone'&&val&&!/^\+?[0-9\s-]{7,15}$/.test(val))throw{code:'app/phone'};
       ch[k]=val}
     if(!Object.keys(ch).length)throw{code:'app/pf-same'};
-    return updProfile(auth.currentUser,ch)},null,async r=>{fillPf(r);toast('Profile updated')})},false)};
+    return updProfile(auth.currentUser,ch)},null,async r=>{fillPf(r);toast('Profile updated');pfToggle(false)})},false)};
 
 
 // ======================================================================
