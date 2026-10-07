@@ -173,7 +173,7 @@ body{height:100%;margin:0;background:#fff;overflow:hidden}
 .pf-ed svg{grid-area:1/1;margin:auto}
 .pf-fly{position:absolute;left:0;top:0;width:34px;height:34px;z-index:7;pointer-events:none;visibility:hidden;fill:var(--lime);stroke:var(--ink);stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round;filter:drop-shadow(0 4px 6px rgba(0,0,0,.35))}
 .pf-av{position:relative;width:84px;height:84px;margin:-42px auto 0;box-sizing:border-box;border-radius:50%;background:var(--ink);color:var(--lime);border:4px solid #fff;display:grid;place-items:center;font:800 34px var(--sans);box-shadow:0 8px 18px rgba(0,0,0,.14)}
-.pf-body{padding:14px 14px 20px;display:grid;gap:14px}.pf-rows{display:none;gap:10px}.pf.ed .pf-rows{display:grid}
+.pf-body{padding:14px 14px 20px;display:grid;gap:14px}.pf-rows{display:none;gap:10px}.pf.ed .pf-rows{display:grid;margin-top:8px}   /* 8px: the edit part starts below the collapsed card's bottom edge, so no sliver shows while it opens */
 .pf-row{display:flex;align-items:center;gap:14px;padding:0 12px;height:68px;box-sizing:border-box;border-radius:18px;background:var(--cream);transition:box-shadow .3s}
 .pf-row .tx{flex:1;min-width:0;display:grid;gap:5px}
 .pf-v{display:block;min-height:21px;font:600 16px/1.3 var(--sans);overflow-wrap:anywhere}
@@ -195,3 +195,4 @@ body{height:100%;margin:0;background:#fff;overflow:hidden}
 .pf-ph{margin:2px 0 0;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:4px 10px;color:#d6452a}.pf-ph[hidden]{display:none}
 .pf-ph b{font:700 14px var(--mono);letter-spacing:.04em}.pf-ph span{font:700 10px var(--mono);letter-spacing:.12em;text-transform:uppercase;padding:3px 8px;border-radius:99px;background:rgba(214,69,42,.12)}
 .pf-ph.ok{color:var(--green)}.pf-ph.ok span{background:rgba(30,77,58,.12)}
+.pf-act .btn{width:100%;box-sizing:border-box}
