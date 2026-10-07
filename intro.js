@@ -139,11 +139,14 @@ addEventListener('pointerdown',e=>{if(e.target.closest('.eye[data-t]'))e.prevent
 addEventListener('click',e=>{const b=e.target.closest('.eye[data-t]');if(!b)return;const i=$('#'+b.dataset.t),on=i.type==='password';i.type=on?'text':'password';b.setAttribute('aria-pressed',on);b.setAttribute('aria-label',on?'Hide password':'Show password')});
 
 const XD=[];
+// transparent shield: while a login<->signup transition runs nothing underneath can be tapped or typed into
+const SH=on=>{let s=document.getElementById('shield');if(!s){s=document.createElement('div');s.id='shield';s.style.cssText='position:fixed;inset:0;z-index:99999;background:transparent;touch-action:none;display:none';document.body.appendChild(s)}
+  s.style.display=on?'block':'none';if(on&&document.activeElement&&document.activeElement.blur)document.activeElement.blur()};
 let busy=false;
 const kids=()=>[...document.querySelectorAll('#login .lg>*')];
 
 function goSignup(btn){
-  if(busy)return;busy=true;
+  if(busy)return;busy=true;SH(1);
   document.activeElement&&document.activeElement.blur();
   const r=btn.getBoundingClientRect(),W=innerWidth,H=innerHeight,SX=r.left+r.width/2,SY=r.bottom-1,EX=W/2,EY=H/2;
   const ub=$('#ub'),xf=$('#xf'),xc=$('#xc'),fx=$('#fx'),su=$('#signup'),lg=$('#login'),P={k:0};
@@ -160,7 +163,7 @@ function goSignup(btn){
   const rings=[0,1].map(n=>mk('width:400px;height:400px;margin:-200px 0 0 -200px;border:4px solid '+(n?'#0b0f10':'#c9de3c')+';opacity:0'));
   const dots=Array.from({length:16},(_,n)=>{const s=n%3===0?16:n%3===1?10:7;return mk('width:'+s+'px;height:'+s+'px;margin:-'+s/2+'px 0 0 -'+s/2+'px;background:'+(n%4===0?'#0b0f10':'#c9de3c')+';opacity:0')});
   gsap.set([...rings,...dots],{x:0,y:0,scale:0,force3D:true}); // #fx i are already centered via left/top:50%
-  const cleanup=()=>{fx.innerHTML='';for(const e of [xf,xc])gsap.set(e,{clearProps:'all'});gsap.set(ub,{visibility:'hidden',clearProps:'boxShadow'});gsap.set(su,{clearProps:'backgroundColor'});busy=false};
+  const cleanup=()=>{fx.innerHTML='';for(const e of [xf,xc])gsap.set(e,{clearProps:'all'});gsap.set(ub,{visibility:'hidden',clearProps:'boxShadow'});gsap.set(su,{clearProps:'backgroundColor'});busy=false;SH(0)};
   const t=gsap.timeline({defaults:{overwrite:false},onComplete:cleanup});
   // 1 text sucked into the underline, line rolls up into a ball
   t.set(ub,{backgroundImage:'radial-gradient(circle at 35% 30%,#eaf57a,#c9de3c 55%,#a3b81e)'},0)
@@ -194,7 +197,7 @@ function goSignup(btn){
    .to('#signup .st',{y:0,opacity:1,duration:.7,ease:'power3.out',stagger:(i,el)=>el.dataset.g*.14},E+.8);
 }
 function goLogin(btn){
-  if(busy)return;busy=true;
+  if(busy)return;busy=true;SH(1);
   document.activeElement&&document.activeElement.blur();
   const r=btn.getBoundingClientRect(),W=innerWidth,H=innerHeight,SX=r.left+r.width/2,SY=r.bottom-1,EX=W/2,EY=H/2;
   const ub=$('#ub'),xf=$('#xf'),xc=$('#xc'),fx=$('#fx'),su=$('#signup'),lg=$('#login'),P={k:0};
@@ -212,7 +215,7 @@ function goLogin(btn){
   const rings=[0,1].map(n=>mk('width:400px;height:400px;margin:-200px 0 0 -200px;border:4px solid '+(n?'#0b0f10':'#c9de3c')+';opacity:0'));
   const dots=Array.from({length:16},(_,n)=>{const s=n%3===0?16:n%3===1?10:7;return mk('width:'+s+'px;height:'+s+'px;margin:-'+s/2+'px 0 0 -'+s/2+'px;background:'+(n%4===0?'#0b0f10':'#c9de3c')+';opacity:0')});
   gsap.set([...rings,...dots],{x:0,y:0,scale:0,force3D:true});
-  const cleanup=()=>{fx.innerHTML='';for(const e of [xf,xc])gsap.set(e,{clearProps:'all'});gsap.set(ub,{visibility:'hidden',clearProps:'boxShadow'});gsap.set(lg,{clearProps:'zIndex,backgroundColor'});gsap.set(su,{clearProps:'zIndex,backgroundColor'});busy=false};
+  const cleanup=()=>{fx.innerHTML='';for(const e of [xf,xc])gsap.set(e,{clearProps:'all'});gsap.set(ub,{visibility:'hidden',clearProps:'boxShadow'});gsap.set(lg,{clearProps:'zIndex,backgroundColor'});gsap.set(su,{clearProps:'zIndex,backgroundColor'});busy=false;SH(0)};
   const t=gsap.timeline({defaults:{overwrite:false},onComplete:cleanup});
   // 1 text sucked into the underline, line rolls up into a ball
   t.set(ub,{backgroundImage:'radial-gradient(circle at 35% 30%,#eaf57a,#c9de3c 55%,#a3b81e)'},0)
