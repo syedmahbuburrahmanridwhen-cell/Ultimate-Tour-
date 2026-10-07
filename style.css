@@ -168,8 +168,10 @@ body{height:100%;margin:0;background:#fff;overflow:hidden}
 /* @@PROFILE - profile card */
 .pf{position:relative;background:#fff;border-radius:28px;box-shadow:0 18px 36px rgba(11,15,16,.12);overflow:hidden}
 .pf-ban{height:112px;background:radial-gradient(circle at 85% 0,rgba(201,222,60,.55),transparent 55%),linear-gradient(135deg,#0b0f10,var(--green))}
-.pf-ed{position:absolute;top:12px;right:12px;width:40px;height:40px;background:rgba(11,15,16,.55);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
-.pf-ed .x,.pf.ed .pf-ed .pen{display:none}.pf.ed .pf-ed .x{display:block}
+.pf-wrap{position:relative}
+.pf-ed{position:absolute;top:12px;right:12px;width:40px;height:40px;z-index:6;border-radius:50%;background:#fff;color:var(--ink);box-shadow:0 6px 16px rgba(0,0,0,.28),inset 0 -5px 9px rgba(11,15,16,.1)}
+.pf-ed svg{grid-area:1/1;margin:auto}
+.pf-fly{position:absolute;left:0;top:0;width:34px;height:34px;z-index:7;pointer-events:none;visibility:hidden;fill:var(--lime);stroke:var(--ink);stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round;filter:drop-shadow(0 4px 6px rgba(0,0,0,.35))}
 .pf-av{position:relative;width:84px;height:84px;margin:-42px auto 0;box-sizing:border-box;border-radius:50%;background:var(--ink);color:var(--lime);border:4px solid #fff;display:grid;place-items:center;font:800 34px var(--sans);box-shadow:0 8px 18px rgba(0,0,0,.14)}
 .pf-body{padding:14px 14px 20px;display:grid;gap:14px}.pf-rows{display:none;gap:10px}.pf.ed .pf-rows{display:grid}
 .pf-row{display:flex;align-items:center;gap:14px;padding:10px;border-radius:18px;background:var(--cream);transition:box-shadow .3s}
@@ -182,7 +184,7 @@ body{height:100%;margin:0;background:#fff;overflow:hidden}
 .pf-n{font:700 10px/1.4 var(--mono);letter-spacing:.04em;color:#7a8386;font-style:normal}
 .pf.ed .pf-row.ro .pf-n,.pf.ed .pf-row.lk .pf-n{display:block}
 .pf-act{display:none}.pf.ed .pf-act{display:block}
-.pf.ed .pf-id{display:none}.pf.ed .pf-row.ro .pf-v{display:block}
+.pf.ed .pf-row.ro .pf-v{display:block}
 .pf-id{display:grid;justify-items:center;gap:6px;text-align:center;min-width:0}
 .pf-nm{margin:0;max-width:100%;font:800 25px/1.2 var(--sans);letter-spacing:-.02em;overflow-wrap:anywhere}
 .pf-em{margin:0;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font:500 13px/1.4 var(--mono);color:#5d6568}.pf-em:empty{display:none}
