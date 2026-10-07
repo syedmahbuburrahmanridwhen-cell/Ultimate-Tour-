@@ -98,14 +98,16 @@ Module sections in order: FIREBASE, STATE, HELPER-MESSAGES, HELPER-BUTTONS, HELP
     </div></div>
     <div class="hm-pg" id="hm1"><div class="hm-sc"><h3 class="hm-h">Tours</h3><div class="empty"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><p>Tournaments will appear here</p></div></div></div>
     <div class="hm-pg" id="hm2"><div class="hm-sc"><h3 class="hm-h">Results</h3><div class="empty"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><p>Match results will appear here</p></div></div></div>
-    <div class="hm-pg" id="hm3"><div class="hm-sc"><h3 class="hm-h">Profile</h3>
-      <!-- @@PROFILE - info card: banner space, round avatar (first letter), details, pen icon > edit mode -->
-      <section class="pf" id="pf"><div class="pf-ban"><button class="ib pf-ed" id="pf_ed" type="button" aria-label="Edit profile"><svg class="ico pen" viewBox="0 0 24 24"><path d="M4 20h4L19.5 8.5a2.1 2.1 0 0 0-3-3L5 17v3z"/><path d="m14.5 7.5 3 3"/></svg><svg class="ico x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <div class="hm-pg" id="hm3"><div class="hm-sc"><div class="pf-wrap" id="pf_wrap">
+      <!-- @@PROFILE - info card: banner space, round avatar (first letter), details; pen ball (top right) opens/closes the edit part -->
+      <section class="pf" id="pf"><div class="pf-ban"></div>
         <div class="pf-av" id="pf_av">P</div>
         <div class="pf-body">
           <div class="pf-id" id="pf_id"><h2 class="pf-nm" id="pf_nm"></h2><button class="pf-un" id="pf_un" type="button" aria-label="Copy username"></button><p class="pf-em" id="pf_em"></p><p class="pf-ph" id="pf_ph"><b></b><span>Verify your number</span></p></div>
           <div class="pf-rows" id="pf_rows"></div>
           <div class="pf-act" id="pf_act"><p class="msg slot"></p><button class="btn" id="pf_ok" type="button"><i></i><span>Update</span></button><p class="signup"><button type="button" id="pf_x">Cancel</button></p></div></div></section>
+      <button class="ib pf-ed" id="pf_ed" type="button" aria-label="Edit profile"><svg class="ico pen" viewBox="0 0 24 24"><path d="M4 20h4L19.5 8.5a2.1 2.1 0 0 0-3-3L5 17v3z"/><path d="m14.5 7.5 3 3"/></svg><svg class="ico x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+      <svg class="pf-fly" id="pf_pen" viewBox="0 0 24 24"><path d="M4 20h4L19.5 8.5a2.1 2.1 0 0 0-3-3L5 17v3z"/><path d="m14.5 7.5 3 3"/></svg></div>
       <button class="btn" id="h_out" type="button"><i></i><span>Log out</span></button></div></div>
     <nav id="nav"><i id="navball"></i>
       <button class="nv on" type="button"><svg class="ico" viewBox="0 0 24 24"><path d="M3 11.5 12 3.6l9 7.9"/><path d="M5.5 10v9.6h13V10"/><path d="M10 19.6v-4.4a2 2 0 0 1 4 0v4.4"/></svg><span>Home</span></button><button class="nv" type="button"><svg class="ico" viewBox="0 0 24 24"><path d="M8 21h8M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M7 6H4v1.5A3.5 3.5 0 0 0 7.5 11M17 6h3v1.5a3.5 3.5 0 0 1-3.5 3.5"/></svg><span>Tours</span></button><button class="nv" type="button"><svg class="ico" viewBox="0 0 24 24"><rect x="4.5" y="4" width="15" height="17" rx="3"/><path d="M9 2.8h6v3.4H9z"/><path d="m8.8 13.2 2.3 2.3 4.2-4.6"/><path d="M9 18.3h6"/></svg><span>Results</span></button><button class="nv" type="button"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.8"/><path d="M4.5 20.5c0-4.1 3.4-6.6 7.5-6.6s7.5 2.5 7.5 6.6"/></svg><span>Profile</span></button></nav>
@@ -126,4 +128,4 @@ Module sections in order: FIREBASE, STATE, HELPER-MESSAGES, HELPER-BUTTONS, HELP
 <script src="intro.js"></script>
 <script type="module" src="app.js"></script>
 </body>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </html>
+  </html>
