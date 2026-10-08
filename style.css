@@ -203,4 +203,4 @@ body{height:100%;margin:0;background:#fff;overflow:hidden}
 .pf-bi{position:relative;width:22px;height:22px}.pf-bi svg{position:absolute;left:0;top:0;width:22px;height:22px}.pf-ba{visibility:hidden}
 .pf-ar{position:absolute;left:0;top:0;width:22px;height:22px;z-index:8;pointer-events:none;visibility:hidden;fill:none;stroke:var(--lime);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 1px #0b0f10) drop-shadow(0 0 1px #0b0f10)}
 #hm3.anim button,#hm3.anim input,#hm3.anim label{pointer-events:none}
-#hm3.anim .hm-sc{overflow-y:hidden}   /* no scrolling while the pen animates, so it stays exactly on its target */
+#hm3.noscroll .hm-sc{overflow-y:hidden}   /* scrolling is blocked only during the 5th-click arrow finale */
