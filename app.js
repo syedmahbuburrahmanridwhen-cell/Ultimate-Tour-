@@ -484,14 +484,15 @@ const DAY=864e5,pf=q('#pf'),pfAct=q('#pf_act'),PF=[['name','Aa','Full Name'],['u
 Object.assign(E,{'app/pf-same':'Nothing changed yet','app/pf-locked':'This detail was changed recently. Try again later'});
 let ME=null;
 const lockAt=(p,k)=>{const t=p.locks&&p.locks[k];return t?(t.toMillis?t.toMillis():+t):0};
+const PF_SHOW_PHONE=false;   // the floating phone / 'Verify your number' line on the small card is hidden for now
 const LOCK_ON=false;   // 24h lock is OFF for now (testing). Set true to turn it on.
 const lockLeft=(p,k)=>LOCK_ON&&p[k]?lockAt(p,k)+DAY-Date.now():0;
-q('#pf_rows').innerHTML=PF.map(([k,ic,lb])=>`<label class="pf-row${k==='email'?' ro':''}" data-k="${k}"><i class="ic"><b>${ic}</b></i><span class="tx"><small>${lb}<em class="pf-n"></em></small><b class="pf-v"></b>${k==='email'?'':`<input class="pf-in" type="${k==='phone'?'tel':'text'}" autocapitalize="none" spellcheck="false" placeholder="${k==='phone'?'Not uploaded yet':''}" autocomplete="off">`}</span></label>`).join('');
+q('#pf_rows').innerHTML='<p class="pf-note">Once you change a detail, it can’t be changed again for 24 hours.</p>'+PF.map(([k,ic,lb])=>`<label class="pf-row${k==='email'?' ro':''}" data-k="${k}"><i class="ic"><b>${ic}</b></i><span class="tx"><small>${lb}<em class="pf-n"></em></small><b class="pf-v"></b>${k==='email'?'':`<input class="pf-in" type="${k==='phone'?'tel':'text'}" autocapitalize="none" spellcheck="false" placeholder="${k==='phone'?'Not uploaded yet':''}" autocomplete="off">`}</span></label>`).join('');
 function fillPf(p){ME=p;const u=p.username||'player';
   q('#hm_user').textContent=u;q('#hm_av').textContent=q('#pf_av').textContent=u[0].toUpperCase();
   pf.querySelectorAll('.pf-row').forEach(r=>r.querySelector('.pf-v').textContent=p[r.dataset.k]||'');
-  q('#pf_nm').textContent=p.name||'';q('#pf_em').textContent=p.email||'';q('#pf_un').textContent='@'+u;
-  const ph=q('#pf_ph');ph.hidden=!p.phone;ph.classList.toggle('ok',!!p.phoneVerified);ph.querySelector('b').textContent=p.phone||'';ph.querySelector('span').textContent=p.phoneVerified?'Verified number':'Verify your number'}
+  q('#pf_nm').textContent=p.name||'';q('#pf_em').textContent=p.email||'';q('#pf_unt').textContent='@'+u;
+  const ph=q('#pf_ph');ph.hidden=!(PF_SHOW_PHONE&&p.phone);ph.classList.toggle('ok',!!p.phoneVerified);ph.querySelector('b').textContent=p.phone||'';ph.querySelector('span').textContent=p.phoneVerified?'Verified number':'Verify your number'}
 // tap the @username to copy it
 q('#pf_un').onclick=async()=>{const t=q('#pf_un').textContent;try{await navigator.clipboard.writeText(t)}catch(e){const a=document.createElement('textarea');a.value=t;a.style.cssText='position:fixed;opacity:0';document.body.append(a);a.select();try{document.execCommand('copy')}catch(x){}a.remove()}toast('Username copied')};
 function pfMode(on){pfUpdReset();
@@ -508,7 +509,7 @@ const updProfile=(u,ch)=>runTransaction(db,async tx=>{
   tx.update(ref,{...ch,locks:L});return {...cur,...ch,locks:loc}});
 // ---- pen animation: pfToggle(true) opens the card, pfToggle(false) closes it (exact reverse). Pen = #pf_pen, ball = #pf_ed
 const pfBall=q('#pf_ed'),pfPen=q('#pf_pen'),pfWrap=q('#pf_wrap'),penI=pfBall.querySelector('.pen'),xI=pfBall.querySelector('.x');
-const pfHm=q('#hm3'),pfBP=q('#pf_bp'),pfBA=q('#pf_ba'),pfAR=q('#pf_ar'),pfUT=q('#pf_ut'),pfWT=q('#pf_wt'),pfOK=q('#pf_ok'),pfW=q('#pf_w');
+const pfHm=q('#hm3'),pfBP=q('#pf_bp'),pfBA=q('#pf_ba'),pfAR=q('#pf_ar'),pfUT=q('#pf_ut'),pfWT=q('#pf_wt'),pfOK=q('#pf_ok'),pfW=q('#pf_w'),pfNM=q('#pf_nm'),pfUNT=q('#pf_unt');
 let pfBusy=false,pfNC=0,pfShown='';
 // while any profile animation runs only the bottom navigation works: no button/box on this page reacts, keyboard closes
 function pfLock(on){pfBusy=on;pfHm.classList.toggle('anim',on);if(on&&document.activeElement&&document.activeElement.blur)document.activeElement.blur()}
@@ -560,6 +561,7 @@ const pfVp=(el,fx=.5,fy=.5)=>{const r=el.getBoundingClientRect();return{x:r.left
 const pfRestNow=()=>{const c=pfVp(pfBP);return{x:c.x-gsap.getProperty(pfBP,'x'),y:c.y-gsap.getProperty(pfBP,'y')}};   // pen's layout position now (page may have been scrolled)
 const pfPenTo=(c,rot,d=.5,ease='power2.inOut')=>{const r=pfRestNow();return pfTw(pfBP,{x:c.x-r.x,y:c.y-r.y,rotation:rot,duration:d,ease})};
 const pfHome=()=>pfTw(pfBP,{x:0,y:0,rotation:0,duration:.35,ease:'power2.inOut'});
+const pfScrollBy=dy=>new Promise(r=>{const sc=pfHm.querySelector('.hm-sc'),S={v:sc.scrollTop};gsap.to(S,{v:S.v+dy,duration:.5,ease:'power2.inOut',onUpdate(){sc.scrollTop=S.v},onComplete:r})});
 const pfToTop=()=>new Promise(r=>{const sc=pfHm.querySelector('.hm-sc'),S={v:sc.scrollTop};if(S.v<2){r();return}gsap.to(S,{v:0,duration:Math.min(1,.35+S.v/1600),ease:'power2.inOut',onUpdate(){sc.scrollTop=S.v},onComplete:r})});
 const pfTip=b=>({x:b.left+7.3,y:b.top+b.height/2-1.3}),pfRub=b=>({x:b.right,y:b.top+b.height/2-2});   // pen centre for tip at text start / rubber at text end
 function pfSweep(el,mode,d){return new Promise(r=>{const b=el.getBoundingClientRect(),S={p:0},w=mode==='write',rs=pfRestNow();
@@ -594,6 +596,8 @@ pfOK.onclick=async()=>{
     let ch={},err='';try{ch=pfCollect()}catch(e){err=errText(e)}
     const same=!err&&!Object.keys(ch).length;pfNC=same?pfNC+1:0;
     const save=(!err&&!same)?updProfile(auth.currentUser,ch):null;if(save)save.catch(()=>{});
+    const topFirst=!err&&('name' in ch||'username' in ch);   // new name/username gets written at the top of the card: go there first, no scrolling until done
+    if(topFirst){pfHm.classList.add('noscroll');await pfToTop()}
     // 1) rubber end erases "Update"
     await pfPenTo(pfRub(pfUT.getBoundingClientRect()),135,.4);await pfSweep(pfUT,'erase',.38);
     // 2) pen goes to the middle of the button and spins (while saving, if there is something to save)
@@ -604,18 +608,25 @@ pfOK.onclick=async()=>{
     if(save){try{res=await save}catch(e){err=errText(e)}}
     await min;sp.forEach(x=>x.kill());gsap.set(pfBP,{autoAlpha:1});
     await pfTw(pfBP,{rotation:Math.ceil(gsap.getProperty(pfBP,'rotation')/360)*360,duration:.35,ease:'power2.out'});gsap.set(pfBP,{rotation:0});
-    if(!res){   // 3) pen writes the reply between the boxes and the button (old reply is rubbed out first)
+    if(!res){if(topFirst){const r=pfOK.getBoundingClientRect(),lim=innerHeight-130;if(r.bottom>lim)await pfScrollBy(r.bottom-lim)}   // make the reply visible
+      // 3) pen writes the reply between the boxes and the button (old reply is rubbed out first)
       const text=err||PF_MSG[Math.min(pfNC,5)-1];
       if(pfShown){await pfPenTo(pfRub(pfWT.getBoundingClientRect()),135,.45);await pfSweep(pfWT,'erase',.32)}
       pfWT.textContent=text;pfWT.style.clipPath='inset(0 100% 0 0)';pfWT.style.fontSize='';
       const av=pfW.clientWidth-8,tw0=pfWT.offsetWidth;if(tw0>av)pfWT.style.fontSize=Math.max(8,11*av/tw0).toFixed(1)+'px';
       await pfPenTo(pfTip(pfWT.getBoundingClientRect()),0,.4);await pfSweep(pfWT,'write',Math.max(.55,text.length*.03));pfShown=text}
+    if(res){   // 3b) saved: pen rubs out the old name / username on the card and writes the new one
+      if(pfShown){await pfPenTo(pfRub(pfWT.getBoundingClientRect()),135,.45);await pfSweep(pfWT,'erase',.32);pfWT.textContent='';pfShown=''}
+      for(const [k,el,txt] of [['name',pfNM,res.name],['username',pfUNT,'@'+res.username]])if(k in ch){
+        await pfPenTo(pfRub(el.getBoundingClientRect()),135,.5);await pfSweep(el,'erase',.38);
+        el.textContent=txt;el.style.clipPath='inset(0 100% 0 0)';
+        await pfPenTo(pfTip(el.getBoundingClientRect()),0,.4);await pfSweep(el,'write',Math.max(.5,txt.length*.04));el.style.clipPath=''}}
     // 4) pen writes "Update" back and goes home
     await pfPenTo(pfTip(pfUT.getBoundingClientRect()),0,.45);await pfSweep(pfUT,'write',.4);await pfHome();
-    if(res){fillPf(res);toast('Profile updated');pfLock(false);pfToggle(false);return}
+    if(res){fillPf(res);toast('Profile updated');pfNC=0;pfHm.classList.remove('noscroll');pfLock(false);return}   // the card stays open
     if(!err&&same&&pfNC>=5){pfHm.classList.add('noscroll');await pfToTop();await pfShoot();pfLock(false);pfToggle(false);return}
   }catch(e){console.error(e);pfUpdReset();pfHm.classList.remove('noscroll')}
-  pfLock(false)};
+  pfHm.classList.remove('noscroll');pfLock(false)};
 
 
 // ======================================================================
