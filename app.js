@@ -561,7 +561,7 @@ const pfPenTo=(c,rot,d=.5,ease='power2.inOut')=>pfTw(pfBP,{x:c.x-pfRest.x,y:c.y-
 const pfTip=b=>({x:b.left+7.3,y:b.top+b.height/2-1.3}),pfRub=b=>({x:b.right,y:b.top+b.height/2-2});   // pen centre for tip at text start / rubber at text end
 function pfSweep(el,mode,d){return new Promise(r=>{const b=el.getBoundingClientRect(),S={p:0},w=mode==='write';
   gsap.to(S,{p:1,duration:d,ease:'none',onComplete:r,onUpdate(){const p=S.p;el.style.clipPath='inset(0 '+(w?(1-p)*100:p*100)+'% 0 0)';
-    const wob=Math.sin(p*(w?34:46))*(w?2.2:2.6),x=w?b.left+p*b.width:b.right-p*b.width,c=w?{x:x+7.3,y:b.top+b.height/2-1.3+wob}:{x,y:b.top+b.height/2-2+wob};
+    const wob=0,x=w?b.left+p*b.width:b.right-p*b.width,c=w?{x:x+7.3,y:b.top+b.height/2-1.3+wob}:{x,y:b.top+b.height/2-2+wob};
     gsap.set(pfBP,{x:c.x-pfRest.x,y:c.y-pfRest.y})}})})}
 function pfCollect(){const ch={};
   for(const [k] of PF){const i=pf.querySelector('[data-k="'+k+'"] input');if(!i||i.disabled)continue;
@@ -581,7 +581,7 @@ async function pfShoot(){   // pen > arrow aimed at the X ball; a copy flies and
   const w=pfWrap.getBoundingClientRect(),s=pfVp(pfBA),x0=s.x-w.left,y0=s.y-w.top;
   gsap.set(pfAR,{x:x0,y:y0,xPercent:-50,yPercent:-50,rotation:ang,scaleX:1,scaleY:1,autoAlpha:1});
   await pfTw(pfAR,{x:x0-Math.cos(rad)*14,y:y0-Math.sin(rad)*14,duration:.25,ease:'power2.out'});   // pull back
-  await pfTw(pfAR,{x:t.x-w.left,y:t.y-w.top,scaleX:1.5,duration:.45,ease:'power3.in'});            // shoot
+  await pfTw(pfAR,{x:t.x-w.left,y:t.y-w.top,duration:.45,ease:'power3.in'});            // shoot
   gsap.set(pfAR,{autoAlpha:0});pfBurst(t.x-w.left,t.y-w.top);
   await pfTw(pfBall,{scale:.72,duration:.1,ease:'power2.out'});gsap.to(pfBall,{scale:1,duration:.7,ease:'elastic.out(1,.35)'});await pfSl(400)}
 pfOK.onclick=async()=>{
