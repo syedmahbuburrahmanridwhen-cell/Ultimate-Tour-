@@ -509,7 +509,7 @@ const updProfile=(u,ch)=>runTransaction(db,async tx=>{
 // ---- pen animation: pfToggle(true) opens the card, pfToggle(false) closes it (exact reverse). Pen = #pf_pen, ball = #pf_ed
 const pfBall=q('#pf_ed'),pfPen=q('#pf_pen'),pfWrap=q('#pf_wrap'),penI=pfBall.querySelector('.pen'),xI=pfBall.querySelector('.x');
 const pfHm=q('#hm3'),pfBP=q('#pf_bp'),pfBA=q('#pf_ba'),pfAR=q('#pf_ar'),pfUT=q('#pf_ut'),pfWT=q('#pf_wt'),pfOK=q('#pf_ok'),pfW=q('#pf_w');
-let pfBusy=false,pfNC=0,pfShown='',pfRest=null;
+let pfBusy=false,pfNC=0,pfShown='';
 // while any profile animation runs only the bottom navigation works: no button/box on this page reacts, keyboard closes
 function pfLock(on){pfBusy=on;pfHm.classList.toggle('anim',on);if(on&&document.activeElement&&document.activeElement.blur)document.activeElement.blur()}
 // Update button back to normal (pen at its place, "Update" written, no message) - used when the card opens/closes
@@ -528,7 +528,7 @@ function pfToggle(open){
   if(open){pfMode(true);h0=pf.offsetHeight;pf.classList.add('ed');pf.style.height='';h1=pf.offsetHeight}
   else{h1=pf.offsetHeight;pf.classList.remove('ed');pf.style.height='';h0=pf.offsetHeight;pf.classList.add('ed')}
   const a=open?h0:h1,b=open?h1:h0,P={h:a};pf.style.height=a+'px';
-  const tl=gsap.timeline({onComplete(){pf.style.height='';if(!open){pf.classList.remove('ed');pfUpdReset()}gsap.set(pfPen,{autoAlpha:0});pfLock(false)}});
+  const tl=gsap.timeline({onComplete(){pf.style.height='';if(!open){pf.classList.remove('ed');pfUpdReset()}gsap.set(pfPen,{autoAlpha:0});pfHm.classList.remove('noscroll');pfLock(false)}});
   let t=0;
   if(!open){tl.to(xI,{rotation:-180,scale:0,duration:.35,ease:'back.in(1.7)'},0).fromTo(penI,{rotation:180,scale:0,autoAlpha:1},{rotation:0,scale:1,duration:.4,ease:'back.out(1.7)'},.2);t=.7}
   // 1) jelly: the ball stretches up, the pen is pulled out and flies up, then falls under gravity onto the ball, which dents like jelly
@@ -557,12 +557,15 @@ pf.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.matches('input'))
 const PF_MSG=['Nothing was changed.','Please change or add any of your details.',"What's the problem? What do you want to do??","I can't understand what you want??","Sorry, I couldn't help you."];
 const pfSl=ms=>new Promise(r=>setTimeout(r,ms)),pfTw=(t,v)=>new Promise(r=>gsap.to(t,{...v,onComplete:r}));
 const pfVp=(el,fx=.5,fy=.5)=>{const r=el.getBoundingClientRect();return{x:r.left+r.width*fx,y:r.top+r.height*fy}};
-const pfPenTo=(c,rot,d=.5,ease='power2.inOut')=>pfTw(pfBP,{x:c.x-pfRest.x,y:c.y-pfRest.y,rotation:rot,duration:d,ease});
+const pfRestNow=()=>{const c=pfVp(pfBP);return{x:c.x-gsap.getProperty(pfBP,'x'),y:c.y-gsap.getProperty(pfBP,'y')}};   // pen's layout position now (page may have been scrolled)
+const pfPenTo=(c,rot,d=.5,ease='power2.inOut')=>{const r=pfRestNow();return pfTw(pfBP,{x:c.x-r.x,y:c.y-r.y,rotation:rot,duration:d,ease})};
+const pfHome=()=>pfTw(pfBP,{x:0,y:0,rotation:0,duration:.35,ease:'power2.inOut'});
+const pfToTop=()=>new Promise(r=>{const sc=pfHm.querySelector('.hm-sc'),S={v:sc.scrollTop};if(S.v<2){r();return}gsap.to(S,{v:0,duration:Math.min(1,.35+S.v/1600),ease:'power2.inOut',onUpdate(){sc.scrollTop=S.v},onComplete:r})});
 const pfTip=b=>({x:b.left+7.3,y:b.top+b.height/2-1.3}),pfRub=b=>({x:b.right,y:b.top+b.height/2-2});   // pen centre for tip at text start / rubber at text end
-function pfSweep(el,mode,d){return new Promise(r=>{const b=el.getBoundingClientRect(),S={p:0},w=mode==='write';
+function pfSweep(el,mode,d){return new Promise(r=>{const b=el.getBoundingClientRect(),S={p:0},w=mode==='write',rs=pfRestNow();
   gsap.to(S,{p:1,duration:d,ease:'none',onComplete:r,onUpdate(){const p=S.p;el.style.clipPath='inset(0 '+(w?(1-p)*100:p*100)+'% 0 0)';
     const wob=0,x=w?b.left+p*b.width:b.right-p*b.width,c=w?{x:x+7.3,y:b.top+b.height/2-1.3+wob}:{x,y:b.top+b.height/2-2+wob};
-    gsap.set(pfBP,{x:c.x-pfRest.x,y:c.y-pfRest.y})}})})}
+    gsap.set(pfBP,{x:c.x-rs.x,y:c.y-rs.y})}})})}
 function pfCollect(){const ch={};
   for(const [k] of PF){const i=pf.querySelector('[data-k="'+k+'"] input');if(!i||i.disabled)continue;
     let val=i.value.trim();if(k==='username')val=val.toLowerCase();
@@ -587,30 +590,30 @@ async function pfShoot(){   // pen > arrow aimed at the X ball; a copy flies and
 pfOK.onclick=async()=>{
   if(pfBusy||!ME)return;pfLock(true);
   try{
-    gsap.set(pfBP,{x:0,y:0,rotation:0,scale:1,autoAlpha:1});pfRest=pfVp(pfBP);
+    gsap.set(pfBP,{x:0,y:0,rotation:0,scale:1,autoAlpha:1});
     let ch={},err='';try{ch=pfCollect()}catch(e){err=errText(e)}
     const same=!err&&!Object.keys(ch).length;pfNC=same?pfNC+1:0;
     const save=(!err&&!same)?updProfile(auth.currentUser,ch):null;if(save)save.catch(()=>{});
     // 1) rubber end erases "Update"
-    await pfPenTo(pfRub(pfUT.getBoundingClientRect()),135,.4);await pfSweep(pfUT,'erase',.55);
+    await pfPenTo(pfRub(pfUT.getBoundingClientRect()),135,.4);await pfSweep(pfUT,'erase',.38);
     // 2) pen goes to the middle of the button and spins (while saving, if there is something to save)
     await pfPenTo(pfVp(pfOK),0,.4);
-    const sp=[gsap.to(pfBP,{rotation:'+=360',duration:.7,repeat:-1,ease:'none'}),gsap.to(pfBP,{autoAlpha:.2,duration:.35,repeat:-1,yoyo:true,ease:'sine.inOut'})];
-    let res=null;const min=pfSl(1100);
+    const sp=[gsap.timeline().to(pfBP,{rotation:'+=360',duration:.5,ease:'power2.in'}).to(pfBP,{rotation:'+=360',duration:.2,repeat:-1,ease:'none'}),gsap.to(pfBP,{autoAlpha:.35,duration:.3,repeat:-1,yoyo:true,ease:'sine.inOut'}),gsap.to(pfBP,{filter:'blur(2.2px)',duration:.4})];   // accelerates, then spins fast and blurred
+    let res=null;const min=pfSl(1400);
     if(save){try{res=await save}catch(e){err=errText(e)}}
     await min;sp.forEach(x=>x.kill());gsap.set(pfBP,{autoAlpha:1});
-    await pfTw(pfBP,{rotation:Math.ceil(gsap.getProperty(pfBP,'rotation')/360)*360,duration:.25,ease:'power1.out'});gsap.set(pfBP,{rotation:0});
+    await pfTw(pfBP,{rotation:Math.ceil(gsap.getProperty(pfBP,'rotation')/360)*360,duration:.3,ease:'power2.out'});gsap.set(pfBP,{rotation:0});gsap.to(pfBP,{filter:'blur(0px)',duration:.2,onComplete:()=>gsap.set(pfBP,{filter:'none'})});
     if(!res){   // 3) pen writes the reply between the boxes and the button (old reply is rubbed out first)
       const text=err||PF_MSG[Math.min(pfNC,5)-1];
-      if(pfShown){await pfPenTo(pfRub(pfWT.getBoundingClientRect()),135,.45);await pfSweep(pfWT,'erase',.45)}
+      if(pfShown){await pfPenTo(pfRub(pfWT.getBoundingClientRect()),135,.45);await pfSweep(pfWT,'erase',.32)}
       pfWT.textContent=text;pfWT.style.clipPath='inset(0 100% 0 0)';pfWT.style.fontSize='';
       const av=pfW.clientWidth-8,tw0=pfWT.offsetWidth;if(tw0>av)pfWT.style.fontSize=Math.max(8,11*av/tw0).toFixed(1)+'px';
-      await pfPenTo(pfTip(pfWT.getBoundingClientRect()),0,.4);await pfSweep(pfWT,'write',Math.max(.8,text.length*.05));pfShown=text}
+      await pfPenTo(pfTip(pfWT.getBoundingClientRect()),0,.4);await pfSweep(pfWT,'write',Math.max(.55,text.length*.03));pfShown=text}
     // 4) pen writes "Update" back and goes home
-    await pfPenTo(pfTip(pfUT.getBoundingClientRect()),0,.45);await pfSweep(pfUT,'write',.55);await pfPenTo(pfRest,0,.4);
+    await pfPenTo(pfTip(pfUT.getBoundingClientRect()),0,.45);await pfSweep(pfUT,'write',.4);await pfHome();
     if(res){fillPf(res);toast('Profile updated');pfLock(false);pfToggle(false);return}
-    if(!err&&same&&pfNC>=5){await pfShoot();pfLock(false);pfToggle(false);return}
-  }catch(e){console.error(e);pfUpdReset()}
+    if(!err&&same&&pfNC>=5){pfHm.classList.add('noscroll');await pfToTop();await pfShoot();pfLock(false);pfToggle(false);return}
+  }catch(e){console.error(e);pfUpdReset();pfHm.classList.remove('noscroll')}
   pfLock(false)};
 
 
