@@ -598,7 +598,7 @@ pfOK.onclick=async()=>{
     await pfPenTo(pfRub(pfUT.getBoundingClientRect()),135,.4);await pfSweep(pfUT,'erase',.38);
     // 2) pen goes to the middle of the button and spins (while saving, if there is something to save)
     await pfPenTo(pfVp(pfOK),0,.4);
-    const sp=[gsap.timeline().to(pfBP,{rotation:'+=360',duration:.5,ease:'power2.in'}).to(pfBP,{rotation:'+=360',duration:.2,repeat:-1,ease:'none'}),gsap.to(pfBP,{autoAlpha:.35,duration:.3,repeat:-1,yoyo:true,ease:'sine.inOut'}),gsap.to(pfBP,{filter:'blur(2.2px)',duration:.4})];   // accelerates, then spins fast and blurred
+    const sp=[gsap.timeline().to(pfBP,{rotation:'+=360',duration:.5,ease:'power2.in'}).to(pfBP,{rotation:'+=360',duration:.2,repeat:-1,ease:'none'}),gsap.to(pfBP,{filter:'blur(1.5px)',duration:.4})];   // accelerates, then spins fast with a light blur, no flicker
     let res=null;const min=pfSl(1400);
     if(save){try{res=await save}catch(e){err=errText(e)}}
     await min;sp.forEach(x=>x.kill());gsap.set(pfBP,{autoAlpha:1});
