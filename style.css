@@ -204,3 +204,7 @@ body{height:100%;margin:0;background:#fff;overflow:hidden}
 .pf-ar{position:absolute;left:0;top:0;width:22px;height:22px;z-index:8;pointer-events:none;visibility:hidden;fill:none;stroke:var(--lime);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 1px #0b0f10) drop-shadow(0 0 1px #0b0f10)}
 #hm3.anim button,#hm3.anim input,#hm3.anim label{pointer-events:none}
 #hm3.noscroll .hm-sc{overflow-y:hidden}   /* scrolling is blocked only during the 5th-click arrow finale */
+.pf-note{margin:0 0 2px;text-align:center;font:600 11px/1.5 var(--mono);color:#7a8386}
+/* no sky-blue tap box / focus ring on any button */
+*{-webkit-tap-highlight-color:transparent}
+button:focus,button:focus-visible,[role=button]:focus,a:focus{outline:none}
