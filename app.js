@@ -598,7 +598,7 @@ pfOK.onclick=async()=>{
     await pfPenTo(pfRub(pfUT.getBoundingClientRect()),135,.4);await pfSweep(pfUT,'erase',.38);
     // 2) pen goes to the middle of the button and spins (while saving, if there is something to save)
     await pfPenTo(pfVp(pfOK),0,.4);
-    const PF_BLUR='blur(1.6px)';   // spin blur at top speed (like the loading ball's spin); change the number to taste
+    const PF_BLUR='blur(.9px)';   // spin blur at top speed (like the loading ball's spin); change the number to taste
     const sp=[gsap.timeline().to(pfBP,{rotation:'+=360',duration:.5,ease:'power2.in'},0).to(pfBP,{filter:PF_BLUR,duration:.5,ease:'power2.in'},0)   // blur grows with the speed
       .to(pfBP,{rotation:'+=360',duration:.2,repeat:-1,ease:'none'},.5)];
     let res=null;const min=pfSl(1400);
