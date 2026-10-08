@@ -598,13 +598,12 @@ pfOK.onclick=async()=>{
     await pfPenTo(pfRub(pfUT.getBoundingClientRect()),135,.4);await pfSweep(pfUT,'erase',.38);
     // 2) pen goes to the middle of the button and spins (while saving, if there is something to save)
     await pfPenTo(pfVp(pfOK),0,.4);
-    const PF_BLUR='blur(.7px)';   // spin blur at top speed (like the loading ball's spin); change the number to taste
-    const sp=[gsap.timeline().to(pfBP,{rotation:'+=360',duration:.5,ease:'power2.in'},0).to(pfBP,{filter:PF_BLUR,duration:.5,ease:'power2.in'},0)   // blur grows with the speed
+    const sp=[gsap.timeline().to(pfBP,{rotation:'+=360',duration:.5,ease:'power2.in'},0)
       .to(pfBP,{rotation:'+=360',duration:.2,repeat:-1,ease:'none'},.5)];
     let res=null;const min=pfSl(1400);
     if(save){try{res=await save}catch(e){err=errText(e)}}
     await min;sp.forEach(x=>x.kill());gsap.set(pfBP,{autoAlpha:1});
-    await pfTw(pfBP,{rotation:Math.ceil(gsap.getProperty(pfBP,'rotation')/360)*360,filter:'blur(0px)',duration:.35,ease:'power2.out'});gsap.set(pfBP,{rotation:0,filter:'none'});
+    await pfTw(pfBP,{rotation:Math.ceil(gsap.getProperty(pfBP,'rotation')/360)*360,duration:.35,ease:'power2.out'});gsap.set(pfBP,{rotation:0});
     if(!res){   // 3) pen writes the reply between the boxes and the button (old reply is rubbed out first)
       const text=err||PF_MSG[Math.min(pfNC,5)-1];
       if(pfShown){await pfPenTo(pfRub(pfWT.getBoundingClientRect()),135,.45);await pfSweep(pfWT,'erase',.32)}
