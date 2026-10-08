@@ -196,3 +196,10 @@ body{height:100%;margin:0;background:#fff;overflow:hidden}
 .pf-ph b{font:700 14px var(--mono);letter-spacing:.04em}.pf-ph span{font:700 10px var(--mono);letter-spacing:.12em;text-transform:uppercase;padding:3px 8px;border-radius:99px;background:rgba(214,69,42,.12)}
 .pf-ph.ok{color:var(--green)}.pf-ph.ok span{background:rgba(30,77,58,.12)}
 .pf-act .btn{width:100%;box-sizing:border-box}
+/* @@PROFILE update button: message line (written by the pen), pen/arrow inside the button, lock while animating */
+.pf-w{display:grid;place-items:center;height:30px;overflow:hidden;font:700 11px var(--mono);color:#d6452a;white-space:nowrap}
+#pf_wt{display:inline-block;clip-path:inset(0 100% 0 0)}
+.pf-act .btn{margin-top:0}
+.pf-bi{position:relative;width:22px;height:22px}.pf-bi svg{position:absolute;left:0;top:0;width:22px;height:22px}.pf-ba{visibility:hidden}
+.pf-ar{position:absolute;left:0;top:0;width:34px;height:34px;z-index:8;pointer-events:none;visibility:hidden;fill:none;stroke:var(--lime);stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 1px #0b0f10) drop-shadow(0 0 1px #0b0f10)}
+#hm3.anim button,#hm3.anim input,#hm3.anim label{pointer-events:none}
