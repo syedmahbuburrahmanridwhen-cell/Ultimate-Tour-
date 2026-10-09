@@ -225,3 +225,13 @@ button:focus,button:focus-visible,[role=button]:focus,a:focus{outline:none}
 .pfp-ok{background:#182024;color:var(--lime);border:1.5px solid rgba(201,222,60,.55);gap:12px}
 .pfp-sl{width:22px;height:22px;flex:none}
 .pfp-pn{position:fixed;left:0;top:0;width:22px;height:22px;z-index:100000;pointer-events:none;color:var(--lime)}
+/* lock look + bypass code box */
+.pf-row{transition:box-shadow .4s,background .5s}
+.pf-row.lk{background:#ebe7e0;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.pf-row input{transition:color .5s}.pf-row input:disabled{pointer-events:none}
+.pf-row small{white-space:nowrap}.pf-n{flex:0 1 auto}
+.ic b svg{display:block;width:24px;height:24px}
+.pfp-cd{display:grid;gap:6px;text-align:left}.pfp-cd small{font:700 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--lime)}
+.pfp-in{all:unset;box-sizing:border-box;width:100%;height:48px;padding:0 16px;border-radius:14px;background:rgba(255,255,255,.08);border:1.5px solid rgba(255,255,255,.16);color:#fff;font:700 18px var(--mono);letter-spacing:.3em;text-align:center}
+.pfp-in:focus{border-color:var(--lime)}.pfp-in::placeholder{color:#6f7a7d;letter-spacing:.3em}
+.pfp-in.bad{border-color:#ff6b57}.pfp-in.bad::placeholder{color:#ff6b57;letter-spacing:.05em;font-size:13px}
