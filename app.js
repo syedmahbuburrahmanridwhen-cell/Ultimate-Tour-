@@ -487,7 +487,7 @@ const lockAt=(p,k)=>{const t=p.locks&&p.locks[k];return t?(t.toMillis?t.toMillis
 const PF_SHOW_PHONE=false;   // the floating phone / 'Verify your number' line on the small card is hidden for now
 const LOCK_ON=true;   // 24h lock: a filled name/username/phone can be changed once, then it is locked for 24h (set false to switch off)
 const lockLeft=(p,k)=>LOCK_ON&&p[k]?lockAt(p,k)+DAY-Date.now():0;
-q('#pf_rows').innerHTML=''+PF.map(([k,ic,lb])=>`<label class="pf-row${k==='email'?' ro':''}" data-k="${k}"><i class="ic"><b>${ic}</b></i><span class="tx"><small>${lb}<em class="pf-n"></em></small><b class="pf-v"></b>${k==='email'?'':`<input class="pf-in" type="${k==='phone'?'tel':'text'}" autocapitalize="none" spellcheck="false" placeholder="${k==='phone'?'Not uploaded yet':''}" autocomplete="off">`}</span></label>`).join('');
+q('#pf_rows').innerHTML=''+PF.map(([k,ic,lb])=>`<label class="pf-row${k==='email'?' ro':''}" data-k="${k}" data-g="${ic}"><i class="ic"><b>${ic}</b></i><span class="tx"><small>${lb}<em class="pf-n"></em></small><b class="pf-v"></b>${k==='email'?'':`<input class="pf-in" type="${k==='phone'?'tel':'text'}" autocapitalize="none" spellcheck="false" placeholder="${k==='phone'?'Not uploaded yet':''}" autocomplete="off">`}</span></label>`).join('');
 function fillPf(p){ME=p;const u=p.username||'player';
   q('#hm_user').textContent=u;q('#hm_av').textContent=q('#pf_av').textContent=u[0].toUpperCase();
   pf.querySelectorAll('.pf-row').forEach(r=>r.querySelector('.pf-v').textContent=p[r.dataset.k]||'');
@@ -495,30 +495,52 @@ function fillPf(p){ME=p;const u=p.username||'player';
   const ph=q('#pf_ph');ph.hidden=!(PF_SHOW_PHONE&&p.phone);ph.classList.toggle('ok',!!p.phoneVerified);ph.querySelector('b').textContent=p.phone||'';ph.querySelector('span').textContent=p.phoneVerified?'Verified number':'Verify your number'}
 // tap the @username to copy it
 q('#pf_un').onclick=async()=>{const t=q('#pf_un').textContent;try{await navigator.clipboard.writeText(t)}catch(e){const a=document.createElement('textarea');a.value=t;a.style.cssText='position:fixed;opacity:0';document.body.append(a);a.select();try{document.execCommand('copy')}catch(x){}a.remove()}toast('Username copied')};
-// lock look of the edit rows (note + disabled box); fill=true also puts the saved values into the boxes
-function pfLockUI(fill){pf.querySelectorAll('.pf-row').forEach(r=>{const k=r.dataset.k,i=r.querySelector('input'),n=r.querySelector('.pf-n'),L=lockLeft(ME,k),lk=L>0;
-  r.classList.toggle('lk',lk);if(i){if(fill)i.value=ME[k]||'';i.disabled=lk}
-  if(k==='email')n.textContent="Can't be changed";
-  else{const m=Math.ceil(L/6e4);n.textContent=lk?'Locked · change again in '+(m>=60?Math.floor(m/60)+'h '+m%60+'m':m+'m'):''}})}
+// ---- lock look of the edit rows: live countdown, lock/unlock animation (padlock flips in, shackle snaps shut), secret 10s hold = bypass
+const PF_BYPASS='109283',PF_LOCK='<svg viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="10" rx="2.5" fill="currentColor" stroke="none"/><path class="sh" d="M8 11V8a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>';
+const pfFmt=ms=>{const s=Math.max(0,Math.ceil(ms/1000)),h=Math.floor(s/3600),m=Math.floor(s%3600/60);return(h?h+'h ':'')+(h||m?m+'m ':'')+s%60+'s'};
+function pfRowLock(r,lock,anim){
+  if(!!r._lk===lock)return;r._lk=lock;const ic=r.querySelector('.ic b'),g=r.dataset.g;
+  if(!anim){r.classList.toggle('lk',lock);ic.innerHTML=lock?PF_LOCK:g;gsap.set(ic,{scaleX:1});return}
+  const tl=gsap.timeline();
+  if(lock)tl.to(r,{scale:.97,duration:.12,ease:'power2.in'},0).add(()=>r.classList.add('lk'),0)      // greys out smoothly (css), box dips
+    .to(ic,{scaleX:0,duration:.15,ease:'power1.in'},0).add(()=>{ic.innerHTML=PF_LOCK;gsap.set(ic.querySelector('.sh'),{y:-4,rotation:-14,svgOrigin:'16 11'})},.15)
+    .to(ic,{scaleX:1,duration:.2,ease:'back.out(2)'},.15).to(r,{scale:1,duration:.7,ease:'elastic.out(1,.4)'},.3)
+    .add(()=>gsap.to(ic.querySelector('.sh'),{y:0,rotation:0,duration:.4,ease:'bounce.out'}),.38);          // shackle snaps shut
+  else{const sh=ic.querySelector('.sh');                                                                       // exact reverse
+    tl.add(()=>sh&&gsap.to(sh,{y:-4,rotation:-14,duration:.3,ease:'back.out(2)'}),0).add(()=>r.classList.remove('lk'),.3)
+      .to(r,{scale:1.03,duration:.15,yoyo:true,repeat:1},.3).to(ic,{scaleX:0,duration:.15,ease:'power1.in'},.3)
+      .add(()=>{ic.innerHTML=g},.45).to(ic,{scaleX:1,duration:.2,ease:'back.out(2)'},.45)}}
+// fill=true puts the saved values into the boxes; anim=true animates a lock/unlock change
+function pfLockUI(fill,anim){pf.querySelectorAll('.pf-row').forEach(r=>{const k=r.dataset.k,i=r.querySelector('input'),n=r.querySelector('.pf-n');
+  const L=k==='email'?0:lockLeft(ME,k),lk=L>0&&!pfBypass[k];
+  pfRowLock(r,lk,anim);if(i){if(fill)i.value=ME[k]||'';i.disabled=lk}
+  n.textContent=k==='email'?"Can't be changed":lk?'Locked for '+pfFmt(L):''})}
 function pfMode(on){pfUpdReset();if(on)pfLockUI(true)}
-setInterval(()=>{if(ME&&pf.classList.contains('ed')&&!pfBusy)pfLockUI(false)},30000);   // countdown text refreshes while the card is open
+setInterval(()=>{if(ME&&pf.classList.contains('ed')&&!pfBusy)pfLockUI(false,true)},1000);   // the countdown ticks every second; a lock that ran out opens by itself
+// secret: hold a locked name / username box for 10 seconds = unlock it (the pop-up will then ask for the bypass code)
+let pfHold=null,pfHx=0,pfHy=0;const pfRows=q('#pf_rows');
+pfRows.addEventListener('pointerdown',e=>{const r=e.target.closest('.pf-row');if(!r||pfBusy||!r.classList.contains('lk'))return;const k=r.dataset.k;if(k!=='name'&&k!=='username')return;
+  pfHx=e.clientX;pfHy=e.clientY;clearTimeout(pfHold);pfHold=setTimeout(()=>{pfBypass[k]=true;pfLockUI(false,true);try{navigator.vibrate&&navigator.vibrate(40)}catch(x){}},10000)});
+pfRows.addEventListener('pointermove',e=>{if(pfHold&&Math.hypot(e.clientX-pfHx,e.clientY-pfHy)>12){clearTimeout(pfHold);pfHold=null}});
+['pointerup','pointercancel','pointerleave'].forEach(t=>pfRows.addEventListener(t,()=>{clearTimeout(pfHold);pfHold=null}));
+pfRows.addEventListener('contextmenu',e=>e.preventDefault());
 // Save changed details (one transaction: re-checks the 24h lock on the server copy, swaps the username record if it changed)
-const updProfile=(u,ch)=>runTransaction(db,async tx=>{
+const updProfile=(u,ch,by)=>runTransaction(db,async tx=>{
   const ref=doc(db,'users',u.uid),cur=(await tx.get(ref)).data()||{},L={...(cur.locks||{})},loc={...L},nu=ch.username;
   let nr=null;if(nu){nr=doc(db,'usernames',nu);if((await tx.get(nr)).exists())throw{code:'app/username-taken'}}
-  for(const k in ch)if(LOCK_ON&&cur[k]){if(lockLeft(cur,k)>0)throw{code:'app/pf-locked'};L[k]=serverTimestamp();loc[k]=Date.now()}
+  for(const k in ch)if(LOCK_ON&&cur[k]){if(lockLeft(cur,k)>0&&!(by&&by[k]))throw{code:'app/pf-locked'};L[k]=serverTimestamp();loc[k]=Date.now()}
   if(nu){tx.set(nr,{uid:u.uid});if(cur.username)tx.delete(doc(db,'usernames',cur.username))}
   tx.update(ref,{...ch,locks:L});return {...cur,...ch,locks:loc}});
 // ---- pen animation: pfToggle(true) opens the card, pfToggle(false) closes it (exact reverse). Pen = #pf_pen, ball = #pf_ed
 const pfBall=q('#pf_ed'),pfPen=q('#pf_pen'),pfWrap=q('#pf_wrap'),penI=pfBall.querySelector('.pen'),xI=pfBall.querySelector('.x');
 const pfHm=q('#hm3'),pfBP=q('#pf_bp'),pfBA=q('#pf_ba'),pfAR=q('#pf_ar'),pfUT=q('#pf_ut'),pfWT=q('#pf_wt'),pfOK=q('#pf_ok'),pfW=q('#pf_w'),pfNM=q('#pf_nm'),pfUNT=q('#pf_unt'),pfUN=q('#pf_un');
-let pfP=pfBP,pfBusy=false,pfNC=0,pfShown='';
+let pfBypass={},pfP=pfBP,pfBusy=false,pfNC=0,pfShown='';
 // while any profile animation runs only the bottom navigation works: no button/box on this page reacts, keyboard closes
 function pfLock(on){pfBusy=on;pfHm.classList.toggle('anim',on);if(on&&document.activeElement&&document.activeElement.blur)document.activeElement.blur()}
 // Update button back to normal (pen at its place, "Update" written, no message) - used when the card opens/closes
 function pfUpdReset(){pfNC=0;pfShown='';pfWT.textContent='';pfWT.style.cssText='';pfUT.style.clipPath='';
   gsap.set(pfBP,{x:0,y:0,rotation:0,scale:1,autoAlpha:1});gsap.set(pfBA,{autoAlpha:0,scale:0,rotation:0})}
-function pfReset(){pf.classList.remove('ed');pf.style.height='';pfLock(false);pfUpdReset();
+function pfReset(){pfBypass={};pf.classList.remove('ed');pf.style.height='';pfLock(false);pfUpdReset();
   gsap.set(pfBall,{scale:1});gsap.set(penI,{autoAlpha:1,scale:1,rotation:0});gsap.set(xI,{autoAlpha:0,scale:0,rotation:0});
   gsap.set(pfPen,{autoAlpha:0,xPercent:-50,yPercent:-50,x:0,y:0,rotation:0,scale:1})}
 pfReset();
@@ -531,7 +553,7 @@ function pfToggle(open){
   if(open){pfMode(true);h0=pf.offsetHeight;pf.classList.add('ed');pf.style.height='';h1=pf.offsetHeight}
   else{h1=pf.offsetHeight;pf.classList.remove('ed');pf.style.height='';h0=pf.offsetHeight;pf.classList.add('ed')}
   const a=open?h0:h1,b=open?h1:h0,P={h:a};pf.style.height=a+'px';
-  const tl=gsap.timeline({onComplete(){pf.style.height='';if(!open){pf.classList.remove('ed');pfUpdReset()}gsap.set(pfPen,{autoAlpha:0});pfHm.classList.remove('noscroll');pfLock(false)}});
+  const tl=gsap.timeline({onComplete(){pf.style.height='';if(!open){pf.classList.remove('ed');pfUpdReset();pfBypass={}}gsap.set(pfPen,{autoAlpha:0});pfHm.classList.remove('noscroll');pfLock(false)}});
   let t=0;
   if(!open){tl.to(xI,{rotation:-180,scale:0,duration:.35,ease:'back.in(1.7)'},0).fromTo(penI,{rotation:180,scale:0,autoAlpha:1},{rotation:0,scale:1,duration:.4,ease:'back.out(1.7)'},.2);t=.7}
   // 1) jelly: the ball stretches up, the pen is pulled out and flies up, then falls under gravity onto the ball, which dents like jelly
@@ -594,12 +616,12 @@ async function pfRewrite(el,txtEl,txt){
 // confirmation pop-up: the Update button grows into it. resolves {res,err,cancel}
 const pfEsc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function pfPopup(ch){return new Promise(async done=>{
-  const keys=['name','username'].filter(k=>k in ch),what=keys.length>1?'name and username':keys[0],LB={name:'Name',username:'Username'};
+  const keys=['name','username'].filter(k=>k in ch),need=keys.some(k=>pfBypass[k]),what=keys.length>1?'name and username':keys[0],LB={name:'Name',username:'Username'};
   const bd=document.createElement('div'),pp=document.createElement('div'),pn=document.createElementNS('http://www.w3.org/2000/svg','svg');
   bd.className='pfp-bd';pp.className='pfp';pn.setAttribute('class','ico pfp-pn');pn.setAttribute('viewBox','0 0 24 24');pn.innerHTML=PF_PEN;
   pp.innerHTML='<div class="pfp-ic"><svg class="ico" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div><div class="pfp-c"><p class="pfp-w">Once you change your '+what+', you can’t change it again for 24 hours.</p>'
     +keys.map(k=>{const at=k==='username'?'@':'';return'<div class="pfp-r"><small>'+LB[k]+'</small><p>Previous<b>'+pfEsc(at+(ME[k]||''))+'</b></p><p>New<b class="n">'+pfEsc(at+ch[k])+'</b></p></div>'}).join('')
-    +'<button class="pfp-ok" type="button"><span>Confirm</span><span class="pfp-sl"></span></button></div>';
+    +(need?'<div class="pfp-cd"><small>Bypass code</small><input class="pfp-in" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="······"></div>':'')+'<button class="pfp-ok" type="button"><span>Confirm</span><span class="pfp-sl"></span></button></div>';
   document.body.append(bd,pp,pn);
   let rb=pfOK.getBoundingClientRect();
   pp.style.left='-9999px';pp.style.top='0';pp.style.width=rb.width+'px';const H=pp.offsetHeight;   // height the pop-up needs
@@ -618,10 +640,11 @@ function pfPopup(ch){return new Promise(async done=>{
   // 2) the tick floats up by itself, the pen walks to the Confirm button, writes "Confirm" and sits beside it
   await Promise.all([pfTw(tk,{scale:1.7,rotation:0,duration:.5,ease:'back.out(1.8)'}),pfTw(pc,{autoAlpha:1,duration:.3}),pfPenTo(pfTip(lab),0,.5)]);
   await pfSweep(lab,'write',.45);await pfPenTo(pfVp(sl),0,.3);
-  const act=await new Promise(r=>{okb.onclick=()=>r('ok');bd.onclick=()=>r('cancel')});okb.onclick=null;bd.onclick=null;
+  const cin=pp.querySelector('.pfp-in');
+  const act=await new Promise(r=>{okb.onclick=()=>{if(cin&&cin.value.trim()!==PF_BYPASS){gsap.fromTo(cin,{x:-9},{x:0,duration:.5,ease:'elastic.out(1,.3)'});cin.value='';cin.placeholder='wrong code';cin.classList.add('bad');return}r('ok')};bd.onclick=()=>r('cancel')});okb.onclick=null;bd.onclick=null;
   // 3) Confirm: save starts, pen rubs out "Confirm", then pushes the pop-up's top line back down: it becomes the Update button again
   let sv=null;const cancel=act==='cancel';
-  if(!cancel){sv=updProfile(auth.currentUser,ch);sv.catch(()=>{});await pfPenTo(pfRub(lab),135,.4);await pfSweep(lab,'erase',.35)}
+  if(!cancel){sv=updProfile(auth.currentUser,ch,pfBypass);sv.catch(()=>{});await pfPenTo(pfRub(lab),135,.4);await pfSweep(lab,'erase',.35)}
   await Promise.all([pfTw(pc,{autoAlpha:0,duration:.25}),pfTw(tk,{scale:0,rotation:90,duration:.3,ease:'back.in(1.7)'}),pfPenTo({x:cx,y:top(H)},0,.45)]);
   await Promise.all([pfTw(bd,{opacity:0,duration:.8}),pull(rb.height,'power2.inOut',.8)]);
   // back to the page pen, standing where the pop-up pen was
@@ -674,14 +697,15 @@ pfOK.onclick=async()=>{
       pfWT.textContent=text;pfWT.style.clipPath='inset(0 100% 0 0)';pfWT.style.fontSize='';
       const av=pfW.clientWidth-8,tw0=pfWT.offsetWidth;if(tw0>av)pfWT.style.fontSize=Math.max(8,11*av/tw0).toFixed(1)+'px';
       await pfPenTo(pfTip(pfWT),0,.4);await pfSweep(pfWT,'write',Math.max(.55,text.length*.03));pfShown=text}
-    if(res){   // 3b) saved: pen rubs out the old name / username on the card and writes the new one
+    if(res){   // 3b) saved: the changed boxes lock (animated), then the pen rubs out the old name / username on the card and writes the new one
+      pfBypass={};ME.locks=res.locks;pfLockUI(false,true);
       if(pfShown){await pfPenTo(pfRub(pfWT),135,.45);await pfSweep(pfWT,'erase',.32);pfWT.textContent='';pfShown=''}
       if('name' in ch||'username' in ch){pfHm.classList.add('noscroll');await pfToTop()}   // page glides to the top, no scrolling until done
       if('name' in ch)await pfRewrite(pfNM,pfNM,res.name);
       if('username' in ch)await pfRewrite(pfUN,pfUNT,'@'+res.username)}
     // 4) pen writes "Update" back and goes home
     await pfPenTo(pfTip(pfUT),0,.45);await pfSweep(pfUT,'write',.4);await pfHome();
-    if(res){fillPf(res);pfLockUI(true);toast('Profile updated');pfNC=0;pfHm.classList.remove('noscroll');pfLock(false);return}   // the card stays open
+    if(res){fillPf(res);pfBypass={};pfLockUI(true);toast('Profile updated');pfNC=0;pfHm.classList.remove('noscroll');pfLock(false);return}   // the card stays open
     if(!err&&same&&pfNC>=5){pfHm.classList.add('noscroll');await pfToTop();await pfShoot();pfLock(false);pfToggle(false);return}
   }catch(e){console.error(e);pfUpdReset();pfHm.classList.remove('noscroll')}
   pfHm.classList.remove('noscroll');pfLock(false)};
