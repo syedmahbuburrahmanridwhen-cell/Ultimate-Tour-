@@ -516,7 +516,7 @@ function pfLockUI(fill,anim){pf.querySelectorAll('.pf-row').forEach(r=>{const k=
   pfRowLock(r,lk,anim);if(i){if(fill)i.value=ME[k]||'';i.disabled=lk}
   n.textContent=k==='email'?"Can't be changed":lk?'Locked for '+pfFmt(L):''})}
 function pfMode(on){pfUpdReset();if(on)pfLockUI(true)}
-setInterval(()=>{if(ME&&pf.classList.contains('ed')&&!pfBusy)pfLockUI(false,true)},1000);   // the countdown ticks every second; a lock that ran out opens by itself
+setInterval(()=>{if(ME&&pf.classList.contains('ed'))pfLockUI(false,!pfBusy)},1000);   // the countdown ticks every second; a lock that ran out opens by itself
 // secret: hold a locked name / username box for 10 seconds = unlock it (the pop-up will then ask for the bypass code)
 let pfHold=null,pfHx=0,pfHy=0;const pfRows=q('#pf_rows');
 pfRows.addEventListener('pointerdown',e=>{const r=e.target.closest('.pf-row');if(!r||pfBusy||!r.classList.contains('lk'))return;const k=r.dataset.k;if(k!=='name'&&k!=='username')return;
@@ -641,16 +641,16 @@ function pfPopup(ch){return new Promise(async done=>{
   await Promise.all([pfTw(tk,{scale:1.7,rotation:0,duration:.5,ease:'back.out(1.8)'}),pfTw(pc,{autoAlpha:1,duration:.3}),pfPenTo(pfTip(lab),0,.5)]);
   await pfSweep(lab,'write',.45);await pfPenTo(pfVp(sl),0,.3);
   const cin=pp.querySelector('.pfp-in');
-  const act=await new Promise(r=>{okb.onclick=()=>{if(cin&&cin.value.trim()!==PF_BYPASS){gsap.fromTo(cin,{x:-9},{x:0,duration:.5,ease:'elastic.out(1,.3)'});cin.value='';cin.placeholder='wrong code';cin.classList.add('bad');return}r('ok')};bd.onclick=()=>r('cancel')});okb.onclick=null;bd.onclick=null;
+  const act=await new Promise(r=>{let wrong=0;okb.onclick=()=>{if(cin&&cin.value.trim()!==PF_BYPASS){wrong++;gsap.fromTo(cin,{x:-9},{x:0,duration:.5,ease:'elastic.out(1,.3)'});cin.value='';cin.placeholder='wrong code';cin.classList.add('bad');if(wrong>=3){okb.onclick=null;bd.onclick=null;setTimeout(()=>r('bad'),650)}return}r('ok')};bd.onclick=()=>r('cancel')});okb.onclick=null;bd.onclick=null;
   // 3) Confirm: save starts, pen rubs out "Confirm", then pushes the pop-up's top line back down: it becomes the Update button again
-  let sv=null;const cancel=act==='cancel';
+  let sv=null;const cancel=act!=='ok',bad=act==='bad';
   if(!cancel){sv=updProfile(auth.currentUser,ch,pfBypass);sv.catch(()=>{});await pfPenTo(pfRub(lab),135,.4);await pfSweep(lab,'erase',.35)}
   await Promise.all([pfTw(pc,{autoAlpha:0,duration:.25}),pfTw(tk,{scale:0,rotation:90,duration:.3,ease:'back.in(1.7)'}),pfPenTo({x:cx,y:top(H)},0,.45)]);
   await Promise.all([pfTw(bd,{opacity:0,duration:.8}),pull(rb.height,'power2.inOut',.8)]);
   // back to the page pen, standing where the pop-up pen was
   const c1=pfVp(pn);pp.remove();bd.remove();pn.remove();pfOK.style.opacity='';pfP=pfBP;
   gsap.set(pfBP,{x:0,y:0,rotation:0,scale:1,autoAlpha:1});const r0=pfRestNow();gsap.set(pfBP,{x:c1.x-r0.x,y:c1.y-r0.y});
-  await pfPenTo(pfVp(pfOK),0,.4);done({sv,cancel})})}
+  await pfPenTo(pfVp(pfOK),0,.4);done({sv,cancel,bad})})}
 function pfCollect(){const ch={};
   for(const [k] of PF){const i=pf.querySelector('[data-k="'+k+'"] input');if(!i||i.disabled)continue;
     let val=i.value.trim();if(k==='username')val=val.toLowerCase();
@@ -690,7 +690,8 @@ pfOK.onclick=async()=>{
     if(save){try{res=await save}catch(e){err=errText(e)}}
     await min;sp.forEach(x=>x.kill());gsap.set(pfBP,{autoAlpha:1});
     await pfTw(pfBP,{rotation:Math.ceil(gsap.getProperty(pfBP,'rotation')/360)*360,duration:.35,ease:'power2.out'});gsap.set(pfBP,{rotation:0});
-    let cancel=false;if(pop){const pr=await pfPopup(ch);cancel=pr.cancel;if(pr.sv){try{res=await pr.sv}catch(e){err=errText(e)}}}
+    let cancel=false;if(pop){const pr=await pfPopup(ch);cancel=pr.cancel;if(pr.bad){pfBypass={};pfLockUI(true,true)}   // 3 wrong codes: the bypass is withdrawn, boxes lock again with their old values
+      if(pr.sv){try{res=await pr.sv}catch(e){err=errText(e)}}}
     if(!res&&!cancel){   // 3) pen writes the reply between the boxes and the button (old reply is rubbed out first)
       const text=err||PF_MSG[Math.min(pfNC,5)-1];
       if(pfShown){await pfPenTo(pfRub(pfWT),135,.45);await pfSweep(pfWT,'erase',.32)}
