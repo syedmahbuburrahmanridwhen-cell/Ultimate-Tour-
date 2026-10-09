@@ -487,7 +487,7 @@ const lockAt=(p,k)=>{const t=p.locks&&p.locks[k];return t?(t.toMillis?t.toMillis
 const PF_SHOW_PHONE=false;   // the floating phone / 'Verify your number' line on the small card is hidden for now
 const LOCK_ON=false;   // 24h lock is OFF for now (testing). Set true to turn it on.
 const lockLeft=(p,k)=>LOCK_ON&&p[k]?lockAt(p,k)+DAY-Date.now():0;
-q('#pf_rows').innerHTML='<p class="pf-note">Once you change a detail, it can’t be changed again for 24 hours.</p>'+PF.map(([k,ic,lb])=>`<label class="pf-row${k==='email'?' ro':''}" data-k="${k}"><i class="ic"><b>${ic}</b></i><span class="tx"><small>${lb}<em class="pf-n"></em></small><b class="pf-v"></b>${k==='email'?'':`<input class="pf-in" type="${k==='phone'?'tel':'text'}" autocapitalize="none" spellcheck="false" placeholder="${k==='phone'?'Not uploaded yet':''}" autocomplete="off">`}</span></label>`).join('');
+q('#pf_rows').innerHTML=''+PF.map(([k,ic,lb])=>`<label class="pf-row${k==='email'?' ro':''}" data-k="${k}"><i class="ic"><b>${ic}</b></i><span class="tx"><small>${lb}<em class="pf-n"></em></small><b class="pf-v"></b>${k==='email'?'':`<input class="pf-in" type="${k==='phone'?'tel':'text'}" autocapitalize="none" spellcheck="false" placeholder="${k==='phone'?'Not uploaded yet':''}" autocomplete="off">`}</span></label>`).join('');
 function fillPf(p){ME=p;const u=p.username||'player';
   q('#hm_user').textContent=u;q('#hm_av').textContent=q('#pf_av').textContent=u[0].toUpperCase();
   pf.querySelectorAll('.pf-row').forEach(r=>r.querySelector('.pf-v').textContent=p[r.dataset.k]||'');
@@ -509,7 +509,7 @@ const updProfile=(u,ch)=>runTransaction(db,async tx=>{
   tx.update(ref,{...ch,locks:L});return {...cur,...ch,locks:loc}});
 // ---- pen animation: pfToggle(true) opens the card, pfToggle(false) closes it (exact reverse). Pen = #pf_pen, ball = #pf_ed
 const pfBall=q('#pf_ed'),pfPen=q('#pf_pen'),pfWrap=q('#pf_wrap'),penI=pfBall.querySelector('.pen'),xI=pfBall.querySelector('.x');
-const pfHm=q('#hm3'),pfBP=q('#pf_bp'),pfBA=q('#pf_ba'),pfAR=q('#pf_ar'),pfUT=q('#pf_ut'),pfWT=q('#pf_wt'),pfOK=q('#pf_ok'),pfW=q('#pf_w'),pfNM=q('#pf_nm'),pfUNT=q('#pf_unt');
+const pfHm=q('#hm3'),pfBP=q('#pf_bp'),pfBA=q('#pf_ba'),pfAR=q('#pf_ar'),pfUT=q('#pf_ut'),pfWT=q('#pf_wt'),pfOK=q('#pf_ok'),pfW=q('#pf_w'),pfNM=q('#pf_nm'),pfUNT=q('#pf_unt'),pfUN=q('#pf_un');
 let pfBusy=false,pfNC=0,pfShown='';
 // while any profile animation runs only the bottom navigation works: no button/box on this page reacts, keyboard closes
 function pfLock(on){pfBusy=on;pfHm.classList.toggle('anim',on);if(on&&document.activeElement&&document.activeElement.blur)document.activeElement.blur()}
@@ -563,11 +563,61 @@ const pfPenTo=(c,rot,d=.5,ease='power2.inOut')=>{const r=pfRestNow();return pfTw
 const pfHome=()=>pfTw(pfBP,{x:0,y:0,rotation:0,duration:.35,ease:'power2.inOut'});
 const pfScrollBy=dy=>new Promise(r=>{const sc=pfHm.querySelector('.hm-sc'),S={v:sc.scrollTop};gsap.to(S,{v:S.v+dy,duration:.5,ease:'power2.inOut',onUpdate(){sc.scrollTop=S.v},onComplete:r})});
 const pfToTop=()=>new Promise(r=>{const sc=pfHm.querySelector('.hm-sc'),S={v:sc.scrollTop};if(S.v<2){r();return}gsap.to(S,{v:0,duration:Math.min(1,.35+S.v/1600),ease:'power2.inOut',onUpdate(){sc.scrollTop=S.v},onComplete:r})});
-const pfTip=b=>({x:b.left+7.3,y:b.top+b.height/2-1.3}),pfRub=b=>({x:b.right,y:b.top+b.height/2-2});   // pen centre for tip at text start / rubber at text end
-function pfSweep(el,mode,d){return new Promise(r=>{const b=el.getBoundingClientRect(),S={p:0},w=mode==='write',rs=pfRestNow();
-  gsap.to(S,{p:1,duration:d,ease:'none',onComplete:r,onUpdate(){const p=S.p;el.style.clipPath='inset(0 '+(w?(1-p)*100:p*100)+'% 0 0)';
-    const wob=0,x=w?b.left+p*b.width:b.right-p*b.width,c=w?{x:x+7.3,y:b.top+b.height/2-1.3+wob}:{x,y:b.top+b.height/2-2+wob};
+const PF_PEN='<path d="M4 20h4L19.5 8.5a2.1 2.1 0 0 0-3-3L5 17v3z"/><path d="m14.5 7.5 3 3"/>';
+function pfLines(el){const rg=document.createRange();rg.selectNodeContents(el);const o=el.getBoundingClientRect(),L=[];   // one box per text line, relative to the element
+  for(const r of rg.getClientRects()){if(r.width<1)continue;const t=r.top-o.top,bt=r.bottom-o.top,l=r.left-o.left,rr=r.right-o.left,m=L.find(x=>Math.abs(x.t-t)<3);
+    if(m){m.l=Math.min(m.l,l);m.r=Math.max(m.r,rr);m.b=Math.max(m.b,bt)}else L.push({l,r:rr,t,b:bt})}
+  L.sort((a,b)=>a.t-b.t);return L.length?L:[{l:0,r:o.width,t:0,b:o.height}]}
+const pfTip=el=>{const b=el.getBoundingClientRect(),L=pfLines(el),l=L[0];return{x:b.left+(L.length===1?0:l.l)+7.3,y:b.top+(l.t+l.b)/2-1.3}};                    // pen centre: tip at the start of the text
+const pfRub=el=>{const b=el.getBoundingClientRect(),L=pfLines(el),l=L[L.length-1];return{x:b.left+(L.length===1?b.width:l.r),y:b.top+(l.t+l.b)/2-2}};          // pen centre: rubber at the end of the text
+// one straight stroke along the text (line by line if it wraps). write = reveal left>right, erase = hide right>left. Clips the whole element, so a coloured pill is written/erased with its text
+function pfSweep(el,mode,d){return new Promise(r=>{
+  const b=el.getBoundingClientRect(),W=b.width,H=b.height,L=pfLines(el),n=L.length,w=mode==='write',rs=pfRestNow(),S={p:0};
+  const E=L.map(l=>n===1?[0,W]:[l.l,l.r]),tot=E.reduce((s,e)=>s+e[1]-e[0],0)||1,ord=L.map((_,i)=>i);if(!w)ord.reverse();
+  gsap.to(S,{p:1,duration:d,ease:'none',onComplete(){el.style.clipPath=w?'inset(0 0 0 0)':'inset(0 100% 0 0)';r()},onUpdate(){
+    let pos=S.p*tot,i=ord[ord.length-1],f=1,len=1;
+    for(const k of ord){len=E[k][1]-E[k][0]||1;if(pos<=len){i=k;f=pos/len;break}pos-=len}
+    const x=w?E[i][0]+f*len:E[i][1]-f*len,t=L[i].t,bt=i===n-1?H:L[i].b;
+    el.style.clipPath=n===1?'inset(0 '+(W-x)+'px 0 0)':'polygon(0px 0px,'+W+'px 0px,'+W+'px '+t+'px,'+x+'px '+t+'px,'+x+'px '+bt+'px,0px '+bt+'px)';
+    const cy=b.top+(L[i].t+L[i].b)/2,c=w?{x:b.left+x+7.3,y:cy-1.3}:{x:b.left+x,y:cy-2};
     gsap.set(pfBP,{x:c.x-rs.x,y:c.y-rs.y})}})})}
+// rub out the old text, let the card grow/shrink smoothly to the new number of lines, then write the new text
+async function pfRewrite(el,txtEl,txt){
+  await pfPenTo(pfRub(el),135,.5);await pfSweep(el,'erase',.4);
+  const h0=el.offsetHeight;txtEl.textContent=txt;el.style.clipPath='inset(0 100% 0 0)';const h1=el.offsetHeight;   // h1 = height the new text needs
+  el.style.overflow='hidden';el.style.height=h0+'px';
+  await Promise.all([pfTw(el,{height:h1,duration:.55,ease:'power2.inOut'}),pfPenTo(pfTip(el),0,.55)]);
+  await pfSweep(el,'write',Math.max(.5,txt.length*.04));
+  el.style.height='';el.style.overflow='';el.style.clipPath=''}
+// confirmation pop-up: the Update button grows into it. resolves {res,err,cancel}
+const pfEsc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function pfPopup(ch){return new Promise(async done=>{
+  const keys=['name','username'].filter(k=>k in ch),what=keys.length>1?'name and username':keys[0],LB={name:'Name',username:'Username'};
+  const W=Math.min(innerWidth-40,340),rb=pfOK.getBoundingClientRect(),bd=document.createElement('div'),pp=document.createElement('div');bd.className='pfp-bd';pp.className='pfp';
+  pp.innerHTML='<div class="pfp-ic"><svg class="ico" viewBox="0 0 24 24">'+PF_PEN+'</svg><svg class="ico" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div><div class="pfp-c"><p class="pfp-w">Once you change your '+what+', you can’t change it again for 24 hours.</p>'
+    +keys.map(k=>{const at=k==='username'?'@':'';return'<div class="pfp-r"><small>'+LB[k]+'</small><p>Previous<b>'+pfEsc(at+(ME[k]||''))+'</b></p><p>New<b class="n">'+pfEsc(at+ch[k])+'</b></p></div>'}).join('')
+    +'<button class="pfp-ok" type="button"><span>Confirm</span><i class="dot"></i><i class="ring"></i></button></div>';
+  document.body.append(bd,pp);
+  const ic=pp.querySelector('.pfp-ic'),[pen,tick]=ic.querySelectorAll('svg'),pc=pp.querySelector('.pfp-c'),okb=pp.querySelector('.pfp-ok'),lab=okb.querySelector('span'),dot=okb.querySelector('.dot'),ring=okb.querySelector('.ring');
+  pp.style.left='-9999px';pp.style.top='0';pp.style.width=W+'px';const H=pp.offsetHeight;   // measure the final height
+  gsap.set(pp,{left:rb.left,top:rb.top,width:rb.width,height:rb.height,borderRadius:rb.height/2});
+  gsap.set(ic,{left:'50%',top:rb.height/2,xPercent:-50,yPercent:-50});gsap.set(pc,{autoAlpha:0});gsap.set(tick,{scale:0,rotation:-90});gsap.set([dot,ring],{scale:0,xPercent:-50,yPercent:-50});
+  pfOK.style.opacity='0';   // the pop-up takes the button's place
+  await Promise.all([pfTw(bd,{opacity:1,duration:.5}),pfTw(pp,{left:(innerWidth-W)/2,top:Math.max(10,(innerHeight-H)/2),width:W,height:H,borderRadius:28,duration:.8,ease:'power3.inOut'}),
+    pfTw(ic,{top:40,duration:.8,ease:'power3.inOut'}),pfTw(pen,{scale:0,rotation:180,duration:.35,delay:.2,ease:'back.in(1.7)'}),pfTw(tick,{scale:1.7,rotation:0,duration:.5,delay:.5,ease:'back.out(1.8)'})]);
+  await pfTw(pc,{autoAlpha:1,duration:.35});
+  const act=await new Promise(r=>{okb.onclick=()=>r('ok');bd.onclick=()=>r('cancel')});okb.onclick=null;bd.onclick=null;
+  let res=null,err='';const cancel=act==='cancel';
+  if(!cancel){   // "Confirm" shrinks to a dot, the dot becomes a spinner while saving
+    await pfTw(lab,{scale:0,opacity:0,duration:.25,ease:'power2.in'});await pfTw(dot,{scale:1,duration:.2,ease:'back.out(2)'});
+    await Promise.all([pfTw(dot,{scale:0,duration:.15}),pfTw(ring,{scale:1,duration:.2,delay:.1})]);
+    const sp=gsap.to(ring,{rotation:360,duration:.7,repeat:-1,ease:'none'}),min=pfSl(1200);
+    try{res=await updProfile(auth.currentUser,ch)}catch(e){err=errText(e)}await min;sp.kill();await pfTw(ring,{scale:0,duration:.2})}
+  await pfTw(pc,{autoAlpha:0,duration:.25});
+  const r2=pfOK.getBoundingClientRect();   // the pop-up goes back to the button, the tick turns into the pen again
+  await Promise.all([pfTw(bd,{opacity:0,duration:.5}),pfTw(pp,{left:r2.left,top:r2.top,width:r2.width,height:r2.height,borderRadius:r2.height/2,duration:.75,ease:'power3.inOut'}),
+    pfTw(ic,{top:r2.height/2,duration:.75,ease:'power3.inOut'}),pfTw(tick,{scale:0,rotation:90,duration:.35,delay:.1,ease:'back.in(1.7)'}),pfTw(pen,{scale:1,rotation:0,duration:.45,delay:.45,ease:'back.out(1.8)'})]);
+  pp.remove();bd.remove();pfOK.style.opacity='';done({res,err,cancel})})}
 function pfCollect(){const ch={};
   for(const [k] of PF){const i=pf.querySelector('[data-k="'+k+'"] input');if(!i||i.disabled)continue;
     let val=i.value.trim();if(k==='username')val=val.toLowerCase();
@@ -595,11 +645,10 @@ pfOK.onclick=async()=>{
     gsap.set(pfBP,{x:0,y:0,rotation:0,scale:1,autoAlpha:1});
     let ch={},err='';try{ch=pfCollect()}catch(e){err=errText(e)}
     const same=!err&&!Object.keys(ch).length;pfNC=same?pfNC+1:0;
-    const save=(!err&&!same)?updProfile(auth.currentUser,ch):null;if(save)save.catch(()=>{});
-    const topFirst=!err&&('name' in ch||'username' in ch);   // new name/username gets written at the top of the card: go there first, no scrolling until done
-    if(topFirst){pfHm.classList.add('noscroll');await pfToTop()}
+    const pop=!err&&!same&&('name' in ch||'username' in ch);   // name/username change: confirmation pop-up first, saved after Confirm
+    const save=(!err&&!same&&!pop)?updProfile(auth.currentUser,ch):null;if(save)save.catch(()=>{});
     // 1) rubber end erases "Update"
-    await pfPenTo(pfRub(pfUT.getBoundingClientRect()),135,.4);await pfSweep(pfUT,'erase',.38);
+    await pfPenTo(pfRub(pfUT),135,.4);await pfSweep(pfUT,'erase',.38);
     // 2) pen goes to the middle of the button and spins (while saving, if there is something to save)
     await pfPenTo(pfVp(pfOK),0,.4);
     const sp=[gsap.timeline().to(pfBP,{rotation:'+=360',duration:.5,ease:'power2.in'},0)
@@ -608,21 +657,20 @@ pfOK.onclick=async()=>{
     if(save){try{res=await save}catch(e){err=errText(e)}}
     await min;sp.forEach(x=>x.kill());gsap.set(pfBP,{autoAlpha:1});
     await pfTw(pfBP,{rotation:Math.ceil(gsap.getProperty(pfBP,'rotation')/360)*360,duration:.35,ease:'power2.out'});gsap.set(pfBP,{rotation:0});
-    if(!res){if(topFirst){const r=pfOK.getBoundingClientRect(),lim=innerHeight-130;if(r.bottom>lim)await pfScrollBy(r.bottom-lim)}   // make the reply visible
-      // 3) pen writes the reply between the boxes and the button (old reply is rubbed out first)
+    let cancel=false;if(pop){const pr=await pfPopup(ch);res=pr.res;err=pr.err||err;cancel=pr.cancel}
+    if(!res&&!cancel){   // 3) pen writes the reply between the boxes and the button (old reply is rubbed out first)
       const text=err||PF_MSG[Math.min(pfNC,5)-1];
-      if(pfShown){await pfPenTo(pfRub(pfWT.getBoundingClientRect()),135,.45);await pfSweep(pfWT,'erase',.32)}
+      if(pfShown){await pfPenTo(pfRub(pfWT),135,.45);await pfSweep(pfWT,'erase',.32)}
       pfWT.textContent=text;pfWT.style.clipPath='inset(0 100% 0 0)';pfWT.style.fontSize='';
       const av=pfW.clientWidth-8,tw0=pfWT.offsetWidth;if(tw0>av)pfWT.style.fontSize=Math.max(8,11*av/tw0).toFixed(1)+'px';
-      await pfPenTo(pfTip(pfWT.getBoundingClientRect()),0,.4);await pfSweep(pfWT,'write',Math.max(.55,text.length*.03));pfShown=text}
+      await pfPenTo(pfTip(pfWT),0,.4);await pfSweep(pfWT,'write',Math.max(.55,text.length*.03));pfShown=text}
     if(res){   // 3b) saved: pen rubs out the old name / username on the card and writes the new one
-      if(pfShown){await pfPenTo(pfRub(pfWT.getBoundingClientRect()),135,.45);await pfSweep(pfWT,'erase',.32);pfWT.textContent='';pfShown=''}
-      for(const [k,el,txt] of [['name',pfNM,res.name],['username',pfUNT,'@'+res.username]])if(k in ch){
-        await pfPenTo(pfRub(el.getBoundingClientRect()),135,.5);await pfSweep(el,'erase',.38);
-        el.textContent=txt;el.style.clipPath='inset(0 100% 0 0)';
-        await pfPenTo(pfTip(el.getBoundingClientRect()),0,.4);await pfSweep(el,'write',Math.max(.5,txt.length*.04));el.style.clipPath=''}}
+      if(pfShown){await pfPenTo(pfRub(pfWT),135,.45);await pfSweep(pfWT,'erase',.32);pfWT.textContent='';pfShown=''}
+      if('name' in ch||'username' in ch){pfHm.classList.add('noscroll');await pfToTop()}   // page glides to the top, no scrolling until done
+      if('name' in ch)await pfRewrite(pfNM,pfNM,res.name);
+      if('username' in ch)await pfRewrite(pfUN,pfUNT,'@'+res.username)}
     // 4) pen writes "Update" back and goes home
-    await pfPenTo(pfTip(pfUT.getBoundingClientRect()),0,.45);await pfSweep(pfUT,'write',.4);await pfHome();
+    await pfPenTo(pfTip(pfUT),0,.45);await pfSweep(pfUT,'write',.4);await pfHome();
     if(res){fillPf(res);toast('Profile updated');pfNC=0;pfHm.classList.remove('noscroll');pfLock(false);return}   // the card stays open
     if(!err&&same&&pfNC>=5){pfHm.classList.add('noscroll');await pfToTop();await pfShoot();pfLock(false);pfToggle(false);return}
   }catch(e){console.error(e);pfUpdReset();pfHm.classList.remove('noscroll')}
