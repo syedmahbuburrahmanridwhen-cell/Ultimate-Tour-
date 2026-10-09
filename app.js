@@ -561,7 +561,7 @@ const pfVp=(el,fx=.5,fy=.5)=>{const r=el.getBoundingClientRect();return{x:r.left
 const pfRestNow=()=>{const c=pfVp(pfP);return{x:c.x-gsap.getProperty(pfP,'x'),y:c.y-gsap.getProperty(pfP,'y')}};   // pen's layout position now (page may have been scrolled)
 const pfPenTo=(c,rot,d=.5,ease='power2.inOut')=>{const r=pfRestNow();return pfTw(pfP,{x:c.x-r.x,y:c.y-r.y,rotation:rot,duration:d,ease})};
 const pfHome=()=>pfTw(pfP,{x:0,y:0,rotation:0,duration:.35,ease:'power2.inOut'});
-const pfScrollBy=dy=>new Promise(r=>{const sc=pfHm.querySelector('.hm-sc'),S={v:sc.scrollTop};gsap.to(S,{v:S.v+dy,duration:.5,ease:'power2.inOut',onUpdate(){sc.scrollTop=S.v},onComplete:r})});
+const pfScrollBy=dy=>new Promise(r=>{const sc=pfHm.querySelector('.hm-sc'),S={v:sc.scrollTop};gsap.to(S,{v:S.v+dy,duration:Math.min(.9,.35+Math.abs(dy)/1500),ease:'power2.inOut',onUpdate(){sc.scrollTop=S.v},onComplete:r})});
 const pfToTop=()=>new Promise(r=>{const sc=pfHm.querySelector('.hm-sc'),S={v:sc.scrollTop};if(S.v<2){r();return}gsap.to(S,{v:0,duration:Math.min(1,.35+S.v/1600),ease:'power2.inOut',onUpdate(){sc.scrollTop=S.v},onComplete:r})});
 const PF_PEN='<path d="M4 20h4L19.5 8.5a2.1 2.1 0 0 0-3-3L5 17v3z"/><path d="m14.5 7.5 3 3"/>';
 function pfLines(el){const rg=document.createRange();rg.selectNodeContents(el);const o=el.getBoundingClientRect(),L=[];   // one box per text line, relative to the element
@@ -601,8 +601,8 @@ function pfPopup(ch){return new Promise(async done=>{
   document.body.append(bd,pp,pn);
   let rb=pfOK.getBoundingClientRect();
   pp.style.left='-9999px';pp.style.top='0';pp.style.width=rb.width+'px';const H=pp.offsetHeight;   // height the pop-up needs
-  // make sure the pop-up (it grows upwards from the button) fits on screen
-  let dy=Math.max(0,rb.bottom-(innerHeight-110));if(rb.bottom-dy-H<12)dy=rb.bottom-H-12;
+  // the pop-up grows upwards from the button, so glide the page first until the finished pop-up will sit exactly in the middle of the screen
+  const dy=rb.bottom-(innerHeight+H)/2;
   if(Math.abs(dy)>2){await pfScrollBy(dy);rb=pfOK.getBoundingClientRect()}
   const ic=pp.querySelector('.pfp-ic'),tk=ic.querySelector('svg'),pc=pp.querySelector('.pfp-c'),okb=pp.querySelector('.pfp-ok'),lab=okb.querySelector('span'),sl=okb.querySelector('.pfp-sl');
   gsap.set(pp,{left:rb.left,top:rb.top,width:rb.width,height:rb.height,borderRadius:28});
