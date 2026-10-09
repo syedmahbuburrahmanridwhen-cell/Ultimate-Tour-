@@ -510,7 +510,7 @@ const updProfile=(u,ch)=>runTransaction(db,async tx=>{
 // ---- pen animation: pfToggle(true) opens the card, pfToggle(false) closes it (exact reverse). Pen = #pf_pen, ball = #pf_ed
 const pfBall=q('#pf_ed'),pfPen=q('#pf_pen'),pfWrap=q('#pf_wrap'),penI=pfBall.querySelector('.pen'),xI=pfBall.querySelector('.x');
 const pfHm=q('#hm3'),pfBP=q('#pf_bp'),pfBA=q('#pf_ba'),pfAR=q('#pf_ar'),pfUT=q('#pf_ut'),pfWT=q('#pf_wt'),pfOK=q('#pf_ok'),pfW=q('#pf_w'),pfNM=q('#pf_nm'),pfUNT=q('#pf_unt'),pfUN=q('#pf_un');
-let pfBusy=false,pfNC=0,pfShown='';
+let pfP=pfBP,pfBusy=false,pfNC=0,pfShown='';
 // while any profile animation runs only the bottom navigation works: no button/box on this page reacts, keyboard closes
 function pfLock(on){pfBusy=on;pfHm.classList.toggle('anim',on);if(on&&document.activeElement&&document.activeElement.blur)document.activeElement.blur()}
 // Update button back to normal (pen at its place, "Update" written, no message) - used when the card opens/closes
@@ -558,9 +558,9 @@ pf.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.matches('input'))
 const PF_MSG=['Nothing was changed.','Please change or add any of your details.',"What's the problem? What do you want to do??","I can't understand what you want??","Sorry, I couldn't help you."];
 const pfSl=ms=>new Promise(r=>setTimeout(r,ms)),pfTw=(t,v)=>new Promise(r=>gsap.to(t,{...v,onComplete:r}));
 const pfVp=(el,fx=.5,fy=.5)=>{const r=el.getBoundingClientRect();return{x:r.left+r.width*fx,y:r.top+r.height*fy}};
-const pfRestNow=()=>{const c=pfVp(pfBP);return{x:c.x-gsap.getProperty(pfBP,'x'),y:c.y-gsap.getProperty(pfBP,'y')}};   // pen's layout position now (page may have been scrolled)
-const pfPenTo=(c,rot,d=.5,ease='power2.inOut')=>{const r=pfRestNow();return pfTw(pfBP,{x:c.x-r.x,y:c.y-r.y,rotation:rot,duration:d,ease})};
-const pfHome=()=>pfTw(pfBP,{x:0,y:0,rotation:0,duration:.35,ease:'power2.inOut'});
+const pfRestNow=()=>{const c=pfVp(pfP);return{x:c.x-gsap.getProperty(pfP,'x'),y:c.y-gsap.getProperty(pfP,'y')}};   // pen's layout position now (page may have been scrolled)
+const pfPenTo=(c,rot,d=.5,ease='power2.inOut')=>{const r=pfRestNow();return pfTw(pfP,{x:c.x-r.x,y:c.y-r.y,rotation:rot,duration:d,ease})};
+const pfHome=()=>pfTw(pfP,{x:0,y:0,rotation:0,duration:.35,ease:'power2.inOut'});
 const pfScrollBy=dy=>new Promise(r=>{const sc=pfHm.querySelector('.hm-sc'),S={v:sc.scrollTop};gsap.to(S,{v:S.v+dy,duration:.5,ease:'power2.inOut',onUpdate(){sc.scrollTop=S.v},onComplete:r})});
 const pfToTop=()=>new Promise(r=>{const sc=pfHm.querySelector('.hm-sc'),S={v:sc.scrollTop};if(S.v<2){r();return}gsap.to(S,{v:0,duration:Math.min(1,.35+S.v/1600),ease:'power2.inOut',onUpdate(){sc.scrollTop=S.v},onComplete:r})});
 const PF_PEN='<path d="M4 20h4L19.5 8.5a2.1 2.1 0 0 0-3-3L5 17v3z"/><path d="m14.5 7.5 3 3"/>';
@@ -580,7 +580,7 @@ function pfSweep(el,mode,d){return new Promise(r=>{
     const x=w?E[i][0]+f*len:E[i][1]-f*len,t=L[i].t,bt=i===n-1?H:L[i].b;
     el.style.clipPath=n===1?'inset(0 '+(W-x)+'px 0 0)':'polygon(0px 0px,'+W+'px 0px,'+W+'px '+t+'px,'+x+'px '+t+'px,'+x+'px '+bt+'px,0px '+bt+'px)';
     const cy=b.top+(L[i].t+L[i].b)/2,c=w?{x:b.left+x+7.3,y:cy-1.3}:{x:b.left+x,y:cy-2};
-    gsap.set(pfBP,{x:c.x-rs.x,y:c.y-rs.y})}})})}
+    gsap.set(pfP,{x:c.x-rs.x,y:c.y-rs.y})}})})}
 // rub out the old text, let the card grow/shrink smoothly to the new number of lines, then write the new text
 async function pfRewrite(el,txtEl,txt){
   await pfPenTo(pfRub(el),135,.5);await pfSweep(el,'erase',.4);
@@ -593,31 +593,39 @@ async function pfRewrite(el,txtEl,txt){
 const pfEsc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 function pfPopup(ch){return new Promise(async done=>{
   const keys=['name','username'].filter(k=>k in ch),what=keys.length>1?'name and username':keys[0],LB={name:'Name',username:'Username'};
-  const W=Math.min(innerWidth-40,340),rb=pfOK.getBoundingClientRect(),bd=document.createElement('div'),pp=document.createElement('div');bd.className='pfp-bd';pp.className='pfp';
-  pp.innerHTML='<div class="pfp-ic"><svg class="ico" viewBox="0 0 24 24">'+PF_PEN+'</svg><svg class="ico" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div><div class="pfp-c"><p class="pfp-w">Once you change your '+what+', you can’t change it again for 24 hours.</p>'
+  const bd=document.createElement('div'),pp=document.createElement('div'),pn=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  bd.className='pfp-bd';pp.className='pfp';pn.setAttribute('class','ico pfp-pn');pn.setAttribute('viewBox','0 0 24 24');pn.innerHTML=PF_PEN;
+  pp.innerHTML='<div class="pfp-ic"><svg class="ico" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg></div><div class="pfp-c"><p class="pfp-w">Once you change your '+what+', you can’t change it again for 24 hours.</p>'
     +keys.map(k=>{const at=k==='username'?'@':'';return'<div class="pfp-r"><small>'+LB[k]+'</small><p>Previous<b>'+pfEsc(at+(ME[k]||''))+'</b></p><p>New<b class="n">'+pfEsc(at+ch[k])+'</b></p></div>'}).join('')
-    +'<button class="pfp-ok" type="button"><span>Confirm</span><i class="dot"></i><i class="ring"></i></button></div>';
-  document.body.append(bd,pp);
-  const ic=pp.querySelector('.pfp-ic'),[pen,tick]=ic.querySelectorAll('svg'),pc=pp.querySelector('.pfp-c'),okb=pp.querySelector('.pfp-ok'),lab=okb.querySelector('span'),dot=okb.querySelector('.dot'),ring=okb.querySelector('.ring');
-  pp.style.left='-9999px';pp.style.top='0';pp.style.width=W+'px';const H=pp.offsetHeight;   // measure the final height
-  gsap.set(pp,{left:rb.left,top:rb.top,width:rb.width,height:rb.height,borderRadius:rb.height/2});
-  gsap.set(ic,{left:'50%',top:rb.height/2,xPercent:-50,yPercent:-50});gsap.set(pc,{autoAlpha:0});gsap.set(tick,{scale:0,rotation:-90});gsap.set([dot,ring],{scale:0,xPercent:-50,yPercent:-50});
-  pfOK.style.opacity='0';   // the pop-up takes the button's place
-  await Promise.all([pfTw(bd,{opacity:1,duration:.5}),pfTw(pp,{left:(innerWidth-W)/2,top:Math.max(10,(innerHeight-H)/2),width:W,height:H,borderRadius:28,duration:.8,ease:'power3.inOut'}),
-    pfTw(ic,{top:40,duration:.8,ease:'power3.inOut'}),pfTw(pen,{scale:0,rotation:180,duration:.35,delay:.2,ease:'back.in(1.7)'}),pfTw(tick,{scale:1.7,rotation:0,duration:.5,delay:.5,ease:'back.out(1.8)'})]);
-  await pfTw(pc,{autoAlpha:1,duration:.35});
+    +'<button class="pfp-ok" type="button"><span>Confirm</span><span class="pfp-sl"></span></button></div>';
+  document.body.append(bd,pp,pn);
+  let rb=pfOK.getBoundingClientRect();
+  pp.style.left='-9999px';pp.style.top='0';pp.style.width=rb.width+'px';const H=pp.offsetHeight;   // height the pop-up needs
+  // make sure the pop-up (it grows upwards from the button) fits on screen
+  let dy=Math.max(0,rb.bottom-(innerHeight-110));if(rb.bottom-dy-H<12)dy=rb.bottom-H-12;
+  if(Math.abs(dy)>2){await pfScrollBy(dy);rb=pfOK.getBoundingClientRect()}
+  const ic=pp.querySelector('.pfp-ic'),tk=ic.querySelector('svg'),pc=pp.querySelector('.pfp-c'),okb=pp.querySelector('.pfp-ok'),lab=okb.querySelector('span'),sl=okb.querySelector('.pfp-sl');
+  gsap.set(pp,{left:rb.left,top:rb.top,width:rb.width,height:rb.height,borderRadius:28});
+  gsap.set(ic,{left:'50%',top:40,xPercent:-50,yPercent:-50});gsap.set(pc,{autoAlpha:0});gsap.set(tk,{scale:0,rotation:-90});lab.style.clipPath='inset(0 100% 0 0)';
+  const c0=pfVp(pfBP);gsap.set(pn,{x:c0.x-11,y:c0.y-11,rotation:0});
+  pfOK.style.opacity='0';pfP=pn;   // the pop-up (and its own pen) takes the button's place
+  const cx=rb.left+rb.width/2,P={h:rb.height},top=h=>rb.bottom-h,pull=(to,ease,d)=>pfTw(P,{h:to,duration:d,ease,onUpdate(){gsap.set(pp,{top:top(P.h),height:P.h});gsap.set(pn,{y:top(P.h)-11})}});
+  // 1) pen goes to the button's top line and pulls it up: the button stretches into the pop-up
+  await Promise.all([pfTw(bd,{opacity:1,duration:.4}),pfPenTo({x:cx,y:rb.top},0,.4)]);
+  await pull(H,'back.out(1.1)',.9);
+  // 2) the tick floats up by itself, the pen walks to the Confirm button, writes "Confirm" and sits beside it
+  await Promise.all([pfTw(tk,{scale:1.7,rotation:0,duration:.5,ease:'back.out(1.8)'}),pfTw(pc,{autoAlpha:1,duration:.3}),pfPenTo(pfTip(lab),0,.5)]);
+  await pfSweep(lab,'write',.45);await pfPenTo(pfVp(sl),0,.3);
   const act=await new Promise(r=>{okb.onclick=()=>r('ok');bd.onclick=()=>r('cancel')});okb.onclick=null;bd.onclick=null;
-  let res=null,err='';const cancel=act==='cancel';
-  if(!cancel){   // "Confirm" shrinks to a dot, the dot becomes a spinner while saving
-    await pfTw(lab,{scale:0,opacity:0,duration:.25,ease:'power2.in'});await pfTw(dot,{scale:1,duration:.2,ease:'back.out(2)'});
-    await Promise.all([pfTw(dot,{scale:0,duration:.15}),pfTw(ring,{scale:1,duration:.2,delay:.1})]);
-    const sp=gsap.to(ring,{rotation:360,duration:.7,repeat:-1,ease:'none'}),min=pfSl(1200);
-    try{res=await updProfile(auth.currentUser,ch)}catch(e){err=errText(e)}await min;sp.kill();await pfTw(ring,{scale:0,duration:.2})}
-  await pfTw(pc,{autoAlpha:0,duration:.25});
-  const r2=pfOK.getBoundingClientRect();   // the pop-up goes back to the button, the tick turns into the pen again
-  await Promise.all([pfTw(bd,{opacity:0,duration:.5}),pfTw(pp,{left:r2.left,top:r2.top,width:r2.width,height:r2.height,borderRadius:r2.height/2,duration:.75,ease:'power3.inOut'}),
-    pfTw(ic,{top:r2.height/2,duration:.75,ease:'power3.inOut'}),pfTw(tick,{scale:0,rotation:90,duration:.35,delay:.1,ease:'back.in(1.7)'}),pfTw(pen,{scale:1,rotation:0,duration:.45,delay:.45,ease:'back.out(1.8)'})]);
-  pp.remove();bd.remove();pfOK.style.opacity='';done({res,err,cancel})})}
+  // 3) Confirm: save starts, pen rubs out "Confirm", then pushes the pop-up's top line back down: it becomes the Update button again
+  let sv=null;const cancel=act==='cancel';
+  if(!cancel){sv=updProfile(auth.currentUser,ch);sv.catch(()=>{});await pfPenTo(pfRub(lab),135,.4);await pfSweep(lab,'erase',.35)}
+  await Promise.all([pfTw(pc,{autoAlpha:0,duration:.25}),pfTw(tk,{scale:0,rotation:90,duration:.3,ease:'back.in(1.7)'}),pfPenTo({x:cx,y:top(H)},0,.45)]);
+  await Promise.all([pfTw(bd,{opacity:0,duration:.8}),pull(rb.height,'power2.inOut',.8)]);
+  // back to the page pen, standing where the pop-up pen was
+  const c1=pfVp(pn);pp.remove();bd.remove();pn.remove();pfOK.style.opacity='';pfP=pfBP;
+  gsap.set(pfBP,{x:0,y:0,rotation:0,scale:1,autoAlpha:1});const r0=pfRestNow();gsap.set(pfBP,{x:c1.x-r0.x,y:c1.y-r0.y});
+  await pfPenTo(pfVp(pfOK),0,.4);done({sv,cancel})})}
 function pfCollect(){const ch={};
   for(const [k] of PF){const i=pf.querySelector('[data-k="'+k+'"] input');if(!i||i.disabled)continue;
     let val=i.value.trim();if(k==='username')val=val.toLowerCase();
@@ -657,7 +665,7 @@ pfOK.onclick=async()=>{
     if(save){try{res=await save}catch(e){err=errText(e)}}
     await min;sp.forEach(x=>x.kill());gsap.set(pfBP,{autoAlpha:1});
     await pfTw(pfBP,{rotation:Math.ceil(gsap.getProperty(pfBP,'rotation')/360)*360,duration:.35,ease:'power2.out'});gsap.set(pfBP,{rotation:0});
-    let cancel=false;if(pop){const pr=await pfPopup(ch);res=pr.res;err=pr.err||err;cancel=pr.cancel}
+    let cancel=false;if(pop){const pr=await pfPopup(ch);cancel=pr.cancel;if(pr.sv){try{res=await pr.sv}catch(e){err=errText(e)}}}
     if(!res&&!cancel){   // 3) pen writes the reply between the boxes and the button (old reply is rubbed out first)
       const text=err||PF_MSG[Math.min(pfNC,5)-1];
       if(pfShown){await pfPenTo(pfRub(pfWT),135,.45);await pfSweep(pfWT,'erase',.32)}
