@@ -485,7 +485,7 @@ Object.assign(E,{'app/pf-same':'Nothing changed yet','app/pf-locked':'This detai
 let ME=null;
 const lockAt=(p,k)=>{const t=p.locks&&p.locks[k];return t?(t.toMillis?t.toMillis():+t):0};
 const PF_SHOW_PHONE=false;   // the floating phone / 'Verify your number' line on the small card is hidden for now
-const LOCK_ON=false;   // 24h lock is OFF for now (testing). Set true to turn it on.
+const LOCK_ON=true;   // 24h lock: a filled name/username/phone can be changed once, then it is locked for 24h (set false to switch off)
 const lockLeft=(p,k)=>LOCK_ON&&p[k]?lockAt(p,k)+DAY-Date.now():0;
 q('#pf_rows').innerHTML=''+PF.map(([k,ic,lb])=>`<label class="pf-row${k==='email'?' ro':''}" data-k="${k}"><i class="ic"><b>${ic}</b></i><span class="tx"><small>${lb}<em class="pf-n"></em></small><b class="pf-v"></b>${k==='email'?'':`<input class="pf-in" type="${k==='phone'?'tel':'text'}" autocapitalize="none" spellcheck="false" placeholder="${k==='phone'?'Not uploaded yet':''}" autocomplete="off">`}</span></label>`).join('');
 function fillPf(p){ME=p;const u=p.username||'player';
@@ -495,11 +495,13 @@ function fillPf(p){ME=p;const u=p.username||'player';
   const ph=q('#pf_ph');ph.hidden=!(PF_SHOW_PHONE&&p.phone);ph.classList.toggle('ok',!!p.phoneVerified);ph.querySelector('b').textContent=p.phone||'';ph.querySelector('span').textContent=p.phoneVerified?'Verified number':'Verify your number'}
 // tap the @username to copy it
 q('#pf_un').onclick=async()=>{const t=q('#pf_un').textContent;try{await navigator.clipboard.writeText(t)}catch(e){const a=document.createElement('textarea');a.value=t;a.style.cssText='position:fixed;opacity:0';document.body.append(a);a.select();try{document.execCommand('copy')}catch(x){}a.remove()}toast('Username copied')};
-function pfMode(on){pfUpdReset();
-  if(on)pf.querySelectorAll('.pf-row').forEach(r=>{const k=r.dataset.k,i=r.querySelector('input'),n=r.querySelector('.pf-n'),L=lockLeft(ME,k),lk=L>0;
-    r.classList.toggle('lk',lk);if(i){i.value=ME[k]||'';i.disabled=lk}
-    if(k==='email')n.textContent="Can't be changed";
-    else if(lk){const m=Math.ceil(L/6e4);n.textContent='Locked · change again in '+(m>=60?Math.floor(m/60)+'h '+m%60+'m':m+'m')}})}
+// lock look of the edit rows (note + disabled box); fill=true also puts the saved values into the boxes
+function pfLockUI(fill){pf.querySelectorAll('.pf-row').forEach(r=>{const k=r.dataset.k,i=r.querySelector('input'),n=r.querySelector('.pf-n'),L=lockLeft(ME,k),lk=L>0;
+  r.classList.toggle('lk',lk);if(i){if(fill)i.value=ME[k]||'';i.disabled=lk}
+  if(k==='email')n.textContent="Can't be changed";
+  else{const m=Math.ceil(L/6e4);n.textContent=lk?'Locked · change again in '+(m>=60?Math.floor(m/60)+'h '+m%60+'m':m+'m'):''}})}
+function pfMode(on){pfUpdReset();if(on)pfLockUI(true)}
+setInterval(()=>{if(ME&&pf.classList.contains('ed')&&!pfBusy)pfLockUI(false)},30000);   // countdown text refreshes while the card is open
 // Save changed details (one transaction: re-checks the 24h lock on the server copy, swaps the username record if it changed)
 const updProfile=(u,ch)=>runTransaction(db,async tx=>{
   const ref=doc(db,'users',u.uid),cur=(await tx.get(ref)).data()||{},L={...(cur.locks||{})},loc={...L},nu=ch.username;
@@ -679,7 +681,7 @@ pfOK.onclick=async()=>{
       if('username' in ch)await pfRewrite(pfUN,pfUNT,'@'+res.username)}
     // 4) pen writes "Update" back and goes home
     await pfPenTo(pfTip(pfUT),0,.45);await pfSweep(pfUT,'write',.4);await pfHome();
-    if(res){fillPf(res);toast('Profile updated');pfNC=0;pfHm.classList.remove('noscroll');pfLock(false);return}   // the card stays open
+    if(res){fillPf(res);pfLockUI(true);toast('Profile updated');pfNC=0;pfHm.classList.remove('noscroll');pfLock(false);return}   // the card stays open
     if(!err&&same&&pfNC>=5){pfHm.classList.add('noscroll');await pfToTop();await pfShoot();pfLock(false);pfToggle(false);return}
   }catch(e){console.error(e);pfUpdReset();pfHm.classList.remove('noscroll')}
   pfHm.classList.remove('noscroll');pfLock(false)};
