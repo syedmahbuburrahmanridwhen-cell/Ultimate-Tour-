@@ -208,3 +208,16 @@ body{height:100%;margin:0;background:#fff;overflow:hidden}
 /* no sky-blue tap box / focus ring on any button */
 *{-webkit-tap-highlight-color:transparent}
 button:focus,button:focus-visible,[role=button]:focus,a:focus{outline:none}
+/* @@PROFILE confirmation pop-up (Update button grows into it) */
+.pfp-bd{position:fixed;inset:0;z-index:99998;background:rgba(11,15,16,.5);opacity:0;touch-action:none;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.pfp{position:fixed;z-index:99999;box-sizing:border-box;overflow:hidden;background:#0b0f10;color:#fff;touch-action:none;box-shadow:0 24px 60px rgba(0,0,0,.45)}
+.pfp-ic{position:absolute;width:22px;height:22px;color:var(--lime)}.pfp-ic svg{position:absolute;left:0;top:0;width:22px;height:22px}
+.pfp-c{padding:78px 20px 20px;display:grid;gap:14px;text-align:center}
+.pfp-w{margin:0;font:600 12px/1.6 var(--mono);color:#cfd6d8}
+.pfp-r{text-align:left;background:rgba(255,255,255,.07);border-radius:16px;padding:12px 14px;display:grid;gap:6px}
+.pfp-r small{font:700 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--lime)}
+.pfp-r p{margin:0;display:flex;justify-content:space-between;align-items:baseline;gap:12px;font:500 11px var(--mono);color:#8e999c}
+.pfp-r b{font:700 15px/1.3 var(--sans);color:#fff;overflow-wrap:anywhere;text-align:right;min-width:0}.pfp-r b.n{color:var(--lime)}
+.pfp-ok{all:unset;box-sizing:border-box;position:relative;display:flex;align-items:center;justify-content:center;height:54px;border-radius:99px;background:var(--lime);color:#0b0f10;font:700 14px var(--mono);letter-spacing:.18em;text-transform:uppercase;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.pfp-ok i{position:absolute;left:50%;top:50%}.pfp-ok .dot{width:9px;height:9px;border-radius:50%;background:#0b0f10}
+.pfp-ok .ring{width:20px;height:20px;box-sizing:border-box;border-radius:50%;border:2.5px solid #0b0f10;border-right-color:transparent}
