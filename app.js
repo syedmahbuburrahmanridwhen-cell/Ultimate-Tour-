@@ -4,7 +4,7 @@
 // ======================================================================
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import {getAuth,GoogleAuthProvider,signInWithPopup,signInWithEmailAndPassword,createUserWithEmailAndPassword,sendPasswordResetEmail,confirmPasswordReset,verifyPasswordResetCode,fetchSignInMethodsForEmail,onAuthStateChanged,signOut,deleteUser,sendEmailVerification} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import {initializeFirestore,doc,getDoc,runTransaction,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import {initializeFirestore,doc,getDoc,runTransaction,serverTimestamp,collection,onSnapshot} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 const app=initializeApp({apiKey:"AIzaSyB7WRLBVRufPnlFck0dreWcU8-yWh9f7_0",authDomain:"ultimate-tour-1.firebaseapp.com",projectId:"ultimate-tour-1",storageBucket:"ultimate-tour-1.firebasestorage.app",messagingSenderId:"593726515356",appId:"1:593726515356:web:bafe179aed7d77015be559"});
 const auth=getAuth(app),db=initializeFirestore(app,{experimentalForceLongPolling:true}),q=s=>document.querySelector(s),v=i=>q('#su_'+i).value.trim();
 
@@ -727,6 +727,36 @@ admBtn.onclick=()=>{if(!admBusy&&!pfBusy){admBusy=true;admOpen().catch(e=>{conso
 const admClip=(r,L,T,Wd,Hd,rad)=>'inset('+Math.max(0,r.top-T)+'px '+Math.max(0,L+Wd-r.right)+'px '+Math.max(0,T+Hd-r.bottom)+'px '+Math.max(0,r.left-L)+'px round '+rad+'px)';
 const admCT=(el,from,to,d,e)=>new Promise(r=>gsap.fromTo(el,{clipPath:from},{clipPath:to,duration:d,ease:e,onComplete:r}));
 const admStag=(arr,v)=>new Promise(r=>{gsap.timeline({onComplete:r}).to(arr,v)});
+
+// ---- Admin pages. ADM_TABS = the navigation bar options (scrolls sideways). Add a new option = add one line here + its page.
+const ADM_TABS=[['players','Players','<circle cx="9" cy="8" r="3.4"/><path d="M2.8 20c0-3.6 2.8-5.6 6.2-5.6s6.2 2 6.2 5.6"/><path d="M16 5a3.4 3.4 0 0 1 0 6.4M18.5 14.8c1.9.7 2.9 2.4 2.9 5.2"/>']];
+// ---- Players page: one card per registered player, newest account on top, live (a new account appears at the top by itself)
+const PL_IC={plus:'<path d="M12 5v14M5 12h14"/>',minus:'<path d="M5 12h14"/>',msg:'<path d="M4 5h16v11H9l-5 4V5z"/>',ban:'<circle cx="12" cy="12" r="8.5"/><path d="M6 6l12 12"/>'};
+const PL_BT=[['plus','Add'],['minus','Remove'],['msg','Message'],['ban','Ban']];
+const plTime=p=>p.createdAt&&p.createdAt.toMillis?p.createdAt.toMillis():Date.now();   // a just-created account has no server time yet = newest
+const plRows=[['username','Username'],['email','Gmail'],['phone','Phone'],['pw','Password']];
+function plCard(){const c=document.createElement('article');c.className='pl-card';
+  c.innerHTML='<div class="pl-av"></div><div class="pl-in"><h4 class="pl-nm"></h4><div class="pl-rows">'+plRows.map(([k,l])=>'<p class="pl-r" data-k="'+k+'"><small>'+l+'</small><b></b></p>').join('')+'</div></div>'
+    +'<div class="pl-act">'+PL_BT.map(([k,l])=>'<button class="pl-b '+k+'" type="button" aria-label="'+l+'"><svg class="ico" viewBox="0 0 24 24">'+PL_IC[k]+'</svg></button>').join('')+'</div>';return c}
+function plFill(c,p){const un=p.username||'',av=c.querySelector('.pl-av');
+  av.textContent=(un||p.name||'?')[0].toUpperCase();
+  c.querySelector('.pl-nm').textContent=p.name||un||'Player';
+  const val={username:un?'@'+un:'',email:p.email||'',phone:p.phone||'',pw:'••••••••'};
+  c.querySelectorAll('.pl-r').forEach(r=>{const b=r.querySelector('b'),t=val[r.dataset.k];b.textContent=t||'Not added';r.classList.toggle('no',!t)});
+  const url=u=>typeof u==='string'&&/^https:\/\//.test(u)?'url('+JSON.stringify(u)+')':'';
+  av.style.backgroundImage=url(p.photo);
+  if(url(p.cover))c.style.setProperty('--cv','linear-gradient(rgba(11,15,16,.5),rgba(11,15,16,.82)),'+url(p.cover));else c.style.removeProperty('--cv')}
+function admPlayers(list,emp,cnt){
+  const els=new Map();let first=true;
+  return onSnapshot(collection(db,'users'),snap=>{
+    const docs=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>plTime(b)-plTime(a)),ids=new Set(docs.map(d=>d.id)),fresh=[];
+    els.forEach((el,id)=>{if(!ids.has(id)){el.remove();els.delete(id)}});
+    docs.forEach((p,i)=>{let el=els.get(p.id);if(!el){el=plCard();els.set(p.id,el);fresh.push(el)}plFill(el,p);if(list.children[i]!==el)list.insertBefore(el,list.children[i]||null)});
+    cnt.textContent=docs.length;emp.hidden=docs.length>0;
+    if(fresh.length){if(first)gsap.from(fresh.slice(0,8),{y:28,opacity:0,duration:.55,stagger:.07,delay:.15,ease:'power3.out',clearProps:'transform,opacity'});
+      else gsap.from(fresh,{y:-20,opacity:0,scale:.96,duration:.6,ease:'power3.out',clearProps:'transform,opacity'})}
+    first=false},
+  err=>{list.innerHTML='';emp.hidden=false;emp.textContent=E[err.code]||'Could not load players ('+(err.code||err.message)+')'})}
 async function admOpen(){
   let st=admGet();if(admLeft(st)===0&&st.u){st={f:0,u:0,bp:false};admSet(st)}
   // 1) if the box is already where the pop-up would sit in the middle of the screen (within 2px) the animation starts at once on tap;
@@ -793,9 +823,18 @@ async function admOpen(){
     gsap.set(pg,{clipPath:admClip(pR2,0,0,innerWidth,innerHeight,28)});
     await Promise.all([admCT(pg,admClip(pR2,0,0,innerWidth,innerHeight,28),'inset(0px 0px 0px 0px round 0px)',.95,E),pfTw(pp,{opacity:0,duration:.5,delay:.4}),pfTw(bd,{opacity:0,duration:.95})]);
     pp.style.pointerEvents='none';
-    const x=document.createElement('button');x.className='ib adm-x';x.type='button';x.setAttribute('aria-label','Close admin panel');x.innerHTML='<svg class="ico" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>';pg.append(x);
-    gsap.fromTo(x,{scale:0,rotation:-90},{scale:1,rotation:0,duration:.5,ease:'back.out(1.8)'});
-    x.onclick=async()=>{x.onclick=null;await pfTw(x,{scale:0,duration:.2});   // the page shrinks straight into the Admin Panel box
+    // --- admin page layout: green back arrow + title, scrolling navigation bar, page area (Players is the first page)
+    const bk=document.createElement('button');bk.className='adm-bk';bk.type='button';bk.setAttribute('aria-label','Back');bk.innerHTML='<svg class="ico" viewBox="0 0 24 24"><path d="M20 12H5M11 6l-6 6 6 6"/></svg>';
+    const hd=document.createElement('header');hd.className='adm-hd';hd.append(bk);hd.insertAdjacentHTML('beforeend','<h2 class="adm-ttl">Admin Panel</h2>');
+    const nv=document.createElement('nav');nv.className='adm-nav';
+    nv.innerHTML=ADM_TABS.map(([k,lb,ic],n)=>'<button class="adm-nv'+(n?'':' on')+'" type="button" data-k="'+k+'"><svg class="ico" viewBox="0 0 24 24">'+ic+'</svg><span>'+lb+'</span>'+(k==='players'?'<em class="adm-cnt">0</em>':'')+'</button>').join('');
+    nv.querySelectorAll('.adm-nv').forEach(b=>b.onclick=()=>{nv.querySelectorAll('.adm-nv').forEach(o=>o.classList.toggle('on',o===b));b.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'})});
+    const bd2=document.createElement('main');bd2.className='adm-body';bd2.innerHTML='<section class="adm-sec" id="adm_players"><div class="pl-list"></div><p class="pl-empty" hidden>No players yet</p></section>';
+    pg.append(hd,nv,bd2);
+    gsap.fromTo(bk,{scale:0,rotation:90},{scale:1,rotation:0,duration:.5,ease:'back.out(1.8)'});
+    gsap.from([hd.querySelector('.adm-ttl'),nv],{opacity:0,y:10,duration:.5,stagger:.08,delay:.1,ease:'power2.out'});
+    const unsub=admPlayers(bd2.querySelector('.pl-list'),bd2.querySelector('.pl-empty'),nv.querySelector('.adm-cnt'));
+    bk.onclick=async()=>{bk.onclick=null;unsub();await Promise.all([pfTw(hd,{opacity:0,duration:.25}),pfTw(nv,{opacity:0,duration:.25}),pfTw(bd2,{opacity:0,duration:.25})]);   // the page shrinks straight into the Admin Panel box
       const r2=admBtn.getBoundingClientRect(),cl=admBtn.cloneNode(true);cl.removeAttribute('id');
       cl.style.cssText='position:fixed;left:'+r2.left+'px;top:'+r2.top+'px;width:'+r2.width+'px;height:'+r2.height+'px;margin:0;opacity:0;pointer-events:none;background:transparent;box-shadow:none';pg.append(cl);   // the box's logo/label fade in as the page arrives
       await Promise.all([admCT(pg,'inset(0px 0px 0px 0px round 0px)',admClip(r2,0,0,innerWidth,innerHeight,22),.95,E),pfTw(cl,{opacity:1,duration:.4,delay:.55})]);
