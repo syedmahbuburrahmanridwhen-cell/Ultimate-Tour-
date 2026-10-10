@@ -266,3 +266,13 @@ button:focus,button:focus-visible,[role=button]:focus,a:focus{outline:none}
 .pfp-ok svg.tkk{position:absolute;left:50%;top:50%;width:22px;height:22px;margin:-11px 0 0 -11px;color:var(--lime)}
 .adm-pg{position:fixed;inset:0;z-index:99998;background:#fff;touch-action:none}
 .adm-x{position:absolute;top:calc(env(safe-area-inset-top,0px) + 14px);right:16px}
+/* admin pop-up v3: compact, same-size labels, slightly bigger logo */
+.pfp-hd{padding:18px 20px 0;gap:8px}
+.pfp.adm .pfp-hd .ic{width:52px;height:52px;border-radius:15px}
+.pfp.adm .pfp-hd .ic b svg{width:28px;height:28px}
+.pfp-t,.pfp-s{margin:0;font:700 15px/1.2 var(--mono);letter-spacing:.16em;text-transform:uppercase}
+.pfp-t{color:#0b0f10}.pfp-s{color:#7a8386}
+.pfp-c.adm-c{padding:12px 20px 18px;gap:8px}
+.pfp.adm .pfp-in{height:44px}
+.pfp.adm .adm-msg{min-height:14px;font-size:11px;line-height:14px}
+.pfp.adm .pfp-ok{height:48px}
