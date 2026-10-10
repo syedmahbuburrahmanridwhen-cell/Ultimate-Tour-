@@ -4,7 +4,7 @@
 // ======================================================================
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import {getAuth,GoogleAuthProvider,signInWithPopup,signInWithEmailAndPassword,createUserWithEmailAndPassword,sendPasswordResetEmail,confirmPasswordReset,verifyPasswordResetCode,fetchSignInMethodsForEmail,onAuthStateChanged,signOut,deleteUser,sendEmailVerification} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import {initializeFirestore,doc,getDoc,runTransaction,serverTimestamp,collection,onSnapshot} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import {initializeFirestore,doc,getDoc,runTransaction,serverTimestamp,collection,onSnapshot,query,orderBy,limit,startAfter,where,getDocs,getCountFromServer} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 const app=initializeApp({apiKey:"AIzaSyB7WRLBVRufPnlFck0dreWcU8-yWh9f7_0",authDomain:"ultimate-tour-1.firebaseapp.com",projectId:"ultimate-tour-1",storageBucket:"ultimate-tour-1.firebasestorage.app",messagingSenderId:"593726515356",appId:"1:593726515356:web:bafe179aed7d77015be559"});
 const auth=getAuth(app),db=initializeFirestore(app,{experimentalForceLongPolling:true}),q=s=>document.querySelector(s),v=i=>q('#su_'+i).value.trim();
 
@@ -747,17 +747,48 @@ function plFill(c,p){const un=p.username||'',av=c.querySelector('.pl-av');
   const url=u=>typeof u==='string'&&/^https:\/\//.test(u)?'url('+JSON.stringify(u)+')':'';
   av.style.backgroundImage=url(p.photo);
   if(url(p.cover))c.style.setProperty('--cv','linear-gradient(rgba(11,15,16,.5),rgba(11,15,16,.82)),'+url(p.cover));else c.style.removeProperty('--cv')}
-function admPlayers(list,emp,cnt){
-  const els=new Map();let first=true;
-  return onSnapshot(collection(db,'users'),snap=>{
-    const docs=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>plTime(b)-plTime(a)),ids=new Set(docs.map(d=>d.id)),fresh=[];
+// Built for a big player base: only 20 cards are read at first (the newest, kept live), more load as you scroll,
+// the total comes from a cheap server count, and search asks the database (it never downloads all players).
+function admPlayers(list,emp,cnt,inp,clr,sc){
+  const UC=collection(db,'users'),PAGE=20,all=new Map(),els=new Map();
+  let mode='list',cursor=null,more=true,loading=false,init=false,seq=0,tm=null,cT=null,off=false;
+  const byNew=a=>a.sort((x,y)=>plTime(y)-plTime(x)),add=(m,d)=>m.set(d.id,{id:d.id,...d.data()});
+  const note=t=>{emp.textContent=t;emp.hidden=!t};
+  function paint(docs){
+    const ids=new Set(docs.map(d=>d.id)),fresh=[];
     els.forEach((el,id)=>{if(!ids.has(id)){el.remove();els.delete(id)}});
     docs.forEach((p,i)=>{let el=els.get(p.id);if(!el){el=plCard();els.set(p.id,el);fresh.push(el)}plFill(el,p);if(list.children[i]!==el)list.insertBefore(el,list.children[i]||null)});
-    cnt.textContent=docs.length;emp.hidden=docs.length>0;
-    if(fresh.length){if(first)gsap.from(fresh.slice(0,8),{y:28,opacity:0,duration:.55,stagger:.07,delay:.15,ease:'power3.out',clearProps:'transform,opacity'});
-      else gsap.from(fresh,{y:-20,opacity:0,scale:.96,duration:.6,ease:'power3.out',clearProps:'transform,opacity'})}
-    first=false},
-  err=>{list.innerHTML='';emp.hidden=false;emp.textContent=E[err.code]||'Could not load players ('+(err.code||err.message)+')'})}
+    if(fresh.length)gsap.from(fresh.slice(0,10),{y:24,opacity:0,duration:.5,stagger:.06,ease:'power3.out',clearProps:'transform,opacity'});
+    note(docs.length?'':mode==='find'?'No player found':'No players yet')}
+  const showList=()=>{mode='list';paint(byNew([...all.values()]))};
+  // total number of accounts (server-side count, 1 cheap read per 1000 accounts)
+  const count=()=>{clearTimeout(cT);cT=setTimeout(()=>getCountFromServer(UC).then(r=>{if(!off)cnt.textContent=r.data().count.toLocaleString('en-US')}).catch(()=>{}),300)};count();
+  // the newest 20, live: a new account shows up on top by itself
+  const unsub=onSnapshot(query(UC,orderBy('createdAt','desc'),limit(PAGE)),snap=>{
+    snap.docs.forEach(d=>add(all,d));
+    if(!init){init=true;cursor=snap.docs[snap.docs.length-1]||null;more=snap.size>=PAGE}
+    else if(snap.docChanges().some(c=>c.type==='added'))count();
+    if(mode==='list')showList()},
+  err=>{mode='err';list.innerHTML='';els.clear();note(E[err.code]||'Could not load players ('+(err.code||err.message)+')')});
+  // older players: the next 20 load when you scroll near the end
+  const onScroll=()=>{if(mode!=='list'||!more||loading||!cursor||sc.scrollTop+sc.clientHeight<sc.scrollHeight-500)return;loading=true;
+    getDocs(query(UC,orderBy('createdAt','desc'),startAfter(cursor),limit(PAGE))).then(r=>{r.docs.forEach(d=>add(all,d));if(r.docs.length)cursor=r.docs[r.docs.length-1];more=r.size>=PAGE;if(mode==='list')showList()}).catch(()=>{}).finally(()=>{loading=false})};
+  sc.addEventListener('scroll',onScroll,{passive:true});
+  // search: name / username / Gmail / phone (the database matches from the START of each; cards already loaded also match anywhere)
+  const title=v=>v.replace(/(^|\s)(\S)/g,(m,a,b)=>a+b.toUpperCase()),uniq=a=>[...new Set(a)];
+  const pre=(f,x)=>getDocs(query(UC,where(f,'>=',x),where(f,'<=',x+'\uf8ff'),limit(PAGE)));
+  async function find(raw){const my=++seq,v=raw.trim().replace(/^@/,''),lv=v.toLowerCase();if(!v){showList();return}
+    mode='find';const jobs=[pre('username',lv),pre('email',lv),...uniq([v,title(v)]).map(x=>pre('name',x))];
+    if(/^[+0-9][0-9\s-]*$/.test(v))uniq([v,v.replace(/[\s-]/g,'')]).forEach(x=>jobs.push(pre('phone',x)));
+    const r=await Promise.allSettled(jobs);if(my!==seq)return;
+    const m=new Map();r.forEach(x=>x.status==='fulfilled'&&x.value.docs.forEach(d=>add(m,d)));
+    all.forEach((p,id)=>{if(((p.name||'')+' '+(p.username||'')+' '+(p.email||'')+' '+(p.phone||'')).toLowerCase().includes(lv))m.set(id,p)});
+    if(!m.size&&r.every(x=>x.status==='rejected')){els.forEach(e=>e.remove());els.clear();note('Search failed. Try again');return}
+    paint(byNew([...m.values()]))}
+  inp.addEventListener('input',()=>{clr.hidden=!inp.value;clearTimeout(tm);seq++;if(!inp.value.trim()){showList();return}tm=setTimeout(()=>find(inp.value),350)});
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')inp.blur()});
+  clr.onclick=()=>{inp.value='';clr.hidden=true;clearTimeout(tm);seq++;showList();inp.focus()};
+  return()=>{off=true;unsub();clearTimeout(tm);clearTimeout(cT);sc.removeEventListener('scroll',onScroll)}}
 async function admOpen(){
   let st=admGet();if(admLeft(st)===0&&st.u){st={f:0,u:0,bp:false};admSet(st)}
   // 1) if the box is already where the pop-up would sit in the middle of the screen (within 2px) the animation starts at once on tap;
@@ -828,17 +859,20 @@ async function admOpen(){
     const bk=document.createElement('button');bk.className='adm-bk';bk.type='button';bk.setAttribute('aria-label','Back');bk.innerHTML='<svg class="ico" viewBox="0 0 24 24"><path d="M20 12H5M11 6l-6 6 6 6"/></svg>';
     const hd=document.createElement('header');hd.className='adm-hd';hd.append(bk);hd.insertAdjacentHTML('beforeend','<h2 class="adm-ttl">Admin Panel</h2>');
     const nv=document.createElement('nav');nv.className='adm-nav';
-    nv.innerHTML='<div class="adm-trk"><i class="adm-ball"></i>'+ADM_TABS.map(([k,lb,ic],n)=>'<button class="adm-nv'+(n?'':' on')+'" type="button" data-k="'+k+'"><svg class="ico" viewBox="0 0 24 24">'+ic+'</svg><span>'+lb+'</span>'+(k==='players'?'<em class="adm-cnt">0</em>':'')+'</button>').join('')+'</div>';
+    nv.innerHTML='<div class="adm-trk"><i class="adm-ball"></i>'+ADM_TABS.map(([k,lb,ic],n)=>'<button class="adm-nv'+(n?'':' on')+'" type="button" data-k="'+k+'"><svg class="ico" viewBox="0 0 24 24">'+ic+'</svg><span>'+lb+'</span></button>').join('')+'</div>';
     const trk=nv.querySelector('.adm-trk'),ball=nv.querySelector('.adm-ball'),tabs=[...nv.querySelectorAll('.adm-nv')];
     const ballTo=b=>{ball.style.left=b.offsetLeft+'px';ball.style.width=b.offsetWidth+'px'};
-    tabs.forEach(b=>b.onclick=()=>{tabs.forEach(o=>o.classList.toggle('on',o===b));ballTo(b);b.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'})});
+    tabs.forEach(b=>b.onclick=()=>{tabs.forEach(o=>o.classList.toggle('on',o===b));ballTo(b);sr.style.display=b.dataset.k==='players'?'':'none';b.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'})});
     const bd2=document.createElement('main');bd2.className='adm-body';bd2.innerHTML='<section class="adm-sec" id="adm_players"><div class="pl-list"></div><p class="pl-empty" hidden>No players yet</p></section>';
-    pg.append(bd2,hd,nv);
+    // search bar (Players page only): floating glass bar under the navigation bar, total player count on the right
+    const sr=document.createElement('div');sr.className='adm-sr';
+    sr.innerHTML='<svg class="ico sr-i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input class="sr-in" type="text" inputmode="search" enterkeyhint="search" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Name, username, Gmail, phone"><button class="sr-x" type="button" aria-label="Clear" hidden><svg class="ico" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button><span class="sr-cnt"><b>-</b><small>Players</small></span>';
+    pg.append(bd2,hd,nv,sr);
     ball.style.transition='none';ballTo(tabs[0]);ball.offsetWidth;ball.style.transition='';
     gsap.fromTo(bk,{scale:0,rotation:90},{scale:1,rotation:0,duration:.5,ease:'back.out(1.8)'});
-    gsap.from([hd,nv],{opacity:0,y:-12,duration:.5,stagger:.08,delay:.1,ease:'power2.out'});
-    const unsub=admPlayers(bd2.querySelector('.pl-list'),bd2.querySelector('.pl-empty'),nv.querySelector('.adm-cnt'));
-    bk.onclick=async()=>{bk.onclick=null;unsub();await Promise.all([pfTw(hd,{opacity:0,duration:.25}),pfTw(nv,{opacity:0,duration:.25}),pfTw(bd2,{opacity:0,duration:.25})]);   // the page shrinks straight into the Admin Panel box
+    gsap.from([hd,nv,sr],{opacity:0,y:-12,duration:.5,stagger:.08,delay:.1,ease:'power2.out'});
+    const unsub=admPlayers(bd2.querySelector('.pl-list'),bd2.querySelector('.pl-empty'),sr.querySelector('.sr-cnt b'),sr.querySelector('.sr-in'),sr.querySelector('.sr-x'),bd2);
+    bk.onclick=async()=>{bk.onclick=null;unsub();await Promise.all([pfTw(hd,{opacity:0,duration:.25}),pfTw(nv,{opacity:0,duration:.25}),pfTw(sr,{opacity:0,duration:.25}),pfTw(bd2,{opacity:0,duration:.25})]);   // the page shrinks straight into the Admin Panel box
       const r2=admBtn.getBoundingClientRect(),cl=admBtn.cloneNode(true);cl.removeAttribute('id');
       cl.style.cssText='position:fixed;left:'+r2.left+'px;top:'+r2.top+'px;width:'+r2.width+'px;height:'+r2.height+'px;margin:0;opacity:0;pointer-events:none;background:transparent;box-shadow:none';pg.append(cl);   // the box's logo/label fade in as the page arrives
       await Promise.all([admCT(pg,'inset(0px 0px 0px 0px round 0px)',admClip(r2,0,0,innerWidth,innerHeight,22),.95,E),pfTw(cl,{opacity:1,duration:.4,delay:.55})]);
