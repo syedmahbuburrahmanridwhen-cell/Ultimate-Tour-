@@ -725,6 +725,8 @@ const admSet=o=>{try{localStorage.setItem(admKey(),JSON.stringify(o))}catch(e){}
 const admLeft=s=>s.u&&s.u>Date.now()?s.u-Date.now():0;
 admBtn.onclick=()=>{if(!admBusy&&!pfBusy){admBusy=true;admOpen().catch(e=>{console.error(e);admBusy=false})}};
 const admClip=(r,L,T,Wd,Hd,rad)=>'inset('+Math.max(0,r.top-T)+'px '+Math.max(0,L+Wd-r.right)+'px '+Math.max(0,T+Hd-r.bottom)+'px '+Math.max(0,r.left-L)+'px round '+rad+'px)';
+const admCT=(el,from,to,d,e)=>new Promise(r=>gsap.fromTo(el,{clipPath:from},{clipPath:to,duration:d,ease:e,onComplete:r}));
+const admStag=(arr,v)=>new Promise(r=>{gsap.timeline({onComplete:r}).to(arr,v)});
 async function admOpen(){
   let st=admGet();if(admLeft(st)===0&&st.u){st={f:0,u:0,bp:false};admSet(st)}
   // 1) page glides so that the Admin Panel box sits in the middle of the screen (the pop-up will then appear exactly centred)
@@ -746,7 +748,7 @@ async function admOpen(){
   const bIc=admBtn.querySelector('.ic').getBoundingClientRect(),rg=document.createRange();rg.selectNodeContents(admBtn.querySelector('span'));const bTx=rg.getBoundingClientRect(),bCh=admBtn.querySelector('.pf-ch').getBoundingClientRect();
   const fIc=ic.getBoundingClientRect(),fTx=tt.getBoundingClientRect(),ix=bIc.left-fIc.left,iy=bIc.top-fIc.top,tx=bTx.left-fTx.left,ty=bTx.top-fTx.top;
   chv.style.cssText='position:absolute;left:'+(bCh.left-pL)+'px;top:'+(bCh.top-pT)+'px;width:20px;height:20px;color:#7a8386';
-  gsap.set(pp,{clipPath:admClip(rb,pL,pT,W,H,22)});gsap.set(ic,{x:ix,y:iy});gsap.set(tt,{x:tx,y:ty});gsap.set(sub,{autoAlpha:0,y:8});gsap.set(pc,{autoAlpha:0});
+  gsap.set(pp,{clipPath:admClip(rb,pL,pT,W,H,22)});gsap.set(ic,{x:ix,y:iy});gsap.set(tt,{x:tx,y:ty});gsap.set(sub,{autoAlpha:0,y:8});gsap.set(Array.from(pc.children),{autoAlpha:0,y:24});
   admBtn.style.opacity='0';   // the pop-up takes the box's place
   // --- Verify button: lock look (padlock + live countdown) and its animation
   const lockHtml=()=>PF_LOCK+'<span class="adm-t">Locked for '+pfFmt(admLeft(st))+'</span>';
@@ -766,13 +768,12 @@ async function admOpen(){
   const tick=setInterval(()=>{const L=admLeft(st);if(L>0){const t=okb.querySelector('.adm-t');if(t)t.textContent='Locked for '+pfFmt(L);lockNow(true,true)}else if(okb._lk){st={f:0,u:0,bp:false};admSet(st);lockNow(false,true)}},1000);
   // --- open: the box grows (clip) into the pop-up; logo and label fly to the top of it; "Authentication" floats in under the label
   const E='power3.inOut',FULL='inset(0px 0px 0px 0px round 28px)';
-  await Promise.all([pfTw(bd,{opacity:1,duration:.6}),pfTw(pp,{clipPath:FULL,duration:.9,ease:E}),pfTw(ic,{x:0,y:0,duration:.9,ease:E}),pfTw(tt,{x:0,y:0,duration:.9,ease:E}),pfTw(chv,{autoAlpha:0,duration:.25})]);
-  await Promise.all([pfTw(sub,{autoAlpha:1,y:0,duration:.45,ease:'power2.out'}),pfTw(pc,{autoAlpha:1,duration:.45})]);
+  await Promise.all([pfTw(bd,{opacity:1,duration:.6}),admCT(pp,admClip(rb,pL,pT,W,H,22),FULL,.9,E),pfTw(ic,{x:0,y:0,duration:.9,ease:E}),pfTw(tt,{x:0,y:0,duration:.9,ease:E}),pfTw(chv,{autoAlpha:0,duration:.25}),
+    pfTw(sub,{autoAlpha:1,y:0,duration:.5,delay:.35,ease:'power2.out'}),admStag(Array.from(pc.children),{autoAlpha:1,y:0,stagger:.08,duration:.55,delay:.3,ease:'power2.out'})]);
   let done=false;
   // --- shrink back into the box (exact reverse of opening)
   const collapse=async()=>{const r2=admBtn.getBoundingClientRect(),pr=pp.getBoundingClientRect();
-    await Promise.all([pfTw(sub,{autoAlpha:0,duration:.25}),pfTw(pc,{autoAlpha:0,duration:.25})]);
-    await Promise.all([pfTw(bd,{opacity:0,duration:.9}),pfTw(pp,{clipPath:admClip(r2,pr.left,pr.top,pr.width,pr.height,22),duration:.9,ease:E}),pfTw(ic,{x:ix,y:iy,duration:.9,ease:E}),pfTw(tt,{x:tx,y:ty,duration:.9,ease:E}),pfTw(chv,{autoAlpha:1,duration:.3,delay:.6})]);
+    await Promise.all([admStag(Array.from(pc.children).reverse(),{autoAlpha:0,y:16,stagger:.05,duration:.3,ease:'power1.in'}),pfTw(sub,{autoAlpha:0,duration:.3}),pfTw(bd,{opacity:0,duration:.9}),admCT(pp,FULL,admClip(r2,pr.left,pr.top,pr.width,pr.height,22),.9,E),pfTw(ic,{x:ix,y:iy,duration:.9,ease:E}),pfTw(tt,{x:tx,y:ty,duration:.9,ease:E}),pfTw(chv,{autoAlpha:1,duration:.3,delay:.6})]);
     pp.remove();bd.remove();admBtn.style.opacity='';admBusy=false};
   const close=()=>{if(done)return;done=true;clearInterval(tick);collapse()};
   // --- Verify clicked with the right password: label > ball > spinner > tick, then the pop-up grows into the admin page
@@ -787,14 +788,15 @@ async function admOpen(){
     await verifyAnim();const pq=pp.getBoundingClientRect(),pR2={left:pq.left,right:pq.right,top:pq.top,bottom:pq.bottom};
     const pg=document.createElement('div');pg.className='adm-pg';document.body.append(pg);   // white page grows out of the pop-up
     gsap.set(pg,{clipPath:admClip(pR2,0,0,innerWidth,innerHeight,28)});
-    await Promise.all([pfTw(pg,{clipPath:'inset(0px 0px 0px 0px round 0px)',duration:.95,ease:E}),pfTw(pp,{opacity:0,duration:.5,delay:.4}),pfTw(bd,{opacity:0,duration:.95})]);
+    await Promise.all([admCT(pg,admClip(pR2,0,0,innerWidth,innerHeight,28),'inset(0px 0px 0px 0px round 0px)',.95,E),pfTw(pp,{opacity:0,duration:.5,delay:.4}),pfTw(bd,{opacity:0,duration:.95})]);
     pp.style.pointerEvents='none';
     const x=document.createElement('button');x.className='ib adm-x';x.type='button';x.setAttribute('aria-label','Close admin panel');x.innerHTML='<svg class="ico" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>';pg.append(x);
     gsap.fromTo(x,{scale:0,rotation:-90},{scale:1,rotation:0,duration:.5,ease:'back.out(1.8)'});
-    x.onclick=async()=>{x.onclick=null;await pfTw(x,{scale:0,duration:.2});   // reverse: page shrinks back into the pop-up, which shrinks back into the box
-      await Promise.all([pfTw(pg,{clipPath:admClip(pR2,0,0,innerWidth,innerHeight,28),duration:.95,ease:E}),pfTw(pp,{opacity:1,duration:.5,delay:.3}),pfTw(bd,{opacity:1,duration:.95})]);
-      pg.remove();pp.style.pointerEvents='';pwIn.value=bpIn.value='';const lb=okb.querySelector('span');if(lb)gsap.set(lb,{scale:1,opacity:1});okb.querySelectorAll('i,svg.tkk').forEach(n=>n.remove());
-      await collapse()}};
+    x.onclick=async()=>{x.onclick=null;await pfTw(x,{scale:0,duration:.2});   // the page shrinks straight into the Admin Panel box
+      const r2=admBtn.getBoundingClientRect(),cl=admBtn.cloneNode(true);cl.removeAttribute('id');
+      cl.style.cssText='position:fixed;left:'+r2.left+'px;top:'+r2.top+'px;width:'+r2.width+'px;height:'+r2.height+'px;margin:0;opacity:0;pointer-events:none;background:transparent;box-shadow:none';pg.append(cl);   // the box's logo/label fade in as the page arrives
+      await Promise.all([admCT(pg,'inset(0px 0px 0px 0px round 0px)',admClip(r2,0,0,innerWidth,innerHeight,22),.95,E),pfTw(cl,{opacity:1,duration:.4,delay:.55})]);
+      pg.remove();pp.remove();bd.remove();admBtn.style.opacity='';admBusy=false}};
   bd.onclick=()=>close();
   // --- Verify
   okb.onclick=()=>{if(okb._lk||done)return;
