@@ -729,8 +729,10 @@ const admCT=(el,from,to,d,e)=>new Promise(r=>gsap.fromTo(el,{clipPath:from},{cli
 const admStag=(arr,v)=>new Promise(r=>{gsap.timeline({onComplete:r}).to(arr,v)});
 async function admOpen(){
   let st=admGet();if(admLeft(st)===0&&st.u){st={f:0,u:0,bp:false};admSet(st)}
-  // 1) starts at once on tap (no scrolling first): the pop-up grows from the box to the middle of the screen
-  const rb=admBtn.getBoundingClientRect();
+  // 1) if the box is already where the pop-up would sit in the middle of the screen (within 2px) the animation starts at once on tap;
+  //    otherwise the page first glides so that the box sits in the middle, then the animation starts
+  let rb=admBtn.getBoundingClientRect();const dy0=rb.top+rb.height/2-innerHeight/2;
+  if(Math.abs(dy0)>2){await pfScrollBy(dy0);rb=admBtn.getBoundingClientRect()}
   const W=Math.min(innerWidth-16,Math.max(rb.width,320)),bd=document.createElement('div'),pp=document.createElement('div');bd.className='pfp-bd';pp.className='pfp adm';
   pp.innerHTML='<div class="pfp-hd"><i class="ic"><b><svg class="ico" viewBox="0 0 24 24">'+ADM_SHIELD+'</svg></b></i><p class="pfp-t"><span>Admin Panel</span></p><p class="pfp-s">Authentication</p></div>'
     +'<svg class="ico pfp-ch" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>'
