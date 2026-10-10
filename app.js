@@ -729,13 +729,12 @@ const admCT=(el,from,to,d,e)=>new Promise(r=>gsap.fromTo(el,{clipPath:from},{cli
 const admStag=(arr,v)=>new Promise(r=>{gsap.timeline({onComplete:r}).to(arr,v)});
 async function admOpen(){
   let st=admGet();if(admLeft(st)===0&&st.u){st={f:0,u:0,bp:false};admSet(st)}
-  // 1) page glides so that the Admin Panel box sits in the middle of the screen (the pop-up will then appear exactly centred)
-  let rb=admBtn.getBoundingClientRect();const dy0=rb.top+rb.height/2-innerHeight/2;
-  if(Math.abs(dy0)>2){await pfScrollBy(dy0);rb=admBtn.getBoundingClientRect()}
+  // 1) starts at once on tap (no scrolling first): the pop-up grows from the box to the middle of the screen
+  const rb=admBtn.getBoundingClientRect();
   const W=Math.min(innerWidth-16,Math.max(rb.width,320)),bd=document.createElement('div'),pp=document.createElement('div');bd.className='pfp-bd';pp.className='pfp adm';
   pp.innerHTML='<div class="pfp-hd"><i class="ic"><b><svg class="ico" viewBox="0 0 24 24">'+ADM_SHIELD+'</svg></b></i><p class="pfp-t"><span>Admin Panel</span></p><p class="pfp-s">Authentication</p></div>'
     +'<svg class="ico pfp-ch" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>'
-    +'<div class="pfp-c adm-c"><div class="pfp-cd"><small>Password</small><input class="pfp-in adm-in" type="password" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Enter admin password"></div>'
+    +'<div class="pfp-c adm-c"><div class="pfp-cd"><small>Password</small><input class="pfp-in adm-in" type="password" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Enter admin panel password"></div>'
     +'<div class="pfp-cd adm-bpw"><small>Bypass code</small><input class="pfp-in" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="······"></div>'
     +'<p class="pfp-w adm-msg"></p><button class="pfp-ok" type="button"><span>Verify</span></button></div>';
   document.body.append(bd,pp);
@@ -746,9 +745,11 @@ async function admOpen(){
   pp.style.left=pL+'px';pp.style.top=pT+'px';pp.style.height=H+'px';
   // where the box's logo / label / arrow are, so they can travel to their places in the pop-up
   const bIc=admBtn.querySelector('.ic').getBoundingClientRect(),rg=document.createRange();rg.selectNodeContents(admBtn.querySelector('span'));const bTx=rg.getBoundingClientRect(),bCh=admBtn.querySelector('.pf-ch').getBoundingClientRect();
-  const fIc=ic.getBoundingClientRect(),fTx=tt.getBoundingClientRect(),ix=bIc.left-fIc.left,iy=bIc.top-fIc.top,tx=bTx.left-fTx.left,ty=bTx.top-fTx.top;
+  const fIc=ic.getBoundingClientRect(),fTx=tt.getBoundingClientRect(),
+    ix=(bIc.left+bIc.width/2)-(fIc.left+fIc.width/2),iy=(bIc.top+bIc.height/2)-(fIc.top+fIc.height/2),is=bIc.width/fIc.width,
+    tx=(bTx.left+bTx.width/2)-(fTx.left+fTx.width/2),ty=(bTx.top+bTx.height/2)-(fTx.top+fTx.height/2),ts=bTx.width/fTx.width;   // is / ts: the logo and label start at the box's size and grow a little as they land
   chv.style.cssText='position:absolute;left:'+(bCh.left-pL)+'px;top:'+(bCh.top-pT)+'px;width:20px;height:20px;color:#7a8386';
-  gsap.set(pp,{clipPath:admClip(rb,pL,pT,W,H,22)});gsap.set(ic,{x:ix,y:iy});gsap.set(tt,{x:tx,y:ty});gsap.set(sub,{autoAlpha:0,y:8});gsap.set(Array.from(pc.children),{autoAlpha:0,y:24});
+  gsap.set(pp,{clipPath:admClip(rb,pL,pT,W,H,22)});gsap.set(ic,{x:ix,y:iy,scale:is});gsap.set(tt,{x:tx,y:ty,scale:ts});gsap.set(sub,{autoAlpha:0,y:10});gsap.set(Array.from(pc.children),{autoAlpha:0,y:14});
   admBtn.style.opacity='0';   // the pop-up takes the box's place
   // --- Verify button: lock look (padlock + live countdown) and its animation
   const lockHtml=()=>PF_LOCK+'<span class="adm-t">Locked for '+pfFmt(admLeft(st))+'</span>';
@@ -768,12 +769,12 @@ async function admOpen(){
   const tick=setInterval(()=>{const L=admLeft(st);if(L>0){const t=okb.querySelector('.adm-t');if(t)t.textContent='Locked for '+pfFmt(L);lockNow(true,true)}else if(okb._lk){st={f:0,u:0,bp:false};admSet(st);lockNow(false,true)}},1000);
   // --- open: the box grows (clip) into the pop-up; logo and label fly to the top of it; "Authentication" floats in under the label
   const E='power3.inOut',FULL='inset(0px 0px 0px 0px round 28px)';
-  await Promise.all([pfTw(bd,{opacity:1,duration:.6}),admCT(pp,admClip(rb,pL,pT,W,H,22),FULL,.9,E),pfTw(ic,{x:0,y:0,duration:.9,ease:E}),pfTw(tt,{x:0,y:0,duration:.9,ease:E}),pfTw(chv,{autoAlpha:0,duration:.25}),
-    pfTw(sub,{autoAlpha:1,y:0,duration:.5,delay:.35,ease:'power2.out'}),admStag(Array.from(pc.children),{autoAlpha:1,y:0,stagger:.08,duration:.55,delay:.3,ease:'power2.out'})]);
+  await Promise.all([pfTw(bd,{opacity:1,duration:.6}),admCT(pp,admClip(rb,pL,pT,W,H,22),FULL,.8,E),pfTw(ic,{x:0,y:0,scale:1,duration:.8,ease:E}),pfTw(tt,{x:0,y:0,scale:1,duration:.8,ease:E}),pfTw(chv,{autoAlpha:0,duration:.25}),
+    pfTw(sub,{autoAlpha:1,y:0,duration:.5,delay:.6,ease:'power2.out'}),admStag(Array.from(pc.children),{autoAlpha:1,y:0,stagger:.07,duration:.5,delay:.6,ease:'power2.out'})]);
   let done=false;
   // --- shrink back into the box (exact reverse of opening)
   const collapse=async()=>{const r2=admBtn.getBoundingClientRect(),pr=pp.getBoundingClientRect();
-    await Promise.all([admStag(Array.from(pc.children).reverse(),{autoAlpha:0,y:16,stagger:.05,duration:.3,ease:'power1.in'}),pfTw(sub,{autoAlpha:0,duration:.3}),pfTw(bd,{opacity:0,duration:.9}),admCT(pp,FULL,admClip(r2,pr.left,pr.top,pr.width,pr.height,22),.9,E),pfTw(ic,{x:ix,y:iy,duration:.9,ease:E}),pfTw(tt,{x:tx,y:ty,duration:.9,ease:E}),pfTw(chv,{autoAlpha:1,duration:.3,delay:.6})]);
+    await Promise.all([admStag(Array.from(pc.children).reverse(),{autoAlpha:0,y:16,stagger:.05,duration:.3,ease:'power1.in'}),pfTw(sub,{autoAlpha:0,duration:.3}),pfTw(bd,{opacity:0,duration:.8}),admCT(pp,FULL,admClip(r2,pr.left,pr.top,pr.width,pr.height,22),.8,E),pfTw(ic,{x:ix,y:iy,scale:is,duration:.8,ease:E}),pfTw(tt,{x:tx,y:ty,scale:ts,duration:.8,ease:E}),pfTw(chv,{autoAlpha:1,duration:.3,delay:.5})]);
     pp.remove();bd.remove();admBtn.style.opacity='';admBusy=false};
   const close=()=>{if(done)return;done=true;clearInterval(tick);collapse()};
   // --- Verify clicked with the right password: label > ball > spinner > tick, then the pop-up grows into the admin page
