@@ -724,20 +724,30 @@ const admGet=()=>{try{return JSON.parse(localStorage.getItem(admKey()))||{}}catc
 const admSet=o=>{try{localStorage.setItem(admKey(),JSON.stringify(o))}catch(e){}};
 const admLeft=s=>s.u&&s.u>Date.now()?s.u-Date.now():0;
 admBtn.onclick=()=>{if(!admBusy&&!pfBusy){admBusy=true;admOpen().catch(e=>{console.error(e);admBusy=false})}};
+const admClip=(r,L,T,Wd,Hd,rad)=>'inset('+Math.max(0,r.top-T)+'px '+Math.max(0,L+Wd-r.right)+'px '+Math.max(0,T+Hd-r.bottom)+'px '+Math.max(0,r.left-L)+'px round '+rad+'px)';
 async function admOpen(){
   let st=admGet();if(admLeft(st)===0&&st.u){st={f:0,u:0,bp:false};admSet(st)}
-  const rb=admBtn.getBoundingClientRect(),W=Math.min(innerWidth-40,340),bd=document.createElement('div'),pp=document.createElement('div');bd.className='pfp-bd';pp.className='pfp';
-  pp.innerHTML='<div class="pfp-ic"><svg class="ico" viewBox="0 0 24 24">'+ADM_SHIELD+'</svg></div><div class="pfp-c"><p class="pfp-t">Admin Authentication</p>'
-    +'<div class="pfp-cd"><small>Password</small><input class="pfp-in adm-in" type="password" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Enter admin password"></div>'
+  // 1) page glides so that the Admin Panel box sits in the middle of the screen (the pop-up will then appear exactly centred)
+  let rb=admBtn.getBoundingClientRect();const dy0=rb.top+rb.height/2-innerHeight/2;
+  if(Math.abs(dy0)>2){await pfScrollBy(dy0);rb=admBtn.getBoundingClientRect()}
+  const W=Math.min(innerWidth-16,Math.max(rb.width,320)),bd=document.createElement('div'),pp=document.createElement('div');bd.className='pfp-bd';pp.className='pfp adm';
+  pp.innerHTML='<div class="pfp-hd"><i class="ic"><b><svg class="ico" viewBox="0 0 24 24">'+ADM_SHIELD+'</svg></b></i><p class="pfp-t"><span>Admin Panel</span></p><p class="pfp-s">Authentication</p></div>'
+    +'<svg class="ico pfp-ch" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg>'
+    +'<div class="pfp-c adm-c"><div class="pfp-cd"><small>Password</small><input class="pfp-in adm-in" type="password" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Enter admin password"></div>'
     +'<div class="pfp-cd adm-bpw"><small>Bypass code</small><input class="pfp-in" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="······"></div>'
     +'<p class="pfp-w adm-msg"></p><button class="pfp-ok" type="button"><span>Verify</span></button></div>';
   document.body.append(bd,pp);
-  const ic=pp.querySelector('.pfp-ic'),tk=ic.querySelector('svg'),pc=pp.querySelector('.pfp-c'),pwIn=pp.querySelector('.adm-in'),bpw=pp.querySelector('.adm-bpw'),bpIn=bpw.querySelector('input'),msg=pp.querySelector('.adm-msg'),okb=pp.querySelector('.pfp-ok');
+  const ic=pp.querySelector('.ic'),tt=pp.querySelector('.pfp-t span'),sub=pp.querySelector('.pfp-s'),chv=pp.querySelector('.pfp-ch'),pc=pp.querySelector('.pfp-c'),pwIn=pp.querySelector('.adm-in'),bpw=pp.querySelector('.adm-bpw'),bpIn=bpw.querySelector('input'),msg=pp.querySelector('.adm-msg'),okb=pp.querySelector('.pfp-ok');
   const locked0=admLeft(st)>0;bpw.style.display=(st.bp&&!locked0)?'grid':'none';
-  pp.style.left='-9999px';pp.style.top='0';pp.style.width=W+'px';const H=pp.offsetHeight;
-  gsap.set(pp,{left:rb.left,top:rb.top,width:rb.width,height:rb.height,borderRadius:22,backgroundColor:'#ffffff'});
-  gsap.set(ic,{left:'50%',top:40,xPercent:-50,yPercent:-50});gsap.set(pc,{autoAlpha:0});gsap.set(tk,{scale:0,rotation:-90});
-  admBtn.style.opacity='0';
+  pp.style.left='-9999px';pp.style.top='0';pp.style.width=W+'px';pp.style.height='auto';const H=pp.offsetHeight;   // height the pop-up needs
+  const pL=(innerWidth-W)/2,pT=Math.max(10,(innerHeight-H)/2),pR={left:pL,right:pL+W,top:pT,bottom:pT+H};
+  pp.style.left=pL+'px';pp.style.top=pT+'px';pp.style.height=H+'px';
+  // where the box's logo / label / arrow are, so they can travel to their places in the pop-up
+  const bIc=admBtn.querySelector('.ic').getBoundingClientRect(),rg=document.createRange();rg.selectNodeContents(admBtn.querySelector('span'));const bTx=rg.getBoundingClientRect(),bCh=admBtn.querySelector('.pf-ch').getBoundingClientRect();
+  const fIc=ic.getBoundingClientRect(),fTx=tt.getBoundingClientRect(),ix=bIc.left-fIc.left,iy=bIc.top-fIc.top,tx=bTx.left-fTx.left,ty=bTx.top-fTx.top;
+  chv.style.cssText='position:absolute;left:'+(bCh.left-pL)+'px;top:'+(bCh.top-pT)+'px;width:20px;height:20px;color:#7a8386';
+  gsap.set(pp,{clipPath:admClip(rb,pL,pT,W,H,22)});gsap.set(ic,{x:ix,y:iy});gsap.set(tt,{x:tx,y:ty});gsap.set(sub,{autoAlpha:0,y:8});gsap.set(pc,{autoAlpha:0});
+  admBtn.style.opacity='0';   // the pop-up takes the box's place
   // --- Verify button: lock look (padlock + live countdown) and its animation
   const lockHtml=()=>PF_LOCK+'<span class="adm-t">Locked for '+pfFmt(admLeft(st))+'</span>';
   const lockNow=(lock,anim)=>{if(!!okb._lk===lock)return;okb._lk=lock;
@@ -748,25 +758,43 @@ async function admOpen(){
     if(lock)tl.add(()=>{const s=okb.querySelector('.sh');if(s){gsap.set(s,{y:-4,rotation:-14,svgOrigin:'16 11'});gsap.to(s,{y:0,rotation:0,duration:.4,ease:'bounce.out'})}},'>-0.2')};
   lockNow(locked0,false);
   // --- the bypass-code box floats in (pop-up grows a little) / out
-  const reflow=async on=>{if((bpw.style.display==='grid')===on)return;
+  let curH=H;const reflow=async on=>{if((bpw.style.display==='grid')===on)return;
     if(!on){await pfTw(bpw,{autoAlpha:0,y:10,duration:.25});bpw.style.display='none'}else{bpw.style.display='grid';gsap.set(bpw,{autoAlpha:0,y:16,scale:.95})}
-    const h0=pp.offsetHeight;pp.style.height='auto';const h1=pp.offsetHeight;pp.style.height=h0+'px';
+    pp.style.height='auto';const h1=pp.offsetHeight;pp.style.height=curH+'px';
     if(on)gsap.to(bpw,{autoAlpha:1,y:0,scale:1,duration:.6,delay:.2,ease:'back.out(1.6)'});
-    await pfTw(pp,{top:Math.max(10,(innerHeight-h1)/2),height:h1,duration:.6,ease:'power3.inOut'})};
+    await pfTw(pp,{top:Math.max(10,(innerHeight-h1)/2),height:h1,duration:.6,ease:'power3.inOut'});curH=h1};
   const tick=setInterval(()=>{const L=admLeft(st);if(L>0){const t=okb.querySelector('.adm-t');if(t)t.textContent='Locked for '+pfFmt(L);lockNow(true,true)}else if(okb._lk){st={f:0,u:0,bp:false};admSet(st);lockNow(false,true)}},1000);
-  // --- open: the Admin Panel box grows into the pop-up
-  await Promise.all([pfTw(bd,{opacity:1,duration:.5}),pfTw(pp,{left:(innerWidth-W)/2,top:Math.max(10,(innerHeight-H)/2),width:W,height:H,borderRadius:28,backgroundColor:'#0b0f10',duration:.8,ease:'power3.inOut'})]);
-  await Promise.all([pfTw(tk,{scale:1.7,rotation:0,duration:.5,ease:'back.out(1.8)'}),pfTw(pc,{autoAlpha:1,duration:.35})]);
+  // --- open: the box grows (clip) into the pop-up; logo and label fly to the top of it; "Authentication" floats in under the label
+  const E='power3.inOut',FULL='inset(0px 0px 0px 0px round 28px)';
+  await Promise.all([pfTw(bd,{opacity:1,duration:.6}),pfTw(pp,{clipPath:FULL,duration:.9,ease:E}),pfTw(ic,{x:0,y:0,duration:.9,ease:E}),pfTw(tt,{x:0,y:0,duration:.9,ease:E}),pfTw(chv,{autoAlpha:0,duration:.25})]);
+  await Promise.all([pfTw(sub,{autoAlpha:1,y:0,duration:.45,ease:'power2.out'}),pfTw(pc,{autoAlpha:1,duration:.45})]);
   let done=false;
-  const close=async()=>{if(done)return;done=true;clearInterval(tick);const r2=admBtn.getBoundingClientRect();
-    await Promise.all([pfTw(pc,{autoAlpha:0,duration:.2}),pfTw(tk,{scale:0,duration:.25}),pfTw(bd,{opacity:0,duration:.6}),pfTw(pp,{left:r2.left,top:r2.top,width:r2.width,height:r2.height,borderRadius:22,backgroundColor:'#ffffff',duration:.7,ease:'power3.inOut'})]);
+  // --- shrink back into the box (exact reverse of opening)
+  const collapse=async()=>{const r2=admBtn.getBoundingClientRect(),pr=pp.getBoundingClientRect();
+    await Promise.all([pfTw(sub,{autoAlpha:0,duration:.25}),pfTw(pc,{autoAlpha:0,duration:.25})]);
+    await Promise.all([pfTw(bd,{opacity:0,duration:.9}),pfTw(pp,{clipPath:admClip(r2,pr.left,pr.top,pr.width,pr.height,22),duration:.9,ease:E}),pfTw(ic,{x:ix,y:iy,duration:.9,ease:E}),pfTw(tt,{x:tx,y:ty,duration:.9,ease:E}),pfTw(chv,{autoAlpha:1,duration:.3,delay:.6})]);
     pp.remove();bd.remove();admBtn.style.opacity='';admBusy=false};
-  const enter=async()=>{done=true;clearInterval(tick);   // the pop-up grows into the (blank) admin page
-    await Promise.all([pfTw(pc,{autoAlpha:0,duration:.25}),pfTw(ic,{autoAlpha:0,duration:.25}),pfTw(bd,{opacity:0,duration:.6}),pfTw(pp,{left:0,top:0,width:innerWidth,height:innerHeight,borderRadius:0,backgroundColor:'#ffffff',duration:.8,ease:'power3.inOut'})]);
-    bd.remove();pp.innerHTML='';const x=document.createElement('button');x.className='ib adm-x';x.type='button';x.setAttribute('aria-label','Close admin panel');x.innerHTML='<svg class="ico" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>';pp.append(x);
+  const close=()=>{if(done)return;done=true;clearInterval(tick);collapse()};
+  // --- Verify clicked with the right password: label > ball > spinner > tick, then the pop-up grows into the admin page
+  const verifyAnim=async()=>{const lab=okb.querySelector('span'),dot=document.createElement('i'),ring=document.createElement('i'),tkk=document.createElementNS('http://www.w3.org/2000/svg','svg');
+    dot.className='dot';ring.className='ring';tkk.setAttribute('class','ico tkk');tkk.setAttribute('viewBox','0 0 24 24');tkk.innerHTML='<path d="M5 13l4 4L19 7"/>';okb.append(dot,ring,tkk);
+    gsap.set([dot,ring],{scale:0,xPercent:-50,yPercent:-50});gsap.set(tkk,{scale:0,rotation:-90});
+    await pfTw(lab,{scale:0,opacity:0,duration:.25,ease:'power2.in'});await pfTw(dot,{scale:1,duration:.2,ease:'back.out(2)'});
+    await Promise.all([pfTw(dot,{scale:0,duration:.15}),pfTw(ring,{scale:1,duration:.2,delay:.1})]);
+    const sp=gsap.to(ring,{rotation:360,duration:.7,repeat:-1,ease:'none'});await pfSl(1100);sp.kill();
+    await pfTw(ring,{scale:0,duration:.2});await pfTw(tkk,{scale:1.2,rotation:0,duration:.45,ease:'back.out(2.2)'});await pfSl(350)};
+  const enter=async()=>{done=true;clearInterval(tick);if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
+    await verifyAnim();const pq=pp.getBoundingClientRect(),pR2={left:pq.left,right:pq.right,top:pq.top,bottom:pq.bottom};
+    const pg=document.createElement('div');pg.className='adm-pg';document.body.append(pg);   // white page grows out of the pop-up
+    gsap.set(pg,{clipPath:admClip(pR2,0,0,innerWidth,innerHeight,28)});
+    await Promise.all([pfTw(pg,{clipPath:'inset(0px 0px 0px 0px round 0px)',duration:.95,ease:E}),pfTw(pp,{opacity:0,duration:.5,delay:.4}),pfTw(bd,{opacity:0,duration:.95})]);
+    pp.style.pointerEvents='none';
+    const x=document.createElement('button');x.className='ib adm-x';x.type='button';x.setAttribute('aria-label','Close admin panel');x.innerHTML='<svg class="ico" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>';pg.append(x);
     gsap.fromTo(x,{scale:0,rotation:-90},{scale:1,rotation:0,duration:.5,ease:'back.out(1.8)'});
-    x.onclick=async()=>{x.onclick=null;await pfTw(x,{scale:0,duration:.2});const r2=admBtn.getBoundingClientRect();
-      await pfTw(pp,{left:r2.left,top:r2.top,width:r2.width,height:r2.height,borderRadius:22,opacity:0,duration:.6,ease:'power3.inOut'});pp.remove();admBtn.style.opacity='';admBusy=false}};
+    x.onclick=async()=>{x.onclick=null;await pfTw(x,{scale:0,duration:.2});   // reverse: page shrinks back into the pop-up, which shrinks back into the box
+      await Promise.all([pfTw(pg,{clipPath:admClip(pR2,0,0,innerWidth,innerHeight,28),duration:.95,ease:E}),pfTw(pp,{opacity:1,duration:.5,delay:.3}),pfTw(bd,{opacity:1,duration:.95})]);
+      pg.remove();pp.style.pointerEvents='';pwIn.value=bpIn.value='';const lb=okb.querySelector('span');if(lb)gsap.set(lb,{scale:1,opacity:1});okb.querySelectorAll('i,svg.tkk').forEach(n=>n.remove());
+      await collapse()}};
   bd.onclick=()=>close();
   // --- Verify
   okb.onclick=()=>{if(okb._lk||done)return;
