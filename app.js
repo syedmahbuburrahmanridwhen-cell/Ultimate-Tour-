@@ -713,6 +713,79 @@ pfOK.onclick=async()=>{
 
 
 // ======================================================================
+// @@ADMIN   Admin Panel option (Profile tab) > "Admin Authentication" pop-up > blank white admin page with an X.
+//   Password: ADM_PW. 3 wrong tries lock the Verify button for 24h (saved in this phone's localStorage per account).
+//   Hold the locked Verify button 10s = unlock; the pop-up then also asks for the bypass code (PF_BYPASS) until you get in.
+// ======================================================================
+const ADM_PW='Ridwhen109210921092838383',ADM_SHIELD='<path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>',admBtn=q('#adm_btn');
+let admBusy=false;
+const admKey=()=>'adm_'+(auth.currentUser?auth.currentUser.uid:'x');
+const admGet=()=>{try{return JSON.parse(localStorage.getItem(admKey()))||{}}catch(e){return{}}};
+const admSet=o=>{try{localStorage.setItem(admKey(),JSON.stringify(o))}catch(e){}};
+const admLeft=s=>s.u&&s.u>Date.now()?s.u-Date.now():0;
+admBtn.onclick=()=>{if(!admBusy&&!pfBusy){admBusy=true;admOpen().catch(e=>{console.error(e);admBusy=false})}};
+async function admOpen(){
+  let st=admGet();if(admLeft(st)===0&&st.u){st={f:0,u:0,bp:false};admSet(st)}
+  const rb=admBtn.getBoundingClientRect(),W=Math.min(innerWidth-40,340),bd=document.createElement('div'),pp=document.createElement('div');bd.className='pfp-bd';pp.className='pfp';
+  pp.innerHTML='<div class="pfp-ic"><svg class="ico" viewBox="0 0 24 24">'+ADM_SHIELD+'</svg></div><div class="pfp-c"><p class="pfp-t">Admin Authentication</p>'
+    +'<div class="pfp-cd"><small>Password</small><input class="pfp-in adm-in" type="password" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Enter admin password"></div>'
+    +'<div class="pfp-cd adm-bpw"><small>Bypass code</small><input class="pfp-in" inputmode="numeric" maxlength="6" autocomplete="off" placeholder="······"></div>'
+    +'<p class="pfp-w adm-msg"></p><button class="pfp-ok" type="button"><span>Verify</span></button></div>';
+  document.body.append(bd,pp);
+  const ic=pp.querySelector('.pfp-ic'),tk=ic.querySelector('svg'),pc=pp.querySelector('.pfp-c'),pwIn=pp.querySelector('.adm-in'),bpw=pp.querySelector('.adm-bpw'),bpIn=bpw.querySelector('input'),msg=pp.querySelector('.adm-msg'),okb=pp.querySelector('.pfp-ok');
+  const locked0=admLeft(st)>0;bpw.style.display=(st.bp&&!locked0)?'grid':'none';
+  pp.style.left='-9999px';pp.style.top='0';pp.style.width=W+'px';const H=pp.offsetHeight;
+  gsap.set(pp,{left:rb.left,top:rb.top,width:rb.width,height:rb.height,borderRadius:22,backgroundColor:'#ffffff'});
+  gsap.set(ic,{left:'50%',top:40,xPercent:-50,yPercent:-50});gsap.set(pc,{autoAlpha:0});gsap.set(tk,{scale:0,rotation:-90});
+  admBtn.style.opacity='0';
+  // --- Verify button: lock look (padlock + live countdown) and its animation
+  const lockHtml=()=>PF_LOCK+'<span class="adm-t">Locked for '+pfFmt(admLeft(st))+'</span>';
+  const lockNow=(lock,anim)=>{if(!!okb._lk===lock)return;okb._lk=lock;
+    const set=()=>{okb.classList.toggle('lk',lock);okb.innerHTML=lock?lockHtml():'<span>Verify</span>';pwIn.disabled=bpIn.disabled=lock},sh0=okb.querySelector('.sh');
+    if(!anim){set();return}
+    const tl=gsap.timeline();if(!lock&&sh0)tl.to(sh0,{y:-4,rotation:-14,svgOrigin:'16 11',duration:.3,ease:'back.out(2)'});
+    tl.to(okb,{scaleY:0,duration:.15,ease:'power1.in'}).add(set).to(okb,{scaleY:1,duration:.35,ease:'back.out(2)'});
+    if(lock)tl.add(()=>{const s=okb.querySelector('.sh');if(s){gsap.set(s,{y:-4,rotation:-14,svgOrigin:'16 11'});gsap.to(s,{y:0,rotation:0,duration:.4,ease:'bounce.out'})}},'>-0.2')};
+  lockNow(locked0,false);
+  // --- the bypass-code box floats in (pop-up grows a little) / out
+  const reflow=async on=>{if((bpw.style.display==='grid')===on)return;
+    if(!on){await pfTw(bpw,{autoAlpha:0,y:10,duration:.25});bpw.style.display='none'}else{bpw.style.display='grid';gsap.set(bpw,{autoAlpha:0,y:16,scale:.95})}
+    const h0=pp.offsetHeight;pp.style.height='auto';const h1=pp.offsetHeight;pp.style.height=h0+'px';
+    if(on)gsap.to(bpw,{autoAlpha:1,y:0,scale:1,duration:.6,delay:.2,ease:'back.out(1.6)'});
+    await pfTw(pp,{top:Math.max(10,(innerHeight-h1)/2),height:h1,duration:.6,ease:'power3.inOut'})};
+  const tick=setInterval(()=>{const L=admLeft(st);if(L>0){const t=okb.querySelector('.adm-t');if(t)t.textContent='Locked for '+pfFmt(L);lockNow(true,true)}else if(okb._lk){st={f:0,u:0,bp:false};admSet(st);lockNow(false,true)}},1000);
+  // --- open: the Admin Panel box grows into the pop-up
+  await Promise.all([pfTw(bd,{opacity:1,duration:.5}),pfTw(pp,{left:(innerWidth-W)/2,top:Math.max(10,(innerHeight-H)/2),width:W,height:H,borderRadius:28,backgroundColor:'#0b0f10',duration:.8,ease:'power3.inOut'})]);
+  await Promise.all([pfTw(tk,{scale:1.7,rotation:0,duration:.5,ease:'back.out(1.8)'}),pfTw(pc,{autoAlpha:1,duration:.35})]);
+  let done=false;
+  const close=async()=>{if(done)return;done=true;clearInterval(tick);const r2=admBtn.getBoundingClientRect();
+    await Promise.all([pfTw(pc,{autoAlpha:0,duration:.2}),pfTw(tk,{scale:0,duration:.25}),pfTw(bd,{opacity:0,duration:.6}),pfTw(pp,{left:r2.left,top:r2.top,width:r2.width,height:r2.height,borderRadius:22,backgroundColor:'#ffffff',duration:.7,ease:'power3.inOut'})]);
+    pp.remove();bd.remove();admBtn.style.opacity='';admBusy=false};
+  const enter=async()=>{done=true;clearInterval(tick);   // the pop-up grows into the (blank) admin page
+    await Promise.all([pfTw(pc,{autoAlpha:0,duration:.25}),pfTw(ic,{autoAlpha:0,duration:.25}),pfTw(bd,{opacity:0,duration:.6}),pfTw(pp,{left:0,top:0,width:innerWidth,height:innerHeight,borderRadius:0,backgroundColor:'#ffffff',duration:.8,ease:'power3.inOut'})]);
+    bd.remove();pp.innerHTML='';const x=document.createElement('button');x.className='ib adm-x';x.type='button';x.setAttribute('aria-label','Close admin panel');x.innerHTML='<svg class="ico" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>';pp.append(x);
+    gsap.fromTo(x,{scale:0,rotation:-90},{scale:1,rotation:0,duration:.5,ease:'back.out(1.8)'});
+    x.onclick=async()=>{x.onclick=null;await pfTw(x,{scale:0,duration:.2});const r2=admBtn.getBoundingClientRect();
+      await pfTw(pp,{left:r2.left,top:r2.top,width:r2.width,height:r2.height,borderRadius:22,opacity:0,duration:.6,ease:'power3.inOut'});pp.remove();admBtn.style.opacity='';admBusy=false}};
+  bd.onclick=()=>close();
+  // --- Verify
+  okb.onclick=()=>{if(okb._lk||done)return;
+    if(pwIn.value===ADM_PW&&(!st.bp||bpIn.value.trim()===PF_BYPASS)){st={f:0,u:0,bp:false};admSet(st);enter();return}
+    st.f=(st.f||0)+1;pwIn.value='';bpIn.value='';
+    if(st.f>=3){st={f:0,u:Date.now()+DAY,bp:false};admSet(st);msg.textContent='';lockNow(true,true);reflow(false)}
+    else{admSet(st);const n=3-st.f;msg.textContent='Wrong '+(st.bp?'password or code':'password')+' · '+n+(n===1?' try':' tries')+' left';
+      gsap.fromTo([pwIn,bpIn],{x:-9},{x:0,duration:.5,ease:'elastic.out(1,.3)'})}};
+  pp.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.matches('input')){e.preventDefault();okb.click()}});
+  // --- secret: hold the locked Verify button for 10s = unlock + ask for the bypass code
+  let hold=null,hx=0,hy=0;
+  okb.addEventListener('pointerdown',e=>{if(!okb._lk||done)return;hx=e.clientX;hy=e.clientY;clearTimeout(hold);
+    hold=setTimeout(()=>{st={f:0,u:0,bp:true};admSet(st);msg.textContent='';lockNow(false,true);reflow(true);try{navigator.vibrate&&navigator.vibrate(40)}catch(x){}},10000)});
+  okb.addEventListener('pointermove',e=>{if(hold&&Math.hypot(e.clientX-hx,e.clientY-hy)>12){clearTimeout(hold);hold=null}});
+  ['pointerup','pointercancel','pointerleave'].forEach(t=>okb.addEventListener(t,()=>{clearTimeout(hold);hold=null}));
+  okb.addEventListener('contextmenu',e=>e.preventDefault())}
+
+
+// ======================================================================
 // @@STARTUP   On page load: coming back from Firebase pages, Google reload, logout, auth state
 // ======================================================================
 // Came back from Firebase's reset page via the Continue button
