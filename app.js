@@ -734,14 +734,15 @@ const ADM_TABS=[['players','Players','<circle cx="9" cy="8" r="3.4"/><path d="M2
 const PL_IC={plus:'<path d="M12 5v14M5 12h14"/>',minus:'<path d="M5 12h14"/>',msg:'<path d="M4 5h16v11H9l-5 4V5z"/>',ban:'<circle cx="12" cy="12" r="8.5"/><path d="M6 6l12 12"/>'};
 const PL_BT=[['plus','Add'],['minus','Remove'],['msg','Message'],['ban','Ban']];
 const plTime=p=>p.createdAt&&p.createdAt.toMillis?p.createdAt.toMillis():Date.now();   // a just-created account has no server time yet = newest
-const plRows=[['username','Username'],['email','Gmail'],['phone','Phone'],['pw','Password']];
 function plCard(){const c=document.createElement('article');c.className='pl-card';
-  c.innerHTML='<div class="pl-av"></div><div class="pl-in"><h4 class="pl-nm"></h4><div class="pl-rows">'+plRows.map(([k,l])=>'<p class="pl-r" data-k="'+k+'"><small>'+l+'</small><b></b></p>').join('')+'</div></div>'
+  c.innerHTML='<div class="pl-top"><div class="pl-av"></div><div class="pl-id"><h4 class="pl-nm"></h4><p class="pl-un"></p></div></div>'
+    +'<div class="pl-rows">'+[['email','Gmail','wide'],['phone','Phone',''],['pw','Password','']].map(([k,l,w])=>'<p class="pl-r '+w+'" data-k="'+k+'"><small>'+l+'</small><b></b></p>').join('')+'</div>'
     +'<div class="pl-act">'+PL_BT.map(([k,l])=>'<button class="pl-b '+k+'" type="button" aria-label="'+l+'"><svg class="ico" viewBox="0 0 24 24">'+PL_IC[k]+'</svg></button>').join('')+'</div>';return c}
 function plFill(c,p){const un=p.username||'',av=c.querySelector('.pl-av');
   av.textContent=(un||p.name||'?')[0].toUpperCase();
   c.querySelector('.pl-nm').textContent=p.name||un||'Player';
-  const val={username:un?'@'+un:'',email:p.email||'',phone:p.phone||'',pw:'••••••••'};
+  c.querySelector('.pl-un').textContent=un?'@'+un:'';
+  const val={email:p.email||'',phone:p.phone||'',pw:'••••••••'};
   c.querySelectorAll('.pl-r').forEach(r=>{const b=r.querySelector('b'),t=val[r.dataset.k];b.textContent=t||'Not added';r.classList.toggle('no',!t)});
   const url=u=>typeof u==='string'&&/^https:\/\//.test(u)?'url('+JSON.stringify(u)+')':'';
   av.style.backgroundImage=url(p.photo);
@@ -823,16 +824,19 @@ async function admOpen(){
     gsap.set(pg,{clipPath:admClip(pR2,0,0,innerWidth,innerHeight,28)});
     await Promise.all([admCT(pg,admClip(pR2,0,0,innerWidth,innerHeight,28),'inset(0px 0px 0px 0px round 0px)',.95,E),pfTw(pp,{opacity:0,duration:.5,delay:.4}),pfTw(bd,{opacity:0,duration:.95})]);
     pp.style.pointerEvents='none';
-    // --- admin page layout: green back arrow + title, scrolling navigation bar, page area (Players is the first page)
+    // --- admin page layout: the page area fills the whole screen; the title capsule and the navigation bar float above it (frosted glass)
     const bk=document.createElement('button');bk.className='adm-bk';bk.type='button';bk.setAttribute('aria-label','Back');bk.innerHTML='<svg class="ico" viewBox="0 0 24 24"><path d="M20 12H5M11 6l-6 6 6 6"/></svg>';
     const hd=document.createElement('header');hd.className='adm-hd';hd.append(bk);hd.insertAdjacentHTML('beforeend','<h2 class="adm-ttl">Admin Panel</h2>');
     const nv=document.createElement('nav');nv.className='adm-nav';
-    nv.innerHTML=ADM_TABS.map(([k,lb,ic],n)=>'<button class="adm-nv'+(n?'':' on')+'" type="button" data-k="'+k+'"><svg class="ico" viewBox="0 0 24 24">'+ic+'</svg><span>'+lb+'</span>'+(k==='players'?'<em class="adm-cnt">0</em>':'')+'</button>').join('');
-    nv.querySelectorAll('.adm-nv').forEach(b=>b.onclick=()=>{nv.querySelectorAll('.adm-nv').forEach(o=>o.classList.toggle('on',o===b));b.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'})});
+    nv.innerHTML='<div class="adm-trk"><i class="adm-ball"></i>'+ADM_TABS.map(([k,lb,ic],n)=>'<button class="adm-nv'+(n?'':' on')+'" type="button" data-k="'+k+'"><svg class="ico" viewBox="0 0 24 24">'+ic+'</svg><span>'+lb+'</span>'+(k==='players'?'<em class="adm-cnt">0</em>':'')+'</button>').join('')+'</div>';
+    const trk=nv.querySelector('.adm-trk'),ball=nv.querySelector('.adm-ball'),tabs=[...nv.querySelectorAll('.adm-nv')];
+    const ballTo=b=>{ball.style.left=b.offsetLeft+'px';ball.style.width=b.offsetWidth+'px'};
+    tabs.forEach(b=>b.onclick=()=>{tabs.forEach(o=>o.classList.toggle('on',o===b));ballTo(b);b.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'})});
     const bd2=document.createElement('main');bd2.className='adm-body';bd2.innerHTML='<section class="adm-sec" id="adm_players"><div class="pl-list"></div><p class="pl-empty" hidden>No players yet</p></section>';
-    pg.append(hd,nv,bd2);
+    pg.append(bd2,hd,nv);
+    ball.style.transition='none';ballTo(tabs[0]);ball.offsetWidth;ball.style.transition='';
     gsap.fromTo(bk,{scale:0,rotation:90},{scale:1,rotation:0,duration:.5,ease:'back.out(1.8)'});
-    gsap.from([hd.querySelector('.adm-ttl'),nv],{opacity:0,y:10,duration:.5,stagger:.08,delay:.1,ease:'power2.out'});
+    gsap.from([hd,nv],{opacity:0,y:-12,duration:.5,stagger:.08,delay:.1,ease:'power2.out'});
     const unsub=admPlayers(bd2.querySelector('.pl-list'),bd2.querySelector('.pl-empty'),nv.querySelector('.adm-cnt'));
     bk.onclick=async()=>{bk.onclick=null;unsub();await Promise.all([pfTw(hd,{opacity:0,duration:.25}),pfTw(nv,{opacity:0,duration:.25}),pfTw(bd2,{opacity:0,duration:.25})]);   // the page shrinks straight into the Admin Panel box
       const r2=admBtn.getBoundingClientRect(),cl=admBtn.cloneNode(true);cl.removeAttribute('id');
