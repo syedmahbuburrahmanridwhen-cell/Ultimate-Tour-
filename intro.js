@@ -26,6 +26,7 @@ function tick(){const t=tl.time();$('#tc').textContent=`TC 00:00:${p2(Math.floor
 function done(){dispatchEvent(new Event('loader:done'))}
 
 function build(){
+  if(isKnown())return buildQuick();
   const u=parseFloat(getComputedStyle(document.documentElement).fontSize),H=innerHeight;
   const P=innerWidth<innerHeight,o=P?6:3;
   CHIPS.forEach(c=>$('#cl').insertAdjacentHTML('beforeend',`<div class="chip" style="left:calc(50% + ${c[o]}rem);top:calc(50% + ${c[o+1]}rem)" data-r="${c[o+2]}"><b>${c[0]}</b><div><strong>${c[1]}</strong><small>${c[2]}</small></div></div>`));
@@ -104,15 +105,38 @@ function build(){
     .fromTo('#a2',{yPercent:110},{yPercent:0,duration:.6,ease:'power4.out'},Y+.12)
     .to('#mk',{backgroundSize:'100% 60%',duration:.5,ease:'power3.inOut'},Y+.5);
 
+  tail(Y+1.7);
+}
+
+// ---- Already logged in (flag 'ut_in' saved by app.js): short intro = only the "Ultimate Tour" word floats in the center, then the black strips take over and open straight into home ----
+function isKnown(){try{const s=new URLSearchParams(location.search);return localStorage.getItem('ut_in')==='1'&&AUTO.state!=='login'&&sessionStorage.getItem('ut_g')!=='1'&&!s.get('verified')&&!s.get('reset')&&!s.has('oobCode')}catch(e){return false}}
+function buildQuick(){
+  gsap.set('#stage',{backgroundColor:'#eef2fb'});
+  gsap.set('#s1,#t2',{visibility:'hidden'});
+  gsap.set('#s2',{visibility:'visible'});
+  gsap.set('#pill,#cl',{display:'none'});   // no timer pill, no floating agent chips
+  gsap.set('#dl',{y:0});                    // word sits exactly in the screen center
+  gsap.set('#hl',{rotation:-.8});
+  gsap.set('.band',{xPercent:i=>i<3?-105:105});
+  tl=gsap.timeline({paused:true,onUpdate:tick,onComplete:done});
+  tl.timeScale(SPEED);
+  tl.fromTo('.l',{yPercent:115,rotation:7,skewX:-10,opacity:0},{yPercent:0,rotation:0,skewX:0,opacity:1,duration:.75,stagger:.04,ease:'power3.out'},.2)
+    .fromTo('#hl',{scaleX:0},{scaleX:1,duration:.5,ease:'power3.inOut'},.9);
+  tail(2.0);
+}
+
+// bands cover the screen -> black -> bands leave -> login shows (or home opens if already logged in)
+function tail(Y){
   // 8 — glitch stair-step to black
-  tl.to('.band',{xPercent:0,duration:.8,stagger:i=>[0,2,4,1,3,5][i]*.09,ease:'power3.inOut'},Y+1.7);
+  tl.to('.band',{xPercent:0,duration:.8,stagger:i=>[0,2,4,1,3,5][i]*.09,ease:'power3.inOut'},Y);
 
   // 9 — brief black, strips leave the opposite way; login boxes show, then texts float up top→bottom
-  const cover=Y+1.7+.8+.45,go=cover+.02;
+  const cover=Y+.8+.45,go=cover+.02;
   tl.call(()=>{if(AUTO.state!=='wait')return;tl.pause();const tm=setTimeout(()=>{AUTO.state='login';AUTO.cb()},5000);AUTO.cb=()=>{clearTimeout(tm);AUTO.cb=null;tl.play()}},null,cover-.02)
     .set('#login',{visibility:'visible'},cover)
     .call(()=>{if(AUTO.state==='home'&&AUTO.show)AUTO.show()},null,cover+.01)
     .set('#hud',{autoAlpha:0},cover)
+    .set('#s2',{visibility:'hidden'},cover)
     .to('.band',{xPercent:i=>i<3?105:-105,duration:.7,stagger:i=>[0,2,4,1,3,5][i]*.07,ease:'power2.inOut'},go)
     .call(()=>{if(AUTO.state==='home'&&AUTO.reveal)AUTO.reveal()},null,go+.15)
     .fromTo('.field,.btn,.gbtn',{y:20,opacity:0},{y:0,opacity:1,duration:.8,ease:'power3.out',stagger:.1,clearProps:'transform'},go+.05)
