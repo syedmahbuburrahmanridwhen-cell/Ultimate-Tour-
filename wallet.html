@@ -6,7 +6,7 @@ This file is NOT opened directly. index.html loads it. It holds this page's css 
 /* ===== pages/wallet/wallet.css ===== */
 /* @@WALLET - full-screen wallet page. The dark sheet (#wl_bg) starts exactly on the home wallet card, grows to the whole screen while its colour fades from the card's black to the app's cream, then the page items float up one by one */
 #wlpg{position:absolute;inset:0;z-index:7;display:none;overflow:hidden}
-#wl_bg{position:absolute;inset:0;overflow:hidden;background:var(--cream);box-shadow:0 18px 36px rgba(30,41,100,.18)}
+#wl_bg{position:absolute;inset:0;overflow:hidden;background:var(--cream)}
 #wl_gl{position:absolute;inset:0;background:radial-gradient(circle at 92% -4%,rgba(99,102,241,.16),transparent 46%),radial-gradient(circle at -8% 100%,rgba(79,116,244,.12),transparent 50%)}
 .wl-gh{position:absolute;left:0;top:0;margin:0;box-shadow:none;pointer-events:none}
 .wl-sc{position:relative;z-index:1;height:100%;box-sizing:border-box;overflow-y:auto;padding:calc(18px + env(safe-area-inset-top,0px)) 20px calc(30px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:18px}
@@ -16,7 +16,7 @@ This file is NOT opened directly. index.html loads it. It holds this page's css 
 .wl-card{cursor:default}
 .wl-sec{box-sizing:border-box;flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 8px;border:1px solid rgba(255,255,255,.32);border-radius:99px;color:rgba(255,255,255,.92);font:700 10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;overflow:hidden}
 .wl-sec .ico{flex:none;width:18px;height:18px;color:#fff}
-.wl-act{display:flex;gap:12px}
+.wl-act{position:relative;z-index:1;display:flex;gap:12px}
 .wl-act .wb{box-sizing:border-box;height:66px;padding:0 14px;justify-content:flex-start;gap:12px;border-radius:22px;font-size:12px;background:#fff;color:var(--ink);box-shadow:0 10px 24px rgba(60,72,140,.12),inset 0 0 0 1px rgba(99,102,241,.12)}
 .wl-act .wb:last-child{background:var(--grad);color:#fff;box-shadow:0 12px 26px rgba(79,86,230,.3)}
 .wl-act .wb .ico{flex:none;width:38px;height:38px;padding:9px;border-radius:50%;background:rgba(99,102,241,.14);color:var(--pri)}
@@ -39,7 +39,7 @@ This file is NOT opened directly. index.html loads it. It holds this page's css 
 //   HTML: <!-- @@WALLET -->  CSS: /* @@WALLET */
 // ======================================================================
 {const H=q('#home'),W=q('#wlpg'),bg=q('#wl_bg'),gl=q('#wl_gl'),card=q('#hm0 .wallet'),sc=q('#wl_sc'),list=q('#wl_list');
-let wlBusy=false,wlOpen=false,wlFirst=true,wlUid='',gh=null;
+let wlBusy=false,wlOpen=false,wlFirst=true,wlUid='',gh=null,SH='',SH0='';
 const DUR=.8,EASE='power3.inOut',INK='#4f74f4',CREAM='#eef2fb',wlMoney=n=>'BDT '+Number(n||0).toLocaleString('en-US',{minimumFractionDigits:2});
 const kids=()=>[...sc.children];   // header, card, buttons, heading, list: they float up one by one
 const geo=()=>{const h=H.getBoundingClientRect(),c=card.getBoundingClientRect();return{c,t:c.top-h.top,l:c.left-h.left,r:h.right-c.right,b:h.bottom-c.bottom}};
@@ -73,12 +73,15 @@ async function wlShow(){
   q('#wl_bal').textContent=q('#hm_bal').textContent;
   W.style.display='block';sc.scrollTop=0;clean();
   const g=geo(),G=ghost(g.c);
-  gsap.set(bg,{top:g.t,left:g.l,right:g.r,bottom:g.b,borderRadius:30,backgroundColor:INK});
+  // the sheet takes over the home card's shadow (same frame), so the shadow never doubles up or jumps
+  card.style.boxShadow='';SH=getComputedStyle(card).boxShadow;SH0=SH.replace(/rgba?\(([^)]*)\)/,(m,a)=>{const p=a.split(',').map(x=>x.trim());return 'rgba('+p[0]+', '+p[1]+', '+p[2]+', 0)'});card.style.boxShadow='none';
+  gsap.set(bg,{top:g.t,left:g.l,right:g.r,bottom:g.b,borderRadius:30,backgroundColor:INK,boxShadow:SH});
   gsap.set(gl,{opacity:0});gsap.set(kids(),{opacity:0,y:22});
   wlOpen=true;wlLoad();
   try{await new Promise(res=>{gsap.timeline({onComplete:res})
     .to(bg,{top:0,left:0,right:0,bottom:0,borderRadius:0,duration:DUR,ease:EASE},0)          // the card grows to the whole screen
     .to(bg,{backgroundColor:CREAM,duration:DUR,ease:'sine.inOut'},0)                           // ...turning from black to cream while it grows
+    .to(bg,{boxShadow:SH0,duration:DUR,ease:'sine.inOut'},0)                                   // ...its shadow melts away smoothly
     .to(G,{opacity:0,duration:.3,ease:'power1.out'},0)                                         // the card's own text fades away
     .to(gl,{opacity:1,duration:.4,ease:'power1.out'},DUR-.4)                                   // the app background's soft glow
     .to(kids(),{opacity:1,y:0,duration:.6,stagger:.11,ease:'power3.out'},DUR-.2)})}            // title, card, buttons, history float up one by one
@@ -88,14 +91,15 @@ async function wlHide(){
   if(sc.scrollTop>2){sc.scrollTo({top:0,behavior:'smooth'});await wait(300)}
   const g=geo();let G=null;
   try{
-    gsap.set(bg,{backgroundColor:CREAM});G=ghost(g.c);gsap.set(G,{opacity:0});
+    gsap.set(bg,{backgroundColor:CREAM,boxShadow:SH0});G=ghost(g.c);gsap.set(G,{opacity:0});
     await new Promise(res=>{gsap.timeline({onComplete:res})
       .to(kids(),{opacity:0,y:14,duration:.28,stagger:{each:.04,from:'end'},ease:'power2.in'},0)
       .to(gl,{opacity:0,duration:.4,ease:'power1.in'},.15)
       .to(bg,{top:g.t,left:g.l,right:g.r,bottom:g.b,borderRadius:30,duration:DUR,ease:EASE},.2)
       .to(bg,{backgroundColor:INK,duration:DUR,ease:'sine.inOut'},.2)
+      .to(bg,{boxShadow:SH,duration:DUR,ease:'sine.inOut'},.2)                                // the shadow grows back to exactly the home card's shadow
       .to(G,{opacity:1,duration:.3,ease:'power1.in'},.2+DUR-.3)})}
-  finally{W.style.display='none';clean();wlOpen=false;wlBusy=false}}
+  finally{W.style.display='none';card.style.boxShadow='';clean();wlOpen=false;wlBusy=false}}   // card's own shadow returns in the same frame the sheet disappears
 card.onclick=e=>{if(e.target.closest('.wb'))return;wlShow()};
 q('#wl_back').onclick=wlHide;
 document.querySelectorAll('#wlpg [data-toast]').forEach(b=>b.onclick=()=>toast(b.dataset.toast))}
