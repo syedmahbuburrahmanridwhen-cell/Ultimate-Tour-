@@ -166,19 +166,21 @@ body{height:100%;margin:0;background:#fff;overflow:hidden}
 #jamtx{position:absolute;left:20px;margin:0;opacity:0;text-align:center;color:var(--cream)}
 #jamtx b{display:block;font:italic 600 26px/1.1 var(--serif);letter-spacing:-.01em;margin-bottom:8px}
 #jamtx span{display:block;font:500 12px/1.6 var(--mono);color:rgba(244,239,233,.65)}
-/* @@WALLET - full-screen wallet page. A cream sheet grows out of the home wallet card; the page's own card glides from the home card's place to its place (only transform/size animate = smooth) */
+/* @@WALLET - full-screen wallet page. The dark sheet (#wl_bg) starts exactly on the home wallet card, grows to the whole screen while its colour fades from the card's black to the app's cream, then the page items float up one by one */
 #wlpg{position:absolute;inset:0;z-index:7;display:none;overflow:hidden}
-#wl_bg{position:absolute;inset:0;background:var(--cream);box-shadow:0 10px 40px rgba(11,15,16,.14)}
+#wl_bg{position:absolute;inset:0;overflow:hidden;background:var(--cream);box-shadow:0 18px 36px rgba(11,15,16,.18)}
+#wl_gl{position:absolute;inset:0;background:radial-gradient(circle at 92% -4%,rgba(201,222,60,.32),transparent 46%),radial-gradient(circle at -8% 100%,rgba(30,77,58,.14),transparent 50%)}
+.wl-gh{position:absolute;left:0;top:0;margin:0;box-shadow:none;pointer-events:none}
 .wl-sc{position:relative;z-index:1;height:100%;box-sizing:border-box;overflow-y:auto;padding:calc(18px + env(safe-area-inset-top,0px)) 20px calc(30px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:18px}
 .wl-sc>*{flex-shrink:0}
 .wl-top{display:flex;align-items:center;justify-content:flex-start;gap:14px}
 .wl-top h2{margin:0;font:italic 600 26px var(--serif);color:var(--green)}
-.wl-card{cursor:default;will-change:transform,height}
-.wl-card .w-b{margin:14px 0 0}
-.wl-card .wl-fk{position:absolute;left:26px;right:26px;bottom:30px;opacity:0;pointer-events:none}
-.wl-act{display:flex;gap:14px}
-.wl-act .wb{flex-direction:column;aspect-ratio:1/1;padding:0;gap:14px;border-radius:30px;font-size:13px;background:var(--ink);color:var(--lime);box-shadow:0 14px 28px rgba(11,15,16,.2)}
-.wl-act .wb .ico{width:38px;height:38px}
+.wl-card{cursor:default}
+.wl-sec{box-sizing:border-box;flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 8px;border:1px solid rgba(255,255,255,.2);border-radius:99px;color:rgba(255,255,255,.72);font:700 10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;white-space:nowrap;overflow:hidden}
+.wl-sec .ico{flex:none;width:18px;height:18px;color:var(--lime)}
+.wl-act{display:flex;gap:12px}
+.wl-act .wb{box-sizing:border-box;height:66px;padding:0 14px;justify-content:flex-start;gap:12px;border-radius:22px;font-size:12px;background:var(--ink);color:#fff;box-shadow:0 12px 24px rgba(11,15,16,.18)}
+.wl-act .wb .ico{flex:none;width:38px;height:38px;padding:9px;border-radius:50%;background:var(--lime);color:var(--ink)}
 .wl-h{margin:6px 0 -4px;text-align:left}
 .wl-ls{display:flex;flex-direction:column;gap:10px}
 .wl-it{display:flex;align-items:center;gap:12px;background:#fff;border-radius:20px;padding:13px 14px;box-shadow:0 8px 20px rgba(11,15,16,.07)}
