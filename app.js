@@ -747,48 +747,75 @@ function plFill(c,p){const un=p.username||'',av=c.querySelector('.pl-av');
   const url=u=>typeof u==='string'&&/^https:\/\//.test(u)?'url('+JSON.stringify(u)+')':'';
   av.style.backgroundImage=url(p.photo);
   if(url(p.cover))c.style.setProperty('--cv','linear-gradient(rgba(11,15,16,.5),rgba(11,15,16,.82)),'+url(p.cover));else c.style.removeProperty('--cv')}
-// Built for a big player base: only 20 cards are read at first (the newest, kept live), more load as you scroll,
-// the total comes from a cheap server count, and search asks the database (it never downloads all players).
-function admPlayers(list,emp,cnt,inp,clr,sc){
-  const UC=collection(db,'users'),PAGE=20,all=new Map(),els=new Map();
-  let mode='list',cursor=null,more=true,loading=false,init=false,seq=0,tm=null,cT=null,off=false;
-  const byNew=a=>a.sort((x,y)=>plTime(y)-plTime(x)),add=(m,d)=>m.set(d.id,{id:d.id,...d.data()});
-  const note=t=>{emp.textContent=t;emp.hidden=!t};
-  function paint(docs){
-    const ids=new Set(docs.map(d=>d.id)),fresh=[];
-    els.forEach((el,id)=>{if(!ids.has(id)){el.remove();els.delete(id)}});
+// relevance of one player for the typed text: higher = better match, 0 = no match
+function plScore(p,q){
+  const tk=q.toLowerCase().split(/\s+/).map(t=>t.replace(/^@/,'')).filter(Boolean);if(!tk.length)return 0;
+  const nm=(p.name||'').toLowerCase(),un=(p.username||'').toLowerCase(),em=(p.email||'').toLowerCase(),ph=(p.phone||'').toLowerCase(),ph2=ph.replace(/[\s-]/g,'');
+  let sum=0,hit=0;
+  for(const t of tk){let b=0;
+    for(const f of [nm,un,em,ph,ph2]){if(!f)continue;
+      const v=f===t?100:f.startsWith(t)?70:(f===nm&&f.split(/\s+/).some(w=>w.startsWith(t)))?60:f.includes(t)?35:0;if(v>b)b=v}
+    if(b){hit++;sum+=b}}
+  return sum?sum+(hit===tk.length?20:0):0}
+// Players page engine. Built for a big player base: 20 cards are read at first (the newest, kept live), more load while scrolling,
+// the total is a cheap server count, search asks the database (never downloads everyone). Cards are RANKED by how well they match
+// the search (best on top) and every re-ordering is animated with FLIP, so cards glide to their new place and can be interrupted anytime.
+function admPlayers(U){
+  const {list,emp,cnt,inp,clr,sc}=U,UC=collection(db,'users'),PAGE=20,all=new Map(),els=new Map();
+  let mode='list',q='',cursor=null,more=true,loading=false,init=false,live=false,dead=false,settled=true,hit=true,entry=true,seq=0,tm=null,lt=null,cT=null,off=false,shown=0;
+  try{shown=+localStorage.getItem('adm_pc')||0}catch(e){}
+  cnt.textContent=shown?shown.toLocaleString('en-US'):'-';
+  const add=(m,d)=>m.set(d.id,{id:d.id,...d.data()});
+  const order=()=>{const d=[...all.values()].sort((a,b)=>plTime(b)-plTime(a));if(!q){hit=true;return d}
+    const s=new Map(d.map(p=>[p.id,plScore(p,q)]));hit=d.some(p=>s.get(p.id)>0);return d.sort((a,b)=>s.get(b.id)-s.get(a.id)||plTime(b)-plTime(a))};
+  const note=()=>{const t=!all.size?(init?'No players yet':''):(mode==='find'&&settled&&!hit?'No player found':'');emp.textContent=t;emp.hidden=!t};
+  function place(docs){
+    const ids=new Set(docs.map(d=>d.id)),first=new Map(),fresh=[],moved=[];
+    els.forEach((el,id)=>{gsap.killTweensOf(el);first.set(id,el.getBoundingClientRect().top)});   // FIRST: where every card is right now (even mid-animation)
+    els.forEach((el,id)=>{if(!ids.has(id)){el.remove();els.delete(id);first.delete(id)}else{gsap.set(el,{clearProps:'transform,zIndex'});if(+gsap.getProperty(el,'opacity')<1)gsap.to(el,{opacity:1,duration:.3,clearProps:'opacity'})}});
     docs.forEach((p,i)=>{let el=els.get(p.id);if(!el){el=plCard();els.set(p.id,el);fresh.push(el)}plFill(el,p);if(list.children[i]!==el)list.insertBefore(el,list.children[i]||null)});
-    if(fresh.length)gsap.from(fresh.slice(0,10),{y:24,opacity:0,duration:.5,stagger:.06,ease:'power3.out',clearProps:'transform,opacity'});
-    note(docs.length?'':mode==='find'?'No player found':'No players yet')}
-  const showList=()=>{mode='list';paint(byNew([...all.values()]))};
-  // total number of accounts (server-side count, 1 cheap read per 1000 accounts)
-  const count=()=>{clearTimeout(cT);cT=setTimeout(()=>getCountFromServer(UC).then(r=>{if(!off)cnt.textContent=r.data().count.toLocaleString('en-US')}).catch(()=>{}),300)};count();
-  // the newest 20, live: a new account shows up on top by itself
+    docs.forEach((p,i)=>{if(i<60&&first.has(p.id)){const el=els.get(p.id),d=first.get(p.id)-el.getBoundingClientRect().top;if(Math.abs(d)>1)moved.push([el,d])}});   // LAST: where they have to be
+    moved.forEach(([el,d])=>{el.style.zIndex=d>0?4:2;   // INVERT + PLAY: a card going up floats over the others
+      gsap.timeline({onComplete:()=>gsap.set(el,{clearProps:'transform,zIndex'})})
+        .fromTo(el,{y:d},{y:0,duration:.8,ease:'power3.inOut'},0)
+        .fromTo(el,{scale:1},{scale:d>0?1.03:.985,duration:.4,yoyo:true,repeat:1,ease:'sine.inOut'},0)});
+    if(fresh.length)gsap.fromTo(fresh.slice(0,12),{y:entry?30:90,opacity:0},{y:0,opacity:1,duration:.7,stagger:.06,ease:'power3.out',clearProps:'transform,opacity'});
+    entry=false}
+  const render=()=>{if(!live||dead)return;place(order());note()};
+  // total number of accounts: fetched right away (before the page is on screen), the last known number is shown instantly
+  const setCnt=n=>{const f=shown;shown=n;try{localStorage.setItem('adm_pc',n)}catch(e){}
+    if(!live||f===n){cnt.textContent=n.toLocaleString('en-US');return}
+    const o={v:f};gsap.to(o,{v:n,duration:.7,ease:'power2.out',onUpdate:()=>{cnt.textContent=Math.round(o.v).toLocaleString('en-US')}})};
+  const fetchCnt=()=>getCountFromServer(UC).then(r=>{if(!off)setCnt(r.data().count)}).catch(()=>{});
+  const count=()=>{clearTimeout(cT);cT=setTimeout(fetchCnt,250)};fetchCnt();
+  // the newest 20, live: a new account arrives on top by itself
   const unsub=onSnapshot(query(UC,orderBy('createdAt','desc'),limit(PAGE)),snap=>{
     snap.docs.forEach(d=>add(all,d));
     if(!init){init=true;cursor=snap.docs[snap.docs.length-1]||null;more=snap.size>=PAGE}
     else if(snap.docChanges().some(c=>c.type==='added'))count();
-    if(mode==='list')showList()},
-  err=>{mode='err';list.innerHTML='';els.clear();note(E[err.code]||'Could not load players ('+(err.code||err.message)+')')});
+    render()},
+  err=>{dead=true;list.innerHTML='';els.clear();emp.textContent=E[err.code]||'Could not load players ('+(err.code||err.message)+')';emp.hidden=false});
   // older players: the next 20 load when you scroll near the end
   const onScroll=()=>{if(mode!=='list'||!more||loading||!cursor||sc.scrollTop+sc.clientHeight<sc.scrollHeight-500)return;loading=true;
-    getDocs(query(UC,orderBy('createdAt','desc'),startAfter(cursor),limit(PAGE))).then(r=>{r.docs.forEach(d=>add(all,d));if(r.docs.length)cursor=r.docs[r.docs.length-1];more=r.size>=PAGE;if(mode==='list')showList()}).catch(()=>{}).finally(()=>{loading=false})};
+    getDocs(query(UC,orderBy('createdAt','desc'),startAfter(cursor),limit(PAGE))).then(r=>{r.docs.forEach(d=>add(all,d));if(r.docs.length)cursor=r.docs[r.docs.length-1];more=r.size>=PAGE;render()}).catch(()=>{}).finally(()=>{loading=false})};
   sc.addEventListener('scroll',onScroll,{passive:true});
-  // search: name / username / Gmail / phone (the database matches from the START of each; cards already loaded also match anywhere)
+  // search: the database matches from the START of name / username / Gmail / phone; ranking (and matching anywhere) works on every card loaded so far
   const title=v=>v.replace(/(^|\s)(\S)/g,(m,a,b)=>a+b.toUpperCase()),uniq=a=>[...new Set(a)];
   const pre=(f,x)=>getDocs(query(UC,where(f,'>=',x),where(f,'<=',x+'\uf8ff'),limit(PAGE)));
-  async function find(raw){const my=++seq,v=raw.trim().replace(/^@/,''),lv=v.toLowerCase();if(!v){showList();return}
-    mode='find';const jobs=[pre('username',lv),pre('email',lv),...uniq([v,title(v)]).map(x=>pre('name',x))];
+  async function find(v0){const my=seq,v=v0.replace(/^@/,''),t0=(v.split(/\s+/)[0]||'').toLowerCase();if(!v)return;
+    const jobs=[pre('username',t0),pre('email',t0),...uniq([v,title(v)]).map(x=>pre('name',x))];
     if(/^[+0-9][0-9\s-]*$/.test(v))uniq([v,v.replace(/[\s-]/g,'')]).forEach(x=>jobs.push(pre('phone',x)));
-    const r=await Promise.allSettled(jobs);if(my!==seq)return;
-    const m=new Map();r.forEach(x=>x.status==='fulfilled'&&x.value.docs.forEach(d=>add(m,d)));
-    all.forEach((p,id)=>{if(((p.name||'')+' '+(p.username||'')+' '+(p.email||'')+' '+(p.phone||'')).toLowerCase().includes(lv))m.set(id,p)});
-    if(!m.size&&r.every(x=>x.status==='rejected')){els.forEach(e=>e.remove());els.clear();note('Search failed. Try again');return}
-    paint(byNew([...m.values()]))}
-  inp.addEventListener('input',()=>{clr.hidden=!inp.value;clearTimeout(tm);seq++;if(!inp.value.trim()){showList();return}tm=setTimeout(()=>find(inp.value),350)});
+    const r=await Promise.allSettled(jobs);if(my!==seq||dead)return;
+    r.forEach(x=>x.status==='fulfilled'&&x.value.docs.forEach(d=>add(all,d)));
+    settled=true;
+    if(r.every(x=>x.status==='rejected')){emp.textContent='Search failed. Try again';emp.hidden=false;return}
+    render()}
+  inp.addEventListener('input',()=>{const v=inp.value.trim();clr.hidden=!inp.value;clearTimeout(tm);clearTimeout(lt);seq++;
+    q=v;mode=v?'find':'list';settled=!v;if(sc.scrollTop>2)sc.scrollTo({top:0,behavior:'smooth'});
+    lt=setTimeout(render,v?90:0);if(v)tm=setTimeout(()=>find(v),350)});
   inp.addEventListener('keydown',e=>{if(e.key==='Enter')inp.blur()});
-  clr.onclick=()=>{inp.value='';clr.hidden=true;clearTimeout(tm);seq++;showList();inp.focus()};
-  return()=>{off=true;unsub();clearTimeout(tm);clearTimeout(cT);sc.removeEventListener('scroll',onScroll)}}
+  clr.onclick=()=>{inp.value='';inp.dispatchEvent(new Event('input'));inp.focus()};
+  return{start:()=>{live=true;render()},stop:()=>{off=true;dead=true;unsub();clearTimeout(tm);clearTimeout(lt);clearTimeout(cT);sc.removeEventListener('scroll',onScroll);els.forEach(el=>gsap.killTweensOf(el))}}}
 async function admOpen(){
   let st=admGet();if(admLeft(st)===0&&st.u){st={f:0,u:0,bp:false};admSet(st)}
   // 1) if the box is already where the pop-up would sit in the middle of the screen (within 2px) the animation starts at once on tap;
@@ -850,29 +877,32 @@ async function admOpen(){
     const sp=gsap.to(ring,{rotation:360,duration:.7,repeat:-1,ease:'none'});await pfSl(1100);sp.kill();
     await pfTw(ring,{scale:0,duration:.2});await pfTw(tkk,{scale:1.2,rotation:0,duration:.45,ease:'back.out(2.2)'});await pfSl(350)};
   const enter=async()=>{done=true;clearInterval(tick);if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
+    // --- admin page: built off-screen and the data starts loading NOW (while the tick animation plays), so nothing heavy happens while the page opens
+    const bk=document.createElement('button');bk.className='adm-bk';bk.type='button';bk.setAttribute('aria-label','Back');bk.innerHTML='<svg class="ico" viewBox="0 0 24 24"><path d="M20 12H5M11 6l-6 6 6 6"/></svg>';
+    const hd=document.createElement('header');hd.className='adm-hd';hd.append(bk);hd.insertAdjacentHTML('beforeend','<h2 class="adm-ttl">Admin Panel</h2>');
+    const nv=document.createElement('nav');nv.className='adm-nav';
+    nv.innerHTML='<div class="adm-trk"><i class="adm-ball"></i>'+ADM_TABS.map(([k,lb,ic],n)=>'<button class="adm-nv'+(n?'':' on')+'" type="button" data-k="'+k+'"><svg class="ico" viewBox="0 0 24 24">'+ic+'</svg><span>'+lb+'</span></button>').join('')+'</div>';
+    const ball=nv.querySelector('.adm-ball'),tabs=[...nv.querySelectorAll('.adm-nv')];
+    const ballTo=b=>{ball.style.left=b.offsetLeft+'px';ball.style.width=b.offsetWidth+'px'};
+    const bd2=document.createElement('main');bd2.className='adm-body';bd2.innerHTML='<section class="adm-sec" id="adm_players"><p class="pl-empty" hidden></p><div class="pl-list"></div></section>';
+    const sr=document.createElement('div');sr.className='adm-sr';
+    sr.innerHTML='<svg class="ico sr-i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input class="sr-in" type="text" inputmode="search" enterkeyhint="search" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Search Players"><button class="sr-x" type="button" aria-label="Clear" hidden><svg class="ico" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button><span class="sr-cnt"><b>-</b><small>Players</small></span>';
+    tabs.forEach(b=>b.onclick=()=>{tabs.forEach(o=>o.classList.toggle('on',o===b));ballTo(b);sr.style.display=b.dataset.k==='players'?'':'none';b.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'})});
+    const eng=admPlayers({list:bd2.querySelector('.pl-list'),emp:bd2.querySelector('.pl-empty'),cnt:sr.querySelector('.sr-cnt b'),inp:sr.querySelector('.sr-in'),clr:sr.querySelector('.sr-x'),sc:bd2});
     await verifyAnim();const pq=pp.getBoundingClientRect(),pR2={left:pq.left,right:pq.right,top:pq.top,bottom:pq.bottom};
     const pg=document.createElement('div');pg.className='adm-pg';document.body.append(pg);   // white page grows out of the pop-up
     gsap.set(pg,{clipPath:admClip(pR2,0,0,innerWidth,innerHeight,28)});
     await Promise.all([admCT(pg,admClip(pR2,0,0,innerWidth,innerHeight,28),'inset(0px 0px 0px 0px round 0px)',.95,E),pfTw(pp,{opacity:0,duration:.5,delay:.4}),pfTw(bd,{opacity:0,duration:.95})]);
     pp.style.pointerEvents='none';
-    // --- admin page layout: the page area fills the whole screen; the title capsule and the navigation bar float above it (frosted glass)
-    const bk=document.createElement('button');bk.className='adm-bk';bk.type='button';bk.setAttribute('aria-label','Back');bk.innerHTML='<svg class="ico" viewBox="0 0 24 24"><path d="M20 12H5M11 6l-6 6 6 6"/></svg>';
-    const hd=document.createElement('header');hd.className='adm-hd';hd.append(bk);hd.insertAdjacentHTML('beforeend','<h2 class="adm-ttl">Admin Panel</h2>');
-    const nv=document.createElement('nav');nv.className='adm-nav';
-    nv.innerHTML='<div class="adm-trk"><i class="adm-ball"></i>'+ADM_TABS.map(([k,lb,ic],n)=>'<button class="adm-nv'+(n?'':' on')+'" type="button" data-k="'+k+'"><svg class="ico" viewBox="0 0 24 24">'+ic+'</svg><span>'+lb+'</span></button>').join('')+'</div>';
-    const trk=nv.querySelector('.adm-trk'),ball=nv.querySelector('.adm-ball'),tabs=[...nv.querySelectorAll('.adm-nv')];
-    const ballTo=b=>{ball.style.left=b.offsetLeft+'px';ball.style.width=b.offsetWidth+'px'};
-    tabs.forEach(b=>b.onclick=()=>{tabs.forEach(o=>o.classList.toggle('on',o===b));ballTo(b);sr.style.display=b.dataset.k==='players'?'':'none';b.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'})});
-    const bd2=document.createElement('main');bd2.className='adm-body';bd2.innerHTML='<section class="adm-sec" id="adm_players"><div class="pl-list"></div><p class="pl-empty" hidden>No players yet</p></section>';
-    // search bar (Players page only): floating glass bar under the navigation bar, total player count on the right
-    const sr=document.createElement('div');sr.className='adm-sr';
-    sr.innerHTML='<svg class="ico sr-i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input class="sr-in" type="text" inputmode="search" enterkeyhint="search" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Name, username, Gmail, phone"><button class="sr-x" type="button" aria-label="Clear" hidden><svg class="ico" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button><span class="sr-cnt"><b>-</b><small>Players</small></span>';
+    // --- the page is on screen: the glass bars appear first, then the cards (one frame later, so the opening never stutters)
+    gsap.set([hd,nv,sr],{opacity:0,y:-14});
     pg.append(bd2,hd,nv,sr);
     ball.style.transition='none';ballTo(tabs[0]);ball.offsetWidth;ball.style.transition='';
+    await new Promise(r=>requestAnimationFrame(()=>r()));
     gsap.fromTo(bk,{scale:0,rotation:90},{scale:1,rotation:0,duration:.5,ease:'back.out(1.8)'});
-    gsap.from([hd,nv,sr],{opacity:0,y:-12,duration:.5,stagger:.08,delay:.1,ease:'power2.out'});
-    const unsub=admPlayers(bd2.querySelector('.pl-list'),bd2.querySelector('.pl-empty'),sr.querySelector('.sr-cnt b'),sr.querySelector('.sr-in'),sr.querySelector('.sr-x'),bd2);
-    bk.onclick=async()=>{bk.onclick=null;unsub();await Promise.all([pfTw(hd,{opacity:0,duration:.25}),pfTw(nv,{opacity:0,duration:.25}),pfTw(sr,{opacity:0,duration:.25}),pfTw(bd2,{opacity:0,duration:.25})]);   // the page shrinks straight into the Admin Panel box
+    gsap.to([hd,nv,sr],{opacity:1,y:0,duration:.5,stagger:.08,ease:'power2.out',clearProps:'transform,opacity'});
+    setTimeout(()=>eng.start(),200);
+    bk.onclick=async()=>{bk.onclick=null;eng.stop();await Promise.all([pfTw(hd,{opacity:0,duration:.25}),pfTw(nv,{opacity:0,duration:.25}),pfTw(sr,{opacity:0,duration:.25}),pfTw(bd2,{opacity:0,duration:.25})]);   // the page shrinks straight into the Admin Panel box
       const r2=admBtn.getBoundingClientRect(),cl=admBtn.cloneNode(true);cl.removeAttribute('id');
       cl.style.cssText='position:fixed;left:'+r2.left+'px;top:'+r2.top+'px;width:'+r2.width+'px;height:'+r2.height+'px;margin:0;opacity:0;pointer-events:none;background:transparent;box-shadow:none';pg.append(cl);   // the box's logo/label fade in as the page arrives
       await Promise.all([admCT(pg,'inset(0px 0px 0px 0px round 0px)',admClip(r2,0,0,innerWidth,innerHeight,22),.95,E),pfTw(cl,{opacity:1,duration:.4,delay:.55})]);
