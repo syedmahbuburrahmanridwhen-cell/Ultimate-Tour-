@@ -278,12 +278,12 @@ button:focus,button:focus-visible,[role=button]:focus,a:focus{outline:none}
 .pfp.adm .pfp-ok{height:48px}
 /* admin page: whole screen is the page; title capsule + navigation bar float above it (frosted glass) */
 .adm-pg{touch-action:auto}
-.adm-body{position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y;padding:calc(env(safe-area-inset-top,0px) + 158px) 16px calc(env(safe-area-inset-bottom,0px) + 28px)}
-.adm-hd{position:absolute;z-index:4;left:16px;top:calc(env(safe-area-inset-top,0px) + 12px);display:flex;align-items:center;gap:6px;height:52px;padding:0 22px 0 6px;border-radius:99px;background:rgba(11,15,16,.6);-webkit-backdrop-filter:blur(16px) saturate(1.6);backdrop-filter:blur(16px) saturate(1.6);border:1px solid rgba(255,255,255,.1);box-shadow:0 12px 28px rgba(11,15,16,.26),inset 0 1px 0 rgba(255,255,255,.1)}
-.adm-bk{all:unset;box-sizing:border-box;width:42px;height:42px;display:grid;place-items:center;border-radius:50%;color:var(--lime);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .2s}
-.adm-bk:active{background:rgba(201,222,60,.16)}.adm-bk .ico{width:30px;height:30px;stroke-width:3}
-.adm-ttl{margin:0;font:700 20px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--lime);-webkit-text-stroke:.6px var(--lime)}
-.adm-nav{position:absolute;z-index:3;left:16px;right:16px;top:calc(env(safe-area-inset-top,0px) + 76px);padding:6px;border-radius:32px;background:rgba(11,15,16,.55);-webkit-backdrop-filter:blur(18px) saturate(1.6);backdrop-filter:blur(18px) saturate(1.6);border:1px solid rgba(255,255,255,.1);box-shadow:0 18px 38px rgba(11,15,16,.28),inset 0 1px 0 rgba(255,255,255,.1)}
+.adm-body{position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y;padding:calc(env(safe-area-inset-top,0px) + 146px) 16px calc(env(safe-area-inset-bottom,0px) + 28px)}
+.adm-hd{position:absolute;z-index:4;left:16px;top:calc(env(safe-area-inset-top,0px) + 10px);display:flex;align-items:center;gap:4px;height:46px;padding:0 18px 0 4px;border-radius:99px;background:rgba(11,15,16,.6);-webkit-backdrop-filter:blur(16px) saturate(1.6);backdrop-filter:blur(16px) saturate(1.6);border:1px solid rgba(255,255,255,.1);box-shadow:0 12px 28px rgba(11,15,16,.26),inset 0 1px 0 rgba(255,255,255,.1)}
+.adm-bk{all:unset;box-sizing:border-box;width:38px;height:38px;display:grid;place-items:center;border-radius:50%;color:var(--lime);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .2s}
+.adm-bk:active{background:rgba(201,222,60,.16)}.adm-bk .ico{width:26px;height:26px;stroke-width:3}
+.adm-ttl{margin:0;font:700 17.5px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--lime);-webkit-text-stroke:.6px var(--lime)}
+.adm-nav{position:absolute;z-index:3;left:16px;right:16px;top:calc(env(safe-area-inset-top,0px) + 64px);padding:6px;border-radius:32px;background:rgba(11,15,16,.55);-webkit-backdrop-filter:blur(18px) saturate(1.6);backdrop-filter:blur(18px) saturate(1.6);border:1px solid rgba(255,255,255,.1);box-shadow:0 18px 38px rgba(11,15,16,.28),inset 0 1px 0 rgba(255,255,255,.1)}
 .adm-trk{position:relative;display:flex;gap:4px;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;touch-action:pan-x;overscroll-behavior-x:contain;border-radius:26px}
 .adm-trk::-webkit-scrollbar{display:none}
 .adm-ball{position:absolute;z-index:0;top:0;bottom:0;left:0;width:0;border-radius:26px;background:var(--lime);box-shadow:0 0 18px rgba(201,222,60,.45);transition:left .55s cubic-bezier(.34,1.2,.5,1),width .55s cubic-bezier(.34,1.2,.5,1)}
@@ -291,8 +291,8 @@ button:focus,button:focus-visible,[role=button]:focus,a:focus{outline:none}
 .adm-nv .ico{width:24px;height:24px;transition:transform .5s cubic-bezier(.34,1.56,.64,1)}
 .adm-nv span{font:700 9.5px var(--mono);letter-spacing:.14em;text-transform:uppercase}
 .adm-nv.on{color:var(--ink)}.adm-nv.on .ico{transform:translateY(-1px) scale(1.1)}
-.adm-nv.on .pl-list{display:grid;gap:12px}
-.pl-empty{margin:0;padding:40px 10px;text-align:center;color:#7a8386;font:600 12px/1.6 var(--mono)}
+.pl-list{display:grid;gap:14px}
+.pl-empty{margin:0;padding:6px 10px 14px;text-align:center;color:#7a8386;font:600 12px/1.6 var(--mono)}
 .pl-card{--cv:radial-gradient(circle at 90% 0,rgba(201,222,60,.45),transparent 55%),linear-gradient(135deg,#0b0f10,var(--green));position:relative;overflow:hidden;border-radius:22px;padding:14px;display:grid;gap:12px;color:#fff;background:var(--cv) center/cover;box-shadow:0 12px 24px rgba(11,15,16,.16)}
 .pl-top{display:flex;align-items:center;gap:12px}
 .pl-av{flex:none;width:52px;height:52px;box-sizing:border-box;border-radius:50%;background:var(--ink) center/cover;color:var(--lime);border:3px solid #fff;display:grid;place-items:center;font:800 22px var(--sans);box-shadow:0 6px 14px rgba(0,0,0,.25)}
@@ -309,8 +309,8 @@ button:focus,button:focus-visible,[role=button]:focus,a:focus{outline:none}
 .pl-b:active{transform:scale(.92);background:rgba(255,255,255,.2)}.pl-b .ico{width:19px;height:19px}
 .pl-b.ban{color:#ff8a7a}
 /* Players page: floating glass search bar (under the navigation bar) with the total player count */
-#adm_players{padding-top:64px}
-.adm-sr{position:absolute;z-index:3;left:16px;right:16px;top:calc(env(safe-area-inset-top,0px) + 158px);height:52px;box-sizing:border-box;display:flex;align-items:center;gap:8px;padding:0 7px 0 16px;border-radius:26px;background:rgba(11,15,16,.55);-webkit-backdrop-filter:blur(18px) saturate(1.6);backdrop-filter:blur(18px) saturate(1.6);border:1px solid rgba(255,255,255,.1);box-shadow:0 14px 30px rgba(11,15,16,.24),inset 0 1px 0 rgba(255,255,255,.1)}
+#adm_players{padding-top:63px}
+.adm-sr{position:absolute;z-index:3;left:16px;right:16px;top:calc(env(safe-area-inset-top,0px) + 147px);height:50px;box-sizing:border-box;display:flex;align-items:center;gap:8px;padding:0 7px 0 16px;border-radius:26px;background:rgba(11,15,16,.55);-webkit-backdrop-filter:blur(18px) saturate(1.6);backdrop-filter:blur(18px) saturate(1.6);border:1px solid rgba(255,255,255,.1);box-shadow:0 14px 30px rgba(11,15,16,.24),inset 0 1px 0 rgba(255,255,255,.1)}
 .sr-i{flex:none;width:20px;height:20px;color:var(--lime)}
 .sr-in{all:unset;flex:1;min-width:0;height:100%;font:500 16px var(--sans);color:#fff;-webkit-user-select:text;user-select:text}
 .sr-in::placeholder{color:rgba(255,255,255,.5);font-size:14px}
