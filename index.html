@@ -84,10 +84,11 @@ Module sections in order: FIREBASE, STATE, HELPER-MESSAGES, HELPER-BUTTONS, HELP
   <div id="home">
     <div id="toast"></div>
     <div id="jamsc"></div>
-    <!-- @@WALLET - full-screen wallet page: back arrow + title, card (no buttons), Add money / Withdraw squares, transaction history -->
-    <div id="wlpg"><i id="wl_bg"></i><div class="wl-sc" id="wl_sc">
+    <!-- @@WALLET - full-screen wallet page: back arrow + title, card (same size as the home card; "secured" pill instead of buttons), Add money / Withdraw, transaction history -->
+    <div id="wlpg"><div id="wl_bg"><i id="wl_gl"></i></div><div class="wl-sc" id="wl_sc">
       <header class="wl-top"><button class="ib" id="wl_back" type="button" aria-label="Back"><svg class="ico" viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button><h2>My wallet</h2></header>
-      <section class="wallet wl-card" id="wl_card"><div class="w-l">WALLET BALANCE</div><div class="w-b" id="wl_bal">BDT 0.00</div><div class="w-r wl-fk" id="wl_fk"></div></section>
+      <section class="wallet wl-card"><div class="w-l">WALLET BALANCE</div><div class="w-b" id="wl_bal">BDT 0.00</div>
+        <div class="w-r"><div class="wl-sec"><svg class="ico" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg>Wallet secured by Ultimate Tour</div></div></section>
       <div class="wl-act"><button class="wb" type="button" data-toast="Add money is coming soon"><svg class="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Add money</button><button class="wb" type="button" data-toast="Withdraw is coming soon"><svg class="ico" viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8"/></svg>Withdraw</button></div>
       <h3 class="hm-h wl-h">Transaction history</h3>
       <div class="wl-ls" id="wl_list"></div>
