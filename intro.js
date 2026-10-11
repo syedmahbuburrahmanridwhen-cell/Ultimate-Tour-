@@ -15,7 +15,7 @@ const CHIPS=[
 $('#g').innerHTML='<div class="arm"><i class="b"></i><i class="d"></i></div>'.repeat(8);
 $('#word').innerHTML=[...'Ultimate Tour'].map(c=>`<span class="l">${c==' '?'&nbsp;':c}</span>`).join('');
 const D=[];
-for(let i=0;i<16;i++){const e=document.createElement('i'),s=.5+Math.random()*1.4;e.style.cssText=`width:${s}rem;height:${s}rem;background:${i%4?'var(--ink)':'var(--wal)'}`;$('#deb').append(e);D.push(e)}
+for(let i=0;i<16;i++){const e=document.createElement('i'),s=.5+Math.random()*1.4;e.style.cssText=`width:${s}rem;height:${s}rem;background:${i%4?'var(--ink)':'var(--wal-l)'}`;$('#deb').append(e);D.push(e)}
 
 const lab=$('#lab'),clk=$('#clk'),tw=$('#tw');
 const fmt=v=>{v=Math.round(v);return [v/3600|0,(v%3600)/60|0,v%60].map(p2).join(':')};
@@ -86,7 +86,7 @@ function build(){
   tl.fromTo('.l',{yPercent:115,rotation:7,skewX:-10,opacity:0},{yPercent:0,rotation:0,skewX:0,opacity:1,duration:.75,stagger:.04,ease:'power3.out'},4.25)
     .fromTo('#pill',{opacity:0,scale:.6},{opacity:1,scale:1,duration:.5,ease:'back.out(2)'},4.75)
     .to(C,{v:0,duration:1.4,ease:'power2.out',onUpdate:()=>{clk.textContent=fmt(C.v)}},4.85)
-    .to('#clk',{color:'#4f74f4',duration:.2},6.25).to('#pdot',{backgroundColor:'#4f74f4',duration:.2},6.25)
+    .to('#clk',{color:'#7b99f6',duration:.2},6.25).to('#pdot',{backgroundColor:'#7b99f6',duration:.2},6.25)
     .fromTo('#hl',{scaleX:0},{scaleX:1,duration:.5,ease:'power3.inOut'},5.4)
     .fromTo('.chip',{opacity:0,scale:.5,y:3*u},{opacity:1,scale:1,y:0,duration:.5,stagger:.08,ease:'back.out(1.8)'},5.5);
 
@@ -155,18 +155,18 @@ function goSignup(btn){
   gsap.set(su,{visibility:'hidden',clipPath:'none',opacity:1,backgroundColor:'rgba(238,242,251,0)'});
   gsap.set('#signup .field,#signup .btn,#signup .gbtn',{opacity:0,y:20});
   gsap.set('#signup .st',{opacity:0,y:14});
-  gsap.set(ub,{visibility:'visible',x:SX,y:SY,xPercent:-50,yPercent:-50,width:r.width,height:2,borderRadius:1,scale:1,opacity:1,backgroundImage:'none',boxShadow:'0 0 22px rgba(79,116,244,.8)',force3D:true});
+  gsap.set(ub,{visibility:'visible',x:SX,y:SY,xPercent:-50,yPercent:-50,width:r.width,height:2,borderRadius:1,scale:1,opacity:1,backgroundImage:'none',boxShadow:'0 0 22px rgba(123,153,246,.8)',force3D:true});
   for(const e of [xf,xc]){gsap.set(e,{width:RM*2,height:RM*2,marginLeft:-RM,marginTop:-RM,scale:0,visibility:'visible',force3D:true})}
   gsap.set(btn,{borderBottomColor:'transparent',display:'inline-block',transformOrigin:'50% 100%'});
   // burst pieces (transform + opacity only = GPU smooth)
   const mk=(css)=>{const i=document.createElement('i');i.style.cssText=css;fx.appendChild(i);return i};
-  const rings=[0,1].map(n=>mk('width:400px;height:400px;margin:-200px 0 0 -200px;border:4px solid '+(n?'#0f1730':'#4f74f4')+';opacity:0'));
-  const dots=Array.from({length:16},(_,n)=>{const s=n%3===0?16:n%3===1?10:7;return mk('width:'+s+'px;height:'+s+'px;margin:-'+s/2+'px 0 0 -'+s/2+'px;background:'+(n%4===0?'#0f1730':'#4f74f4')+';opacity:0')});
+  const rings=[0,1].map(n=>mk('width:400px;height:400px;margin:-200px 0 0 -200px;border:4px solid '+(n?'#0f1730':'#7b99f6')+';opacity:0'));
+  const dots=Array.from({length:16},(_,n)=>{const s=n%3===0?16:n%3===1?10:7;return mk('width:'+s+'px;height:'+s+'px;margin:-'+s/2+'px 0 0 -'+s/2+'px;background:'+(n%4===0?'#0f1730':'#7b99f6')+';opacity:0')});
   gsap.set([...rings,...dots],{x:0,y:0,scale:0,force3D:true}); // #fx i are already centered via left/top:50%
   const cleanup=()=>{fx.innerHTML='';for(const e of [xf,xc])gsap.set(e,{clearProps:'all'});gsap.set(ub,{visibility:'hidden',clearProps:'boxShadow'});gsap.set(su,{clearProps:'backgroundColor'});busy=false;SH(0)};
   const t=gsap.timeline({defaults:{overwrite:false},onComplete:cleanup});
   // 1 text sucked into the underline, line rolls up into a ball
-  t.set(ub,{backgroundImage:'radial-gradient(circle at 35% 30%,#a9bcff,#4f74f4 55%,#3558e0)'},0)
+  t.set(ub,{backgroundImage:'radial-gradient(circle at 35% 30%,#cdd8ff,#7b99f6 55%,#5f80f2)'},0)
    .to(btn,{scale:.04,y:r.height*.35,opacity:0,duration:.6,ease:'power2.inOut'},0)
    .to(ub,{width:30,height:30,borderRadius:15,duration:.6,ease:'power2.inOut'},0);
   // 2 spiral to the exact center
@@ -208,17 +208,17 @@ function goLogin(btn){
   gsap.set(lg,{visibility:'hidden',zIndex:52,backgroundColor:'rgba(238,242,251,0)'});
   gsap.set('#login .field,#login .btn,#login .gbtn',{opacity:0,y:20});
   gsap.set('#login .tt',{opacity:0,y:14});
-  gsap.set(ub,{visibility:'visible',x:SX,y:SY,xPercent:-50,yPercent:-50,width:r.width,height:2,borderRadius:1,scale:1,opacity:1,backgroundImage:'none',boxShadow:'0 0 22px rgba(79,116,244,.8)',force3D:true});
+  gsap.set(ub,{visibility:'visible',x:SX,y:SY,xPercent:-50,yPercent:-50,width:r.width,height:2,borderRadius:1,scale:1,opacity:1,backgroundImage:'none',boxShadow:'0 0 22px rgba(123,153,246,.8)',force3D:true});
   for(const e of [xf,xc]){gsap.set(e,{width:RM*2,height:RM*2,marginLeft:-RM,marginTop:-RM,scale:0,visibility:'visible',force3D:true})}
   gsap.set(btn,{borderBottomColor:'transparent',display:'inline-block',transformOrigin:'50% 100%'});
   const mk=(css)=>{const i=document.createElement('i');i.style.cssText=css;fx.appendChild(i);return i};
-  const rings=[0,1].map(n=>mk('width:400px;height:400px;margin:-200px 0 0 -200px;border:4px solid '+(n?'#0f1730':'#4f74f4')+';opacity:0'));
-  const dots=Array.from({length:16},(_,n)=>{const s=n%3===0?16:n%3===1?10:7;return mk('width:'+s+'px;height:'+s+'px;margin:-'+s/2+'px 0 0 -'+s/2+'px;background:'+(n%4===0?'#0f1730':'#4f74f4')+';opacity:0')});
+  const rings=[0,1].map(n=>mk('width:400px;height:400px;margin:-200px 0 0 -200px;border:4px solid '+(n?'#0f1730':'#7b99f6')+';opacity:0'));
+  const dots=Array.from({length:16},(_,n)=>{const s=n%3===0?16:n%3===1?10:7;return mk('width:'+s+'px;height:'+s+'px;margin:-'+s/2+'px 0 0 -'+s/2+'px;background:'+(n%4===0?'#0f1730':'#7b99f6')+';opacity:0')});
   gsap.set([...rings,...dots],{x:0,y:0,scale:0,force3D:true});
   const cleanup=()=>{fx.innerHTML='';for(const e of [xf,xc])gsap.set(e,{clearProps:'all'});gsap.set(ub,{visibility:'hidden',clearProps:'boxShadow'});gsap.set(lg,{clearProps:'zIndex,backgroundColor'});gsap.set(su,{clearProps:'zIndex,backgroundColor'});busy=false;SH(0)};
   const t=gsap.timeline({defaults:{overwrite:false},onComplete:cleanup});
   // 1 text sucked into the underline, line rolls up into a ball
-  t.set(ub,{backgroundImage:'radial-gradient(circle at 35% 30%,#a9bcff,#4f74f4 55%,#3558e0)'},0)
+  t.set(ub,{backgroundImage:'radial-gradient(circle at 35% 30%,#cdd8ff,#7b99f6 55%,#5f80f2)'},0)
    .to(btn,{scale:.04,y:r.height*.35,opacity:0,duration:.6,ease:'power2.inOut'},0)
    .to(ub,{width:30,height:30,borderRadius:15,duration:.6,ease:'power2.inOut'},0);
   // 2 smooth arc to the exact center (no spin): ball hops up and glides in, softly settling
