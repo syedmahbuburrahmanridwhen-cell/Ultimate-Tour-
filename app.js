@@ -57,7 +57,7 @@ async function btnWrite(btn,base,sec){
     cdMarkup(tx,base,' '+sec+'s');gsap.set(lg,{opacity:0});tx.style.clipPath='inset(0 100% 0 0)';
     const B=btn.getBoundingClientRect(),L=lg.getBoundingClientRect(),T=tx.getBoundingClientRect(),cx=B.left+B.width/2,cy=B.top+B.height/2;
     const bl=document.createElement('div');
-    Object.assign(bl.style,{position:'fixed',left:cx-7+'px',top:cy-7+'px',width:'14px',height:'14px',borderRadius:'50%',background:'#2dd4bf',zIndex:96,pointerEvents:'none'});
+    Object.assign(bl.style,{position:'fixed',left:cx-7+'px',top:cy-7+'px',width:'14px',height:'14px',borderRadius:'50%',background:'#fff',zIndex:96,pointerEvents:'none'});
     document.body.append(bl);gsap.set(bl,{scale:.2,opacity:0});
     await fin(gsap.to(bl,{scale:1,opacity:1,duration:.3,ease:'back.out(2)'}));
     await fin(gsap.to(bl,{left:T.left-7,duration:.45,ease:'power3.inOut'}));
@@ -108,8 +108,8 @@ function gAnim(btn,dark){
   const x0=Math.max(R.right-24-L.right,T.right-L.left-6),cx=R.left+R.width/2-(L.left+L.width/2);
   btn.style.position='relative';btn.style.overflow='hidden';lg.style.position='relative';lg.style.zIndex=2;
   const sp=document.createElement('div');sp.className='gsp';
-  sp.innerHTML='<svg viewBox="0 0 30 30" width="30" height="30"><g class="rot"><circle cx="15" cy="15" r="11" pathLength="100" style="fill:rgba(45,212,191,0)" stroke="#3a3fb8" stroke-width="3.2" stroke-linecap="round" stroke-dasharray="28 72"/></g><path class="tick" d="M9.5 15.5l4 4 7-8" fill="none" stroke="#0f1730" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/></svg>';
-  btn.append(sp);if(dark)sp.querySelector('circle').setAttribute('stroke','#2dd4bf');
+  sp.innerHTML='<svg viewBox="0 0 30 30" width="30" height="30"><g class="rot"><circle cx="15" cy="15" r="11" pathLength="100" style="fill:rgba(79,116,244,0)" stroke="#4f74f4" stroke-width="3.2" stroke-linecap="round" stroke-dasharray="28 72"/></g><path class="tick" d="M9.5 15.5l4 4 7-8" fill="none" stroke="#0f1730" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/></svg>';
+  btn.append(sp);if(dark)sp.querySelector('circle').setAttribute('stroke','#fff');else sp.querySelector('.tick').setAttribute('stroke','#fff');
   const rot=sp.querySelector('.rot'),ring=sp.querySelector('circle'),tick=sp.querySelector('.tick');
   let spin,gx;
   const clip=()=>{const c=lg.getBoundingClientRect(),m=c.left+c.width/2;tx.style.clipPath='inset(0 0 0 '+Math.min(T.width,Math.max(0,m-T.left))+'px)'};
@@ -128,11 +128,11 @@ function gAnim(btn,dark){
         .add(()=>{spin=gsap.to(rot,{rotation:360,svgOrigin:'15 15',duration:.8,repeat:-1,ease:'none'})},'<');
       return fin(t)},
     done(){spin&&spin.kill();
-      const t=gsap.timeline().to(ring,{strokeDasharray:'100 0',fill:'#2dd4bf',duration:.3,ease:'power2.out'})
+      const t=gsap.timeline().to(ring,{strokeDasharray:'100 0',fill:dark?'#fff':'#4f74f4',duration:.3,ease:'power2.out'})
         .to(tick,{strokeDashoffset:0,duration:.35,ease:'power2.out'}).to(sp,{scale:1.2,duration:.12,yoyo:true,repeat:1}).to({},{duration:.3});
       return fin(t)},
     expand(){const r=btn.getBoundingClientRect();gx=document.createElement('div');
-      Object.assign(gx.style,{position:'fixed',left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px',background:dark?'#5b63f0':'#fff',borderRadius:'99px',zIndex:95,boxSizing:'border-box'});
+      Object.assign(gx.style,{position:'fixed',left:r.left+'px',top:r.top+'px',width:r.width+'px',height:r.height+'px',background:dark?'#4f74f4':'#fff',borderRadius:'99px',zIndex:95,boxSizing:'border-box'});
       gx.append(sp);document.body.append(gx);gsap.to(sp,{opacity:0,duration:.3,delay:.2});
       return fin(gsap.to(gx,{left:0,top:0,width:innerWidth,height:innerHeight,borderRadius:0,backgroundColor:'#eef2fb',duration:.85,ease:'power3.inOut'}))},
     fade(){gsap.to(gx,{opacity:0,duration:.45,onComplete:()=>gx.remove()});popIn(topPg()===document.body?[]:topPg().querySelectorAll('.lg>*'))},
@@ -140,7 +140,7 @@ function gAnim(btn,dark){
       spin&&spin.kill();
       const S=slot.getBoundingClientRect(),B=btn.getBoundingClientRect(),bx=B.left+B.width/2,by=B.top+B.height/2;
       const bl=document.createElement('div');
-      Object.assign(bl.style,{position:'fixed',left:bx-7+'px',top:by-7+'px',width:'14px',height:'14px',borderRadius:'50%',background:'#2dd4bf',zIndex:96,pointerEvents:'none',opacity:0});
+      Object.assign(bl.style,{position:'fixed',left:bx-7+'px',top:by-7+'px',width:'14px',height:'14px',borderRadius:'50%',background:dark?'#fff':'#4f74f4',zIndex:96,pointerEvents:'none',opacity:0});
       document.body.append(bl);
       await fin(gsap.timeline().to(sp,{scale:0,opacity:0,duration:.2}).to(bl,{opacity:1,duration:.15},'<'));
       slot.textContent=text;slot.style.color='#d6452a';
@@ -165,10 +165,10 @@ async function lineAnim0(btn,job,cover){
   job.catch(()=>{});
   const r=btn.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,W=innerWidth,H=innerHeight;
   const ln=document.createElement('div');
-  Object.assign(ln.style,{position:'fixed',left:r.left+'px',top:r.bottom-2+'px',width:r.width+'px',height:'2px',background:'#2dd4bf',borderRadius:'1px',zIndex:95,pointerEvents:'none'});
+  Object.assign(ln.style,{position:'fixed',left:r.left+'px',top:r.bottom-2+'px',width:r.width+'px',height:'2px',background:'#4f74f4',borderRadius:'1px',zIndex:95,pointerEvents:'none'});
   document.body.append(ln);btn.style.borderBottomColor='transparent';
   const sp=document.createElement('div');sp.className='gsp';sp.style.cssText='position:fixed;left:'+cx+'px;top:'+cy+'px;z-index:96';
-  sp.innerHTML='<svg viewBox="0 0 30 30" width="30" height="30"><g class="rot"><circle cx="15" cy="15" r="11" pathLength="100" style="fill:rgba(45,212,191,0)" stroke="#3a3fb8" stroke-width="3.2" stroke-linecap="round" stroke-dasharray="28 72"/></g><path class="tick" d="M9.5 15.5l4 4 7-8" fill="none" stroke="#0f1730" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/></svg>';
+  sp.innerHTML='<svg viewBox="0 0 30 30" width="30" height="30"><g class="rot"><circle cx="15" cy="15" r="11" pathLength="100" style="fill:rgba(79,116,244,0)" stroke="#4f74f4" stroke-width="3.2" stroke-linecap="round" stroke-dasharray="28 72"/></g><path class="tick" d="M9.5 15.5l4 4 7-8" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" pathLength="100" stroke-dasharray="100" stroke-dashoffset="100"/></svg>';
   document.body.append(sp);
   const rot=sp.querySelector('.rot'),ring=sp.querySelector('circle'),tick=sp.querySelector('.tick');let spin;
   const clean=()=>{spin&&spin.kill();gsap.killTweensOf([btn,ln,sp,ring,tick]);ln.remove();sp.remove();gsap.set(btn,{x:0,scale:1,opacity:1});btn.style.borderBottomColor=''};
@@ -188,7 +188,7 @@ async function lineAnim0(btn,job,cover){
       .fromTo(sp,{opacity:0,scale:.4},{opacity:1,scale:1,duration:.3,ease:'back.out(2)'},'<')
       .add(()=>{spin=gsap.to(rot,{rotation:360,svgOrigin:'15 15',duration:.8,repeat:-1,ease:'none'})},'<'));
     await job;spin&&spin.kill();
-    await fin(gsap.timeline().to(ring,{strokeDasharray:'100 0',fill:'#2dd4bf',duration:.3,ease:'power2.out'})
+    await fin(gsap.timeline().to(ring,{strokeDasharray:'100 0',fill:'#4f74f4',duration:.3,ease:'power2.out'})
       .to(tick,{strokeDashoffset:0,duration:.35,ease:'power2.out'}).to({},{duration:.4}).to(sp,{scale:0,opacity:0,duration:.25})
       .set(ln,{scale:1,opacity:1,left:cx-9,top:cy-9,width:18,height:18,borderRadius:'50%'})
       .to(ln,{left:r.left,top:r.bottom-2,width:r.width,height:2,borderRadius:1,duration:.5,ease:'power3.inOut'})
@@ -729,7 +729,7 @@ function pfCollect(){const ch={};
     if(k==='phone'&&val&&!/^\+?[0-9\s-]{7,15}$/.test(val))throw{code:'app/phone'};
     ch[k]=val}
   return ch}
-function pfBurst(x,y){for(let i=0;i<9;i++){const d=document.createElement('i');d.style.cssText='position:absolute;left:0;top:0;width:6px;height:6px;border-radius:50%;background:#2dd4bf;z-index:9;pointer-events:none';pfWrap.appendChild(d);
+function pfBurst(x,y){for(let i=0;i<9;i++){const d=document.createElement('i');d.style.cssText='position:absolute;left:0;top:0;width:6px;height:6px;border-radius:50%;background:#4f74f4;z-index:9;pointer-events:none';pfWrap.appendChild(d);
   const a=i/9*6.283+Math.random()*.5,r=26+Math.random()*16;gsap.fromTo(d,{x,y,scale:1},{x:x+Math.cos(a)*r,y:y+Math.sin(a)*r,scale:0,duration:.5,ease:'power2.out',onComplete:()=>d.remove()})}}
 async function pfShoot(){   // pen > arrow aimed at the X ball; a copy flies and bursts on it, the arrow stays in the button
   const a=pfVp(pfBP),t=pfVp(pfBall),ang=Math.atan2(t.y-a.y,t.x-a.x)*180/Math.PI,rad=ang*Math.PI/180;
