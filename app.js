@@ -758,30 +758,39 @@ function plScore(p,q){
     if(b){hit++;sum+=b}}
   return sum?sum+(hit===tk.length?20:0):0}
 // Players page engine. Built for a big player base: 20 cards are read at first (the newest, kept live), more load while scrolling,
-// the total is a cheap server count, search asks the database (never downloads everyone). Cards are RANKED by how well they match
-// the search (best on top) and every re-ordering is animated with FLIP, so cards glide to their new place and can be interrupted anytime.
+// the total is a cheap server count, search asks the database (never downloads everyone).
+// Search = 3+ letters: the search icon spins ~1s while the database is asked, then the cards are RANKED (best match on top) in ONE smooth move.
+// Everything runs one step at a time (a queue), so animations never overlap or collide.
 function admPlayers(U){
-  const {list,emp,cnt,inp,clr,sc}=U,UC=collection(db,'users'),PAGE=20,all=new Map(),els=new Map();
-  let mode='list',q='',cursor=null,more=true,loading=false,init=false,live=false,dead=false,settled=true,hit=true,entry=true,seq=0,tm=null,lt=null,cT=null,off=false,shown=0;
+  const {list,emp,cnt,inp,clr,sc,ico}=U,sec=emp.parentNode,UC=collection(db,'users'),PAGE=20,all=new Map(),els=new Map(),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+  let mode='list',q='',cursor=null,more=true,loading=false,init=false,live=false,dead=false,settled=true,hit=true,entry=true,active=false,nf=false,busy=false,dirty=false;
+  let seq=0,tSrv=null,tRun=null,cT=null,off=false,shown=0,sp=Promise.resolve(),chain=Promise.resolve(),spin=null;
   try{shown=+localStorage.getItem('adm_pc')||0}catch(e){}
   cnt.textContent=shown?shown.toLocaleString('en-US'):'-';
   const add=(m,d)=>m.set(d.id,{id:d.id,...d.data()});
   const order=()=>{const d=[...all.values()].sort((a,b)=>plTime(b)-plTime(a));if(!q){hit=true;return d}
     const s=new Map(d.map(p=>[p.id,plScore(p,q)]));hit=d.some(p=>s.get(p.id)>0);return d.sort((a,b)=>s.get(b.id)-s.get(a.id)||plTime(b)-plTime(a))};
-  const note=()=>{const t=!all.size?(init?'No players yet':''):(mode==='find'&&settled&&!hit?'No player found':'');emp.textContent=t;emp.hidden=!t};
+  // "No account found": the cards glide a little down, then the text floats up under the search bar (and the reverse)
+  const setNF=on=>{if(on===nf)return;nf=on;sec.classList.toggle('nf',on);gsap.killTweensOf([emp,list]);
+    if(on){emp.textContent='No account found';emp.hidden=false;gsap.to(list,{y:58,duration:.6,ease:'power3.inOut'});gsap.fromTo(emp,{opacity:0,y:-14},{opacity:1,y:0,duration:.55,delay:.25,ease:'power3.out'})}
+    else{gsap.to(emp,{opacity:0,y:-10,duration:.25,ease:'power2.in',onComplete:()=>{if(!nf)emp.hidden=true}});gsap.to(list,{y:0,duration:.55,delay:.1,ease:'power3.inOut',clearProps:'transform'})}};
+  const note=()=>{if(!all.size){if(init){emp.textContent='No players yet';emp.hidden=false;gsap.set(emp,{opacity:1,y:0})}return}setNF(mode==='find'&&settled&&!hit)};
+  // FLIP: remember where every card is, re-order the DOM, then slide every card from its old place to its new one (all in the same time)
   function place(docs){
     const ids=new Set(docs.map(d=>d.id)),first=new Map(),fresh=[],moved=[];
-    els.forEach((el,id)=>{gsap.killTweensOf(el);first.set(id,el.getBoundingClientRect().top)});   // FIRST: where every card is right now (even mid-animation)
-    els.forEach((el,id)=>{if(!ids.has(id)){el.remove();els.delete(id);first.delete(id)}else{gsap.set(el,{clearProps:'transform,zIndex'});if(+gsap.getProperty(el,'opacity')<1)gsap.to(el,{opacity:1,duration:.3,clearProps:'opacity'})}});
+    els.forEach((el,id)=>{gsap.killTweensOf(el);first.set(id,el.getBoundingClientRect().top)});
+    els.forEach((el,id)=>{if(!ids.has(id)){el.remove();els.delete(id);first.delete(id)}else{el.classList.remove('pl-up');gsap.set(el,{clearProps:'transform,zIndex'});if(+gsap.getProperty(el,'opacity')<1)gsap.to(el,{opacity:1,duration:.3,clearProps:'opacity'})}});
     docs.forEach((p,i)=>{let el=els.get(p.id);if(!el){el=plCard();els.set(p.id,el);fresh.push(el)}plFill(el,p);if(list.children[i]!==el)list.insertBefore(el,list.children[i]||null)});
-    docs.forEach((p,i)=>{if(i<60&&first.has(p.id)){const el=els.get(p.id),d=first.get(p.id)-el.getBoundingClientRect().top;if(Math.abs(d)>1)moved.push([el,d])}});   // LAST: where they have to be
-    moved.forEach(([el,d])=>{el.style.zIndex=d>0?4:2;   // INVERT + PLAY: a card going up floats over the others
-      gsap.timeline({onComplete:()=>gsap.set(el,{clearProps:'transform,zIndex'})})
-        .fromTo(el,{y:d},{y:0,duration:.8,ease:'power3.inOut'},0)
-        .fromTo(el,{scale:1},{scale:d>0?1.03:.985,duration:.4,yoyo:true,repeat:1,ease:'sine.inOut'},0)});
-    if(fresh.length)gsap.fromTo(fresh.slice(0,12),{y:entry?30:90,opacity:0},{y:0,opacity:1,duration:.7,stagger:.06,ease:'power3.out',clearProps:'transform,opacity'});
-    entry=false}
-  const render=()=>{if(!live||dead)return;place(order());note()};
+    docs.forEach((p,i)=>{if(i<60&&first.has(p.id)){const el=els.get(p.id),d=first.get(p.id)-el.getBoundingClientRect().top;if(Math.abs(d)>1)moved.push([el,d])}});
+    const tl=gsap.timeline();
+    moved.forEach(([el,d])=>{el.style.zIndex=d>0?4:1;if(d>0)el.classList.add('pl-up');tl.fromTo(el,{y:d},{y:0,duration:.85,ease:'power3.inOut'},0)});   // the card going up floats above the others
+    if(fresh.length)tl.fromTo(fresh.slice(0,12),{y:entry?30:90,opacity:0},{y:0,opacity:1,duration:.7,stagger:.06,ease:'power3.out',clearProps:'transform,opacity'},0);
+    entry=false;
+    return new Promise(res=>tl.call(()=>{moved.forEach(([el])=>{el.classList.remove('pl-up');gsap.set(el,{clearProps:'transform,zIndex'})});res()}))}
+  const doRender=async()=>{busy=true;try{await Promise.race([place(order()),sleep(1600)]);note()}finally{busy=false}if(dirty){dirty=false;render()}};
+  const render=()=>{if(!live||dead)return;if(busy){dirty=true;return}doRender()};
+  const idle=async()=>{while(busy)await sleep(30)};
+  const toTop=()=>new Promise(res=>{if(sc.scrollTop<=2){res();return}sc.scrollTo({top:0,behavior:'smooth'});let n=0;const t=setInterval(()=>{if(sc.scrollTop<=1||++n>40){clearInterval(t);res()}},30)});
   // total number of accounts: fetched right away (before the page is on screen), the last known number is shown instantly
   const setCnt=n=>{const f=shown;shown=n;try{localStorage.setItem('adm_pc',n)}catch(e){}
     if(!live||f===n){cnt.textContent=n.toLocaleString('en-US');return}
@@ -794,28 +803,31 @@ function admPlayers(U){
     if(!init){init=true;cursor=snap.docs[snap.docs.length-1]||null;more=snap.size>=PAGE}
     else if(snap.docChanges().some(c=>c.type==='added'))count();
     render()},
-  err=>{dead=true;list.innerHTML='';els.clear();emp.textContent=E[err.code]||'Could not load players ('+(err.code||err.message)+')';emp.hidden=false});
+  err=>{dead=true;list.innerHTML='';els.clear();emp.textContent=E[err.code]||'Could not load players ('+(err.code||err.message)+')';emp.hidden=false;gsap.set(emp,{opacity:1,y:0})});
   // older players: the next 20 load when you scroll near the end
   const onScroll=()=>{if(mode!=='list'||!more||loading||!cursor||sc.scrollTop+sc.clientHeight<sc.scrollHeight-500)return;loading=true;
     getDocs(query(UC,orderBy('createdAt','desc'),startAfter(cursor),limit(PAGE))).then(r=>{r.docs.forEach(d=>add(all,d));if(r.docs.length)cursor=r.docs[r.docs.length-1];more=r.size>=PAGE;render()}).catch(()=>{}).finally(()=>{loading=false})};
   sc.addEventListener('scroll',onScroll,{passive:true});
-  // search: the database matches from the START of name / username / Gmail / phone; ranking (and matching anywhere) works on every card loaded so far
+  // search icon: spins while the search is being prepared, then settles smoothly
+  const spinOn=()=>{if(spin)return;gsap.killTweensOf(ico);spin=gsap.to(ico,{rotation:'+=360',duration:1,ease:'none',repeat:-1})};
+  const spinOff=()=>{if(!spin)return;spin.kill();spin=null;const r=+gsap.getProperty(ico,'rotation');gsap.to(ico,{rotation:Math.ceil(r/360)*360,duration:.3,ease:'power2.out',onComplete:()=>gsap.set(ico,{rotation:0})})};
+  // the database matches from the START of name / username / Gmail / phone; ranking (and matching anywhere) works on every card loaded so far
   const title=v=>v.replace(/(^|\s)(\S)/g,(m,a,b)=>a+b.toUpperCase()),uniq=a=>[...new Set(a)];
   const pre=(f,x)=>getDocs(query(UC,where(f,'>=',x),where(f,'<=',x+'\uf8ff'),limit(PAGE)));
-  async function find(v0){const my=seq,v=v0.replace(/^@/,''),t0=(v.split(/\s+/)[0]||'').toLowerCase();if(!v)return;
+  async function find(v0){const v=v0.replace(/^@/,''),t0=(v.split(/\s+/)[0]||'').toLowerCase();
     const jobs=[pre('username',t0),pre('email',t0),...uniq([v,title(v)]).map(x=>pre('name',x))];
     if(/^[+0-9][0-9\s-]*$/.test(v))uniq([v,v.replace(/[\s-]/g,'')]).forEach(x=>jobs.push(pre('phone',x)));
-    const r=await Promise.allSettled(jobs);if(my!==seq||dead)return;
-    r.forEach(x=>x.status==='fulfilled'&&x.value.docs.forEach(d=>add(all,d)));
-    settled=true;
-    if(r.every(x=>x.status==='rejected')){emp.textContent='Search failed. Try again';emp.hidden=false;return}
-    render()}
-  inp.addEventListener('input',()=>{const v=inp.value.trim();clr.hidden=!inp.value;clearTimeout(tm);clearTimeout(lt);seq++;
-    q=v;mode=v?'find':'list';settled=!v;if(sc.scrollTop>2)sc.scrollTo({top:0,behavior:'smooth'});
-    lt=setTimeout(render,v?90:0);if(v)tm=setTimeout(()=>find(v),350)});
+    const r=await Promise.allSettled(jobs);r.forEach(x=>x.status==='fulfilled'&&x.value.docs.forEach(d=>add(all,d)))}
+  // steps run one after another (queue): never two animations at once
+  const step=async(v,my)=>{await sp;if(my!==seq||dead)return;spinOff();await toTop();if(my!==seq||dead)return;await idle();if(my!==seq||dead)return;
+    q=v;mode='find';settled=true;active=true;await doRender()};
+  const restore=async()=>{if(!active||dead)return;active=false;q='';mode='list';settled=true;await toTop();await idle();await doRender();setNF(false)};
+  inp.addEventListener('input',()=>{const v=inp.value.trim();clr.hidden=!inp.value;clearTimeout(tSrv);clearTimeout(tRun);const my=++seq;
+    if(v.length<3){spinOff();chain=chain.then(()=>my===seq?restore():0).catch(()=>{});return}   // fewer than 3 letters: nothing moves
+    spinOn();tSrv=setTimeout(()=>{sp=find(v)},350);tRun=setTimeout(()=>{chain=chain.then(()=>step(v,my)).catch(()=>{})},1000)});
   inp.addEventListener('keydown',e=>{if(e.key==='Enter')inp.blur()});
   clr.onclick=()=>{inp.value='';inp.dispatchEvent(new Event('input'));inp.focus()};
-  return{start:()=>{live=true;render()},stop:()=>{off=true;dead=true;unsub();clearTimeout(tm);clearTimeout(lt);clearTimeout(cT);sc.removeEventListener('scroll',onScroll);els.forEach(el=>gsap.killTweensOf(el))}}}
+  return{start:()=>{live=true;render()},stop:()=>{off=true;dead=true;unsub();clearTimeout(tSrv);clearTimeout(tRun);clearTimeout(cT);sc.removeEventListener('scroll',onScroll);els.forEach(el=>gsap.killTweensOf(el));gsap.killTweensOf([ico,list,emp])}}}
 async function admOpen(){
   let st=admGet();if(admLeft(st)===0&&st.u){st={f:0,u:0,bp:false};admSet(st)}
   // 1) if the box is already where the pop-up would sit in the middle of the screen (within 2px) the animation starts at once on tap;
@@ -888,7 +900,7 @@ async function admOpen(){
     const sr=document.createElement('div');sr.className='adm-sr';
     sr.innerHTML='<svg class="ico sr-i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input class="sr-in" type="text" inputmode="search" enterkeyhint="search" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Search Players"><button class="sr-x" type="button" aria-label="Clear" hidden><svg class="ico" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button><span class="sr-cnt"><b>-</b><small>Players</small></span>';
     tabs.forEach(b=>b.onclick=()=>{tabs.forEach(o=>o.classList.toggle('on',o===b));ballTo(b);sr.style.display=b.dataset.k==='players'?'':'none';b.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'})});
-    const eng=admPlayers({list:bd2.querySelector('.pl-list'),emp:bd2.querySelector('.pl-empty'),cnt:sr.querySelector('.sr-cnt b'),inp:sr.querySelector('.sr-in'),clr:sr.querySelector('.sr-x'),sc:bd2});
+    const eng=admPlayers({list:bd2.querySelector('.pl-list'),emp:bd2.querySelector('.pl-empty'),cnt:sr.querySelector('.sr-cnt b'),inp:sr.querySelector('.sr-in'),clr:sr.querySelector('.sr-x'),sc:bd2,ico:sr.querySelector('.sr-i')});
     await verifyAnim();const pq=pp.getBoundingClientRect(),pR2={left:pq.left,right:pq.right,top:pq.top,bottom:pq.bottom};
     const pg=document.createElement('div');pg.className='adm-pg';document.body.append(pg);   // white page grows out of the pop-up
     gsap.set(pg,{clipPath:admClip(pR2,0,0,innerWidth,innerHeight,28)});
