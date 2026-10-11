@@ -779,15 +779,16 @@ function admPlayers(U){
   function place(docs){
     const ids=new Set(docs.map(d=>d.id)),first=new Map(),fresh=[],moved=[];
     els.forEach((el,id)=>{gsap.killTweensOf(el);first.set(id,el.getBoundingClientRect().top)});
-    els.forEach((el,id)=>{if(!ids.has(id)){el.remove();els.delete(id);first.delete(id)}else{el.classList.remove('pl-up');gsap.set(el,{clearProps:'transform,zIndex'});if(+gsap.getProperty(el,'opacity')<1)gsap.to(el,{opacity:1,duration:.3,clearProps:'opacity'})}});
+    els.forEach((el,id)=>{if(!ids.has(id)){el.remove();els.delete(id);first.delete(id)}else{el.classList.remove('pl-mv');gsap.set(el,{clearProps:'transform,zIndex'});if(+gsap.getProperty(el,'opacity')<1)gsap.to(el,{opacity:1,duration:.3,clearProps:'opacity'})}});
     docs.forEach((p,i)=>{let el=els.get(p.id);if(!el){el=plCard();els.set(p.id,el);fresh.push(el)}plFill(el,p);if(list.children[i]!==el)list.insertBefore(el,list.children[i]||null)});
-    docs.forEach((p,i)=>{if(i<60&&first.has(p.id)){const el=els.get(p.id),d=first.get(p.id)-el.getBoundingClientRect().top;if(Math.abs(d)>1)moved.push([el,d])}});
-    const tl=gsap.timeline();
-    moved.forEach(([el,d])=>{el.style.zIndex=d>0?4:1;if(d>0)el.classList.add('pl-up');tl.fromTo(el,{y:d},{y:0,duration:.85,ease:'power3.inOut'},0)});   // the card going up floats above the others
+    docs.forEach((p,i)=>{if(i<60&&first.has(p.id)){const el=els.get(p.id),d=first.get(p.id)-el.getBoundingClientRect().top;if(Math.abs(d)>1)moved.push([el,d,first.get(p.id)])}});
+    const tl=gsap.timeline(),vh=innerHeight,vis=t=>t>-160&&t<vh+160,pg=list.closest('.adm-pg'),anim=moved.filter(m=>vis(m[2])||vis(m[2]-m[1]));   // cards far off-screen just jump, only visible ones are animated
+    if(pg&&(anim.length||fresh.length))pg.classList.add('mv');
+    anim.forEach(([el,d])=>{el.classList.add('pl-mv');el.style.zIndex=d>0?2:1;tl.fromTo(el,{y:d},{y:0,duration:.85,ease:'power3.inOut'},0)});   // the card going up floats above the others (but always below the glass bars)
     if(fresh.length)tl.fromTo(fresh.slice(0,12),{y:entry?30:90,opacity:0},{y:0,opacity:1,duration:.7,stagger:.06,ease:'power3.out',clearProps:'transform,opacity'},0);
     entry=false;
-    return new Promise(res=>tl.call(()=>{moved.forEach(([el])=>{el.classList.remove('pl-up');gsap.set(el,{clearProps:'transform,zIndex'})});res()}))}
-  const doRender=async()=>{busy=true;try{await Promise.race([place(order()),sleep(1600)]);note()}finally{busy=false}if(dirty){dirty=false;render()}};
+    return new Promise(res=>tl.call(()=>{moved.forEach(([el])=>{el.classList.remove('pl-mv');gsap.set(el,{clearProps:'transform,zIndex'})});if(pg)pg.classList.remove('mv');res()}))}
+  const doRender=async()=>{busy=true;try{await Promise.race([place(order()),sleep(1600)]);note()}finally{busy=false;const g=list.closest('.adm-pg');if(g)g.classList.remove('mv')}if(dirty){dirty=false;render()}};
   const render=()=>{if(!live||dead)return;if(busy){dirty=true;return}doRender()};
   const idle=async()=>{while(busy)await sleep(30)};
   const toTop=()=>new Promise(res=>{if(sc.scrollTop<=2){res();return}sc.scrollTo({top:0,behavior:'smooth'});let n=0;const t=setInterval(()=>{if(sc.scrollTop<=1||++n>40){clearInterval(t);res()}},30)});
@@ -898,7 +899,7 @@ async function admOpen(){
     const ballTo=b=>{ball.style.left=b.offsetLeft+'px';ball.style.width=b.offsetWidth+'px'};
     const bd2=document.createElement('main');bd2.className='adm-body';bd2.innerHTML='<section class="adm-sec" id="adm_players"><p class="pl-empty" hidden></p><div class="pl-list"></div></section>';
     const sr=document.createElement('div');sr.className='adm-sr';
-    sr.innerHTML='<svg class="ico sr-i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg><input class="sr-in" type="text" inputmode="search" enterkeyhint="search" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Search Players"><button class="sr-x" type="button" aria-label="Clear" hidden><svg class="ico" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button><span class="sr-cnt"><b>-</b><small>Players</small></span>';
+    sr.innerHTML='<svg class="ico sr-i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6"/><path d="M16.6 16.6L21 21"/></svg><input class="sr-in" type="text" inputmode="search" enterkeyhint="search" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Search Players"><button class="sr-x" type="button" aria-label="Clear" hidden><svg class="ico" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button><span class="sr-cnt"><b>-</b><small>Players</small></span>';
     tabs.forEach(b=>b.onclick=()=>{tabs.forEach(o=>o.classList.toggle('on',o===b));ballTo(b);sr.style.display=b.dataset.k==='players'?'':'none';b.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'})});
     const eng=admPlayers({list:bd2.querySelector('.pl-list'),emp:bd2.querySelector('.pl-empty'),cnt:sr.querySelector('.sr-cnt b'),inp:sr.querySelector('.sr-in'),clr:sr.querySelector('.sr-x'),sc:bd2,ico:sr.querySelector('.sr-i')});
     await verifyAnim();const pq=pp.getBoundingClientRect(),pR2={left:pq.left,right:pq.right,top:pq.top,bottom:pq.bottom};
