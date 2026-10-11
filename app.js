@@ -477,14 +477,17 @@ const toast=t=>{const e=q('#toast');e.textContent=t;e.classList.add('show');clea
 document.querySelectorAll('[data-toast]').forEach(b=>b.onclick=()=>toast(b.dataset.toast));
 
 // ======================================================================
-// @@PAGE-WALLET   Wallet page: tap the home wallet card (not its buttons) > the card grows to a full-screen page; the back arrow shrinks it back.
+// @@PAGE-WALLET   Wallet page: tap the home wallet card (not its buttons) > a cream sheet grows out of the card to fill the screen,
+//   the page's own card glides from the home card's place to the top; the back arrow plays the same thing in reverse.
 //   Transactions are read from Firestore: users/{uid}/transactions  { type:'add'|'withdraw', amount:number, createdAt:Timestamp, method?:string, status?:string }
 //   HTML: <!-- @@WALLET -->  CSS: /* @@WALLET */
 // ======================================================================
-{const H=q('#home'),W=q('#wlpg'),card=q('#hm0 .wallet'),sc=q('#wl_sc'),list=q('#wl_list');let wlBusy=false,wlOpen=false,wlFirst=true,wlUid='';
-const CREAM='#f4efe9',INK='#0b0f10',wlMoney=n=>'BDT '+Number(n||0).toLocaleString('en-US',{minimumFractionDigits:2});
-const wlClip=(r,R)=>'inset('+r.t+'px '+r.r+'px '+r.b+'px '+r.l+'px round '+R+'px)';
-const wlRect=()=>{const h=H.getBoundingClientRect(),c=card.getBoundingClientRect();return{t:Math.max(0,c.top-h.top),l:Math.max(0,c.left-h.left),r:Math.max(0,h.right-c.right),b:Math.max(0,h.bottom-c.bottom)}};
+{const H=q('#home'),W=q('#wlpg'),bg=q('#wl_bg'),card=q('#hm0 .wallet'),wc=q('#wl_card'),fk=q('#wl_fk'),sc=q('#wl_sc'),list=q('#wl_list');
+let wlBusy=false,wlOpen=false,wlFirst=true,wlUid='';
+const DUR=.75,EASE='power3.inOut',wlMoney=n=>'BDT '+Number(n||0).toLocaleString('en-US',{minimumFractionDigits:2});
+const parts=()=>[...sc.children].filter(x=>x!==wc);   // everything on the page except the card
+const geo=()=>{const h=H.getBoundingClientRect(),c=card.getBoundingClientRect();return{c,t:c.top-h.top,l:c.left-h.left,r:h.right-c.right,b:h.bottom-c.bottom}};
+const clean=()=>gsap.set([bg,wc,fk,...parts()],{clearProps:'all'});
 const WL_IC={add:'<path d="M12 5v14M5 12h14"/>',out:'<path d="M7 17 17 7M9 7h8v8"/>'};
 function wlDate(t){try{const d=t&&t.toDate?t.toDate():null;return d?d.toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):''}catch(e){return''}}
 function wlNote(txt){list.innerHTML='';const d=document.createElement('div');d.className='empty';d.innerHTML='<svg class="ico" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 10h18M16 15h2"/></svg><p></p>';d.querySelector('p').textContent=txt;list.appendChild(d)}
@@ -508,23 +511,30 @@ async function wlLoad(){
   catch(e){console.error('wallet history',e);if(wlOpen)wlRender(null)}}
 async function wlShow(){
   if(wlBusy||wlOpen||locked||running||Q.length)return;wlBusy=true;
-  const r=wlRect(),R0=wlClip(r,30),R1=wlClip({t:0,l:0,r:0,b:0},0);
   q('#wl_bal').textContent=q('#hm_bal').textContent;
-  W.style.display='block';sc.scrollTop=0;gsap.set(W,{backgroundColor:INK,clipPath:R0});gsap.set(sc,{opacity:0});wlOpen=true;wlLoad();
+  fk.innerHTML=card.querySelector('.w-r').innerHTML;fk.querySelectorAll('[data-toast]').forEach(b=>b.removeAttribute('data-toast'));   // look-alike buttons: they fade out while the card moves
+  W.style.display='block';sc.scrollTop=0;clean();
+  const g=geo(),pc=wc.getBoundingClientRect(),nat=pc.height;   // g = the home card, pc = where the page card naturally sits
+  gsap.set(bg,{top:g.t,left:g.l,right:g.r,bottom:g.b,borderRadius:30});
+  gsap.set(wc,{x:g.c.left-pc.left,y:g.c.top-pc.top,height:g.c.height});
+  gsap.set(fk,{opacity:1});gsap.set(parts(),{opacity:0,y:18});
+  wlOpen=true;wlLoad();
   try{await new Promise(res=>{gsap.timeline({onComplete:res})
-    .to(W,{clipPath:R1,duration:.6,ease:'power3.inOut'},0)
-    .to(W,{backgroundColor:CREAM,duration:.4,ease:'power1.out'},.25)
-    .to(sc,{opacity:1,duration:.35,ease:'power1.out'},.4)})}
-  finally{gsap.set(W,{clearProps:'clipPath,backgroundColor'});gsap.set(sc,{clearProps:'opacity'});wlBusy=false}}
+    .to(bg,{top:0,left:0,right:0,bottom:0,borderRadius:0,duration:DUR,ease:EASE},0)
+    .to(wc,{x:0,y:0,height:nat,duration:DUR,ease:EASE},0)
+    .to(fk,{opacity:0,duration:.3,ease:'power1.out'},0)
+    .to(parts(),{opacity:1,y:0,duration:.55,stagger:.07,ease:'power3.out'},.3)})}
+  finally{clean();wlBusy=false}}
 async function wlHide(){
   if(wlBusy||!wlOpen)return;wlBusy=true;
-  const R1=wlClip({t:0,l:0,r:0,b:0},0),R0=wlClip(wlRect(),30);
-  gsap.set(W,{backgroundColor:CREAM,clipPath:R1});
+  if(sc.scrollTop>2){sc.scrollTo({top:0,behavior:'smooth'});await wait(300)}
+  const g=geo(),pc=wc.getBoundingClientRect();
   try{await new Promise(res=>{gsap.timeline({onComplete:res})
-    .to(sc,{opacity:0,duration:.25,ease:'power1.in'},0)
-    .to(W,{backgroundColor:INK,duration:.3,ease:'power1.in'},.1)
-    .to(W,{clipPath:R0,duration:.55,ease:'power3.inOut'},.15)})}
-  finally{W.style.display='none';gsap.set(W,{clearProps:'clipPath,backgroundColor'});gsap.set(sc,{clearProps:'opacity'});wlOpen=false;wlBusy=false}}
+    .to(parts(),{opacity:0,y:12,duration:.25,stagger:{each:.03,from:'end'},ease:'power2.in'},0)
+    .to(bg,{top:g.t,left:g.l,right:g.r,bottom:g.b,borderRadius:30,duration:DUR,ease:EASE},.1)
+    .to(wc,{x:g.c.left-pc.left,y:g.c.top-pc.top,height:g.c.height,duration:DUR,ease:EASE},.1)
+    .to(fk,{opacity:1,duration:.3,ease:'power1.in'},.5)})}
+  finally{W.style.display='none';clean();wlOpen=false;wlBusy=false}}
 card.onclick=e=>{if(e.target.closest('.wb'))return;wlShow()};
 q('#wl_back').onclick=wlHide;
 document.querySelectorAll('#wlpg [data-toast]').forEach(b=>b.onclick=()=>toast(b.dataset.toast))}
