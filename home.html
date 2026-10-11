@@ -27,7 +27,7 @@ This file is NOT opened directly. index.html loads it. It holds this page's css 
 /* z-index:1 + pointer-events:none on the two decorative circles: the bottom-left circle (:after) used to lie ON TOP of the left part of Add money and take its taps, so they opened the wallet */
 .w-r{position:relative;z-index:1;display:flex;gap:10px}
 .wb{all:unset;box-sizing:border-box;flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 0;border-radius:99px;font:700 12px var(--mono);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .2s}
-.wb .ico{width:18px;height:18px}.wb.add{background:var(--g-add);color:#fff}.wb.out{background:var(--g-out);border:0;color:#fff}
+.wb .ico{width:18px;height:18px}.wb.add,.wb.out{background:#fff;border:0;color:#000}
 /* the press-shrink (:active) makes the button smaller, so a tap near its edge used to fall onto the wallet card behind it. This invisible 5px rim keeps the tap on the button */
 .w-r .wb{position:relative}.w-r .wb:before{content:"";position:absolute;inset:-5px}
 .hm-h{margin:8px 0 -6px;font:italic 500 25px var(--serif);color:var(--green)}
