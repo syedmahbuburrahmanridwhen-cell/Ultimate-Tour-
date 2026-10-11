@@ -84,6 +84,14 @@ Module sections in order: FIREBASE, STATE, HELPER-MESSAGES, HELPER-BUTTONS, HELP
   <div id="home">
     <div id="toast"></div>
     <div id="jamsc"></div>
+    <!-- @@WALLET - full-screen wallet page: card (no buttons), Add money / Withdraw, transaction history -->
+    <div id="wlpg"><div class="wl-sc" id="wl_sc">
+      <header class="wl-top"><button class="ib" id="wl_back" type="button" aria-label="Back"><svg class="ico" viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button><h2>My wallet</h2></header>
+      <section class="wallet wl-card"><div class="w-l">WALLET BALANCE</div><div class="w-b" id="wl_bal">BDT 0.00</div></section>
+      <div class="wl-act"><button class="wb" type="button" data-toast="Add money is coming soon"><svg class="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Add money</button><button class="wb" type="button" data-toast="Withdraw is coming soon"><svg class="ico" viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8"/></svg>Withdraw</button></div>
+      <h3 class="hm-h wl-h">Transaction history</h3>
+      <div class="wl-ls" id="wl_list"></div>
+    </div></div>
     <div class="hm-pg on" id="hm0"><div class="hm-sc">
       <header class="hm-top"><div class="hm-av" id="hm_av">P</div><div class="hm-who"><small>WELCOME BACK</small><b id="hm_user">Player</b></div>
         <div class="hm-ic"><button class="ib" type="button" aria-label="Notifications" data-toast="Notifications are coming soon"><svg class="ico" viewBox="0 0 24 24"><path d="M6 9a6 6 0 1 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg></button><button class="ib" type="button" aria-label="Messages" data-toast="Messages are coming soon"><svg class="ico" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4V5z"/></svg></button></div></header>
