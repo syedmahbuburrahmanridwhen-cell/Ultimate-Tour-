@@ -203,7 +203,7 @@ async function lineAnim0(btn,job,cover){
 // ======================================================================
 const getProfile=async u=>{const s=await getDoc(doc(db,'users',u.uid));return s.exists()?s.data():null};
 const saveProfile=(u,d)=>runTransaction(db,async tx=>{const r=doc(db,'usernames',d.username);if((await tx.get(r)).exists())throw{code:'app/username-taken'};tx.set(r,{uid:u.uid});tx.set(doc(db,'users',u.uid),{...d,createdAt:serverTimestamp()})});
-const enter=(p,np)=>{const u=p.username||'player';q('#hm_user').textContent=u;q('#hm_av').textContent=u[0].toUpperCase();
+const enter=(p,np)=>{try{localStorage.setItem('ut_in','1')}catch(e){}const u=p.username||'player';q('#hm_user').textContent=u;q('#hm_av').textContent=u[0].toUpperCase();
   try{pfReset();fillPf(p)}catch(e){console.error(e)}   // a card problem must never block login/home
   
   q('#hm_bal').textContent='BDT '+Number(p.balance||0).toLocaleString('en-US',{minimumFractionDigits:2});
@@ -802,9 +802,9 @@ if(GFLAG&&!VERIFIED){skipIntro();
 // Back from Google registration = cancel; Enter key; logout; stay logged in
 q('#back').addEventListener('click',()=>{if(pending){signOut(auth);resetSignup()}});
 for(const f of [lgF,sgF])f.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='INPUT'){e.preventDefault();f.querySelector('.btn').click()}});
-q('#h_out').onclick=async()=>{await signOut(auth);location.reload()};
+q('#h_out').onclick=async()=>{try{localStorage.removeItem('ut_in')}catch(e){}await signOut(auth);location.reload()};
 onAuthStateChanged(auth,async u=>{
-  if(!u){if(AUTO.state==='wait')settle('login');return}
+  if(!u){try{localStorage.removeItem('ut_in')}catch(e){}if(AUTO.state==='wait')settle('login');return}
   if(working||pending||VERIFIED||GFLAG)return;
   try{const p=u.emailVerified?await getProfile(u):null;
     // already logged in: tell the intro to open home directly (no login page flash)
