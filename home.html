@@ -20,13 +20,16 @@ This file is NOT opened directly. index.html loads it. It holds this page's css 
 .ib{all:unset;box-sizing:border-box;width:44px;height:44px;border-radius:50%;background:#fff;display:grid;place-items:center;color:var(--pri);box-shadow:0 8px 18px rgba(60,72,140,.14),inset 0 0 0 1px rgba(99,102,241,.1);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .2s}
 .ib:active,.wb:active{transform:scale(.95)}
 .wallet{position:relative;overflow:hidden;background:var(--grad);color:#fff;border-radius:30px;padding:36px 26px 30px;margin:0 -8px;box-shadow:0 20px 38px rgba(79,86,230,.34);cursor:pointer;-webkit-tap-highlight-color:transparent}
-.wallet:before{content:"";position:absolute;right:-60px;top:-80px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.13)}
-.wallet:after{content:"";position:absolute;left:-50px;bottom:-80px;width:170px;height:170px;border-radius:50%;background:rgba(255,255,255,.08)}
+.wallet:before{content:"";pointer-events:none;position:absolute;right:-60px;top:-80px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.13)}
+.wallet:after{content:"";pointer-events:none;position:absolute;left:-50px;bottom:-80px;width:170px;height:170px;border-radius:50%;background:rgba(255,255,255,.08)}
 .w-l{font:700 11px var(--mono);letter-spacing:.2em;color:rgba(255,255,255,.8)}
 .w-b{position:relative;font:800 42px/1.1 var(--sans);margin:14px 0 34px;color:#fff}
-.w-r{position:relative;display:flex;gap:10px}
+/* z-index:1 + pointer-events:none on the two decorative circles: the bottom-left circle (:after) used to lie ON TOP of the left part of Add money and take its taps, so they opened the wallet */
+.w-r{position:relative;z-index:1;display:flex;gap:10px}
 .wb{all:unset;box-sizing:border-box;flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 0;border-radius:99px;font:700 12px var(--mono);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .2s}
-.wb .ico{width:18px;height:18px}.wb.add{background:#fff;color:var(--pri)}.wb.out{background:rgba(255,255,255,.2);border:0;color:#fff}
+.wb .ico{width:18px;height:18px}.wb.add{background:var(--g-add);color:#fff}.wb.out{background:var(--g-out);border:0;color:#fff}
+/* the press-shrink (:active) makes the button smaller, so a tap near its edge used to fall onto the wallet card behind it. This invisible 5px rim keeps the tap on the button */
+.w-r .wb{position:relative}.w-r .wb:before{content:"";position:absolute;inset:-5px}
 .hm-h{margin:8px 0 -6px;font:italic 500 25px var(--serif);color:var(--green)}
 .empty{display:grid;justify-items:center;gap:8px;padding:26px 16px;border:1.5px dashed rgba(99,102,241,.3);border-radius:22px;background:rgba(255,255,255,.72);color:#6b7692;font:500 13px var(--mono);text-align:center}
 .empty p{margin:0}.empty .ico{width:30px;height:30px;opacity:.6}
