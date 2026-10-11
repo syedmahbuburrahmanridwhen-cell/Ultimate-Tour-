@@ -278,7 +278,7 @@ button:focus,button:focus-visible,[role=button]:focus,a:focus{outline:none}
 .pfp.adm .pfp-ok{height:48px}
 /* admin page: whole screen is the page; title capsule + navigation bar float above it (frosted glass) */
 .adm-pg{touch-action:auto}
-.adm-body{position:absolute;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y;padding:calc(env(safe-area-inset-top,0px) + 146px) 16px calc(env(safe-area-inset-bottom,0px) + 28px)}
+.adm-body{position:absolute;z-index:0;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y;padding:calc(env(safe-area-inset-top,0px) + 146px) 16px calc(env(safe-area-inset-bottom,0px) + 28px)}
 .adm-hd{position:absolute;z-index:4;left:16px;top:calc(env(safe-area-inset-top,0px) + 10px);display:flex;align-items:center;gap:4px;height:46px;padding:0 18px 0 4px;border-radius:99px;background:rgba(11,15,16,.6);-webkit-backdrop-filter:blur(16px) saturate(1.6);backdrop-filter:blur(16px) saturate(1.6);border:1px solid rgba(255,255,255,.1);box-shadow:0 12px 28px rgba(11,15,16,.26),inset 0 1px 0 rgba(255,255,255,.1)}
 .adm-bk{all:unset;box-sizing:border-box;width:38px;height:38px;display:grid;place-items:center;border-radius:50%;color:var(--lime);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .2s}
 .adm-bk:active{background:rgba(201,222,60,.16)}.adm-bk .ico{width:26px;height:26px;stroke-width:3}
@@ -295,8 +295,8 @@ button:focus,button:focus-visible,[role=button]:focus,a:focus{outline:none}
 .adm-sec{position:relative}.adm-sec.nf{padding-bottom:72px}
 .pl-empty{position:absolute;left:0;right:0;top:63px;height:58px;margin:0;padding:0;display:grid;place-items:center;pointer-events:none;color:#7a8386;font:600 13px var(--mono);letter-spacing:.06em}
 .pl-empty[hidden]{display:none}
-.pl-card{--cv:radial-gradient(circle at 90% 0,rgba(201,222,60,.45),transparent 55%),linear-gradient(135deg,#0b0f10,var(--green));position:relative;overflow:hidden;border-radius:22px;padding:14px;display:grid;gap:12px;color:#fff;background:var(--cv) center/cover;box-shadow:0 12px 24px rgba(11,15,16,.16);transition:box-shadow .35s}
-.pl-card.pl-up{box-shadow:0 26px 44px rgba(11,15,16,.38)}
+.pl-card{--cv:radial-gradient(circle at 90% 0,rgba(201,222,60,.45),transparent 55%),linear-gradient(135deg,#0b0f10,var(--green));position:relative;overflow:hidden;border-radius:22px;padding:14px;display:grid;gap:12px;color:#fff;background:var(--cv) center/cover;box-shadow:0 12px 24px rgba(11,15,16,.16)}
+.pl-card.pl-mv{will-change:transform}
 .pl-top{display:flex;align-items:center;gap:12px}
 .pl-av{flex:none;width:52px;height:52px;box-sizing:border-box;border-radius:50%;background:var(--ink) center/cover;color:var(--lime);border:3px solid #fff;display:grid;place-items:center;font:800 22px var(--sans);box-shadow:0 6px 14px rgba(0,0,0,.25)}
 .pl-id{min-width:0}
@@ -321,3 +321,6 @@ button:focus,button:focus-visible,[role=button]:focus,a:focus{outline:none}
 .sr-x[hidden]{display:none}.sr-x .ico{width:14px;height:14px;stroke-width:2.4}
 .sr-cnt{flex:none;min-width:58px;height:38px;box-sizing:border-box;padding:0 12px;border-radius:99px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--lime);color:var(--ink)}
 .sr-cnt b{font:800 14px/1.05 var(--sans)}.sr-cnt small{font:700 7.5px/1.2 var(--mono);letter-spacing:.14em;text-transform:uppercase}
+/* while cards are moving the glass bars drop their blur (blurring a moving background is what makes phones lag) and get it back when the move ends */
+.adm-hd,.adm-nav,.adm-sr{transition:background-color .25s}
+.adm-pg.mv .adm-hd,.adm-pg.mv .adm-nav,.adm-pg.mv .adm-sr{-webkit-backdrop-filter:none;backdrop-filter:none;background-color:rgba(11,15,16,.72)}
