@@ -4,7 +4,7 @@
 // ======================================================================
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import {getAuth,GoogleAuthProvider,signInWithPopup,signInWithEmailAndPassword,createUserWithEmailAndPassword,sendPasswordResetEmail,confirmPasswordReset,verifyPasswordResetCode,fetchSignInMethodsForEmail,onAuthStateChanged,signOut,deleteUser,sendEmailVerification} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import {initializeFirestore,doc,getDoc,runTransaction,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import {initializeFirestore,doc,getDoc,runTransaction,serverTimestamp,collection as wlCol,getDocs as wlGet,query as wlQry,orderBy as wlOrd,limit as wlLim} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import {collection as admFS_collection,onSnapshot as admFS_onSnapshot,query as admFS_query,orderBy as admFS_orderBy,limit as admFS_limit,startAfter as admFS_startAfter,where as admFS_where,getDocs as admFS_getDocs,getCountFromServer as admFS_getCountFromServer} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";   // used only by the Admin Panel code at the bottom of this file
 const app=initializeApp({apiKey:"AIzaSyB7WRLBVRufPnlFck0dreWcU8-yWh9f7_0",authDomain:"ultimate-tour-1.firebaseapp.com",projectId:"ultimate-tour-1",storageBucket:"ultimate-tour-1.firebasestorage.app",messagingSenderId:"593726515356",appId:"1:593726515356:web:bafe179aed7d77015be559"});
 const auth=getAuth(app),db=initializeFirestore(app,{experimentalForceLongPolling:true}),q=s=>document.querySelector(s),v=i=>q('#su_'+i).value.trim();
@@ -460,7 +460,7 @@ async function penalty(){
 // Swiping while pages are still changing just adds to the queue.
 {const H=q('#home');let sx=0,sy=0,st=0,lock='',side=0,W=1;
  H.addEventListener('touchstart',e=>{const t=e.touches[0];sx=t.clientX;sy=t.clientY;st=Date.now();side=0;W=H.clientWidth||1;
-  lock=(locked||e.target.closest('#nav'))?'no':(running||Q.length)?'anim':''},{passive:true});
+  lock=(locked||e.target.closest('#nav,#wlpg'))?'no':(running||Q.length)?'anim':''},{passive:true});
  H.addEventListener('touchmove',e=>{if(lock==='no'||lock==='anim')return;const t=e.touches[0],dx=t.clientX-sx,dy=t.clientY-sy;
   if(!lock){if(Math.abs(dx)<8&&Math.abs(dy)<8)return;lock=Math.abs(dx)>Math.abs(dy)*1.2?'x':'y'}
   if(lock!=='x')return;
@@ -475,6 +475,59 @@ async function penalty(){
  H.addEventListener('touchcancel',()=>{if(lock==='x')showTab(cur)},{passive:true})}
 const toast=t=>{const e=q('#toast');e.textContent=t;e.classList.add('show');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('show'),2000)};
 document.querySelectorAll('[data-toast]').forEach(b=>b.onclick=()=>toast(b.dataset.toast));
+
+// ======================================================================
+// @@PAGE-WALLET   Wallet page: tap the home wallet card (not its buttons) > the card grows to a full-screen page; the back arrow shrinks it back.
+//   Transactions are read from Firestore: users/{uid}/transactions  { type:'add'|'withdraw', amount:number, createdAt:Timestamp, method?:string, status?:string }
+//   HTML: <!-- @@WALLET -->  CSS: /* @@WALLET */
+// ======================================================================
+{const H=q('#home'),W=q('#wlpg'),card=q('#hm0 .wallet'),sc=q('#wl_sc'),list=q('#wl_list');let wlBusy=false,wlOpen=false,wlFirst=true,wlUid='';
+const CREAM='#f4efe9',INK='#0b0f10',wlMoney=n=>'BDT '+Number(n||0).toLocaleString('en-US',{minimumFractionDigits:2});
+const wlClip=(r,R)=>'inset('+r.t+'px '+r.r+'px '+r.b+'px '+r.l+'px round '+R+'px)';
+const wlRect=()=>{const h=H.getBoundingClientRect(),c=card.getBoundingClientRect();return{t:Math.max(0,c.top-h.top),l:Math.max(0,c.left-h.left),r:Math.max(0,h.right-c.right),b:Math.max(0,h.bottom-c.bottom)}};
+const WL_IC={add:'<path d="M12 5v14M5 12h14"/>',out:'<path d="M7 17 17 7M9 7h8v8"/>'};
+function wlDate(t){try{const d=t&&t.toDate?t.toDate():null;return d?d.toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):''}catch(e){return''}}
+function wlNote(txt){list.innerHTML='';const d=document.createElement('div');d.className='empty';d.innerHTML='<svg class="ico" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 10h18M16 15h2"/></svg><p></p>';d.querySelector('p').textContent=txt;list.appendChild(d)}
+function wlRender(rows){
+  if(!rows)return wlNote('Could not load transactions');
+  if(!rows.length)return wlNote('No transactions yet');
+  list.innerHTML='';
+  for(const t of rows){const out=t.type==='withdraw'||t.type==='out',el=document.createElement('div');el.className='wl-it '+(out?'out':'add');
+    el.innerHTML='<i class="wl-ic"><svg class="ico" viewBox="0 0 24 24">'+(out?WL_IC.out:WL_IC.add)+'</svg></i><div class="wl-mid"><b></b><small></small></div><span class="wl-am"></span>';
+    el.querySelector('b').textContent=out?'Withdraw':'Add money';
+    el.querySelector('small').textContent=[wlDate(t.createdAt),t.method,t.status].filter(Boolean).join(' · ');
+    el.querySelector('.wl-am').textContent=(out?'- ':'+ ')+wlMoney(t.amount);
+    list.appendChild(el)}
+  gsap.from(list.children,{y:18,opacity:0,duration:.45,stagger:.04,ease:'power3.out',clearProps:'transform,opacity'})}
+async function wlLoad(){
+  const u=auth.currentUser;if(!u)return wlRender(null);
+  if(wlUid!==u.uid){wlUid=u.uid;wlFirst=true}
+  if(wlFirst)wlNote('Loading...');
+  try{const s=await wlGet(wlQry(wlCol(db,'users',u.uid,'transactions'),wlOrd('createdAt','desc'),wlLim(100)));
+    if(!wlOpen)return;wlFirst=false;wlRender(s.docs.map(d=>d.data()))}
+  catch(e){console.error('wallet history',e);if(wlOpen)wlRender(null)}}
+async function wlShow(){
+  if(wlBusy||wlOpen||locked||running||Q.length)return;wlBusy=true;
+  const r=wlRect(),R0=wlClip(r,30),R1=wlClip({t:0,l:0,r:0,b:0},0);
+  q('#wl_bal').textContent=q('#hm_bal').textContent;
+  W.style.display='block';sc.scrollTop=0;gsap.set(W,{backgroundColor:INK,clipPath:R0});gsap.set(sc,{opacity:0});wlOpen=true;wlLoad();
+  try{await new Promise(res=>{gsap.timeline({onComplete:res})
+    .to(W,{clipPath:R1,duration:.6,ease:'power3.inOut'},0)
+    .to(W,{backgroundColor:CREAM,duration:.4,ease:'power1.out'},.25)
+    .to(sc,{opacity:1,duration:.35,ease:'power1.out'},.4)})}
+  finally{gsap.set(W,{clearProps:'clipPath,backgroundColor'});gsap.set(sc,{clearProps:'opacity'});wlBusy=false}}
+async function wlHide(){
+  if(wlBusy||!wlOpen)return;wlBusy=true;
+  const R1=wlClip({t:0,l:0,r:0,b:0},0),R0=wlClip(wlRect(),30);
+  gsap.set(W,{backgroundColor:CREAM,clipPath:R1});
+  try{await new Promise(res=>{gsap.timeline({onComplete:res})
+    .to(sc,{opacity:0,duration:.25,ease:'power1.in'},0)
+    .to(W,{backgroundColor:INK,duration:.3,ease:'power1.in'},.1)
+    .to(W,{clipPath:R0,duration:.55,ease:'power3.inOut'},.15)})}
+  finally{W.style.display='none';gsap.set(W,{clearProps:'clipPath,backgroundColor'});gsap.set(sc,{clearProps:'opacity'});wlOpen=false;wlBusy=false}}
+card.onclick=e=>{if(e.target.closest('.wb'))return;wlShow()};
+q('#wl_back').onclick=wlHide;
+document.querySelectorAll('#wlpg [data-toast]').forEach(b=>b.onclick=()=>toast(b.dataset.toast))}
 
 // ======================================================================
 // @@PAGE-PROFILE   Profile tab: info card, pen icon > edit mode > Update. A changed (already filled) detail locks for 24h.
