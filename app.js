@@ -477,17 +477,20 @@ const toast=t=>{const e=q('#toast');e.textContent=t;e.classList.add('show');clea
 document.querySelectorAll('[data-toast]').forEach(b=>b.onclick=()=>toast(b.dataset.toast));
 
 // ======================================================================
-// @@PAGE-WALLET   Wallet page: tap the home wallet card (not its buttons) > a cream sheet grows out of the card to fill the screen,
-//   the page's own card glides from the home card's place to the top; the back arrow plays the same thing in reverse.
+// @@PAGE-WALLET   Wallet page: tap the home wallet card (not its buttons) > the card itself grows to the whole screen, its colour fades from
+//   black to the app's cream, then the page items float up one by one. The back arrow plays it in reverse (page shrinks back into the card).
 //   Transactions are read from Firestore: users/{uid}/transactions  { type:'add'|'withdraw', amount:number, createdAt:Timestamp, method?:string, status?:string }
 //   HTML: <!-- @@WALLET -->  CSS: /* @@WALLET */
 // ======================================================================
-{const H=q('#home'),W=q('#wlpg'),bg=q('#wl_bg'),card=q('#hm0 .wallet'),wc=q('#wl_card'),fk=q('#wl_fk'),sc=q('#wl_sc'),list=q('#wl_list');
-let wlBusy=false,wlOpen=false,wlFirst=true,wlUid='';
-const DUR=.75,EASE='power3.inOut',wlMoney=n=>'BDT '+Number(n||0).toLocaleString('en-US',{minimumFractionDigits:2});
-const parts=()=>[...sc.children].filter(x=>x!==wc);   // everything on the page except the card
+{const H=q('#home'),W=q('#wlpg'),bg=q('#wl_bg'),gl=q('#wl_gl'),card=q('#hm0 .wallet'),sc=q('#wl_sc'),list=q('#wl_list');
+let wlBusy=false,wlOpen=false,wlFirst=true,wlUid='',gh=null;
+const DUR=.8,EASE='power3.inOut',INK='#0b0f10',CREAM='#f4efe9',wlMoney=n=>'BDT '+Number(n||0).toLocaleString('en-US',{minimumFractionDigits:2});
+const kids=()=>[...sc.children];   // header, card, buttons, heading, list: they float up one by one
 const geo=()=>{const h=H.getBoundingClientRect(),c=card.getBoundingClientRect();return{c,t:c.top-h.top,l:c.left-h.left,r:h.right-c.right,b:h.bottom-c.bottom}};
-const clean=()=>gsap.set([bg,wc,fk,...parts()],{clearProps:'all'});
+const clean=()=>{gsap.set([bg,gl,...kids()],{clearProps:'all'});if(gh){gh.remove();gh=null}};
+function ghost(c){   // a look-alike of the home card (text + glow) that sits inside the sheet, so the card seems to be the thing that grows
+  gh=card.cloneNode(true);gh.removeAttribute('id');gh.querySelectorAll('[id]').forEach(e=>e.removeAttribute('id'));gh.querySelectorAll('[data-toast]').forEach(e=>e.removeAttribute('data-toast'));
+  gh.classList.add('wl-gh');gh.style.width=c.width+'px';gh.style.height=c.height+'px';bg.appendChild(gh);return gh}
 const WL_IC={add:'<path d="M12 5v14M5 12h14"/>',out:'<path d="M7 17 17 7M9 7h8v8"/>'};
 function wlDate(t){try{const d=t&&t.toDate?t.toDate():null;return d?d.toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):''}catch(e){return''}}
 function wlNote(txt){list.innerHTML='';const d=document.createElement('div');d.className='empty';d.innerHTML='<svg class="ico" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 10h18M16 15h2"/></svg><p></p>';d.querySelector('p').textContent=txt;list.appendChild(d)}
@@ -512,28 +515,30 @@ async function wlLoad(){
 async function wlShow(){
   if(wlBusy||wlOpen||locked||running||Q.length)return;wlBusy=true;
   q('#wl_bal').textContent=q('#hm_bal').textContent;
-  fk.innerHTML=card.querySelector('.w-r').innerHTML;fk.querySelectorAll('[data-toast]').forEach(b=>b.removeAttribute('data-toast'));   // look-alike buttons: they fade out while the card moves
   W.style.display='block';sc.scrollTop=0;clean();
-  const g=geo(),pc=wc.getBoundingClientRect(),nat=pc.height;   // g = the home card, pc = where the page card naturally sits
-  gsap.set(bg,{top:g.t,left:g.l,right:g.r,bottom:g.b,borderRadius:30});
-  gsap.set(wc,{x:g.c.left-pc.left,y:g.c.top-pc.top,height:g.c.height});
-  gsap.set(fk,{opacity:1});gsap.set(parts(),{opacity:0,y:18});
+  const g=geo(),G=ghost(g.c);
+  gsap.set(bg,{top:g.t,left:g.l,right:g.r,bottom:g.b,borderRadius:30,backgroundColor:INK});
+  gsap.set(gl,{opacity:0});gsap.set(kids(),{opacity:0,y:22});
   wlOpen=true;wlLoad();
   try{await new Promise(res=>{gsap.timeline({onComplete:res})
-    .to(bg,{top:0,left:0,right:0,bottom:0,borderRadius:0,duration:DUR,ease:EASE},0)
-    .to(wc,{x:0,y:0,height:nat,duration:DUR,ease:EASE},0)
-    .to(fk,{opacity:0,duration:.3,ease:'power1.out'},0)
-    .to(parts(),{opacity:1,y:0,duration:.55,stagger:.07,ease:'power3.out'},.3)})}
+    .to(bg,{top:0,left:0,right:0,bottom:0,borderRadius:0,duration:DUR,ease:EASE},0)          // the card grows to the whole screen
+    .to(bg,{backgroundColor:CREAM,duration:DUR,ease:'sine.inOut'},0)                           // ...turning from black to cream while it grows
+    .to(G,{opacity:0,duration:.3,ease:'power1.out'},0)                                         // the card's own text fades away
+    .to(gl,{opacity:1,duration:.4,ease:'power1.out'},DUR-.4)                                   // the app background's soft glow
+    .to(kids(),{opacity:1,y:0,duration:.6,stagger:.11,ease:'power3.out'},DUR-.2)})}            // title, card, buttons, history float up one by one
   finally{clean();wlBusy=false}}
 async function wlHide(){
   if(wlBusy||!wlOpen)return;wlBusy=true;
   if(sc.scrollTop>2){sc.scrollTo({top:0,behavior:'smooth'});await wait(300)}
-  const g=geo(),pc=wc.getBoundingClientRect();
-  try{await new Promise(res=>{gsap.timeline({onComplete:res})
-    .to(parts(),{opacity:0,y:12,duration:.25,stagger:{each:.03,from:'end'},ease:'power2.in'},0)
-    .to(bg,{top:g.t,left:g.l,right:g.r,bottom:g.b,borderRadius:30,duration:DUR,ease:EASE},.1)
-    .to(wc,{x:g.c.left-pc.left,y:g.c.top-pc.top,height:g.c.height,duration:DUR,ease:EASE},.1)
-    .to(fk,{opacity:1,duration:.3,ease:'power1.in'},.5)})}
+  const g=geo();let G=null;
+  try{
+    gsap.set(bg,{backgroundColor:CREAM});G=ghost(g.c);gsap.set(G,{opacity:0});
+    await new Promise(res=>{gsap.timeline({onComplete:res})
+      .to(kids(),{opacity:0,y:14,duration:.28,stagger:{each:.04,from:'end'},ease:'power2.in'},0)
+      .to(gl,{opacity:0,duration:.4,ease:'power1.in'},.15)
+      .to(bg,{top:g.t,left:g.l,right:g.r,bottom:g.b,borderRadius:30,duration:DUR,ease:EASE},.2)
+      .to(bg,{backgroundColor:INK,duration:DUR,ease:'sine.inOut'},.2)
+      .to(G,{opacity:1,duration:.3,ease:'power1.in'},.2+DUR-.3)})}
   finally{W.style.display='none';clean();wlOpen=false;wlBusy=false}}
 card.onclick=e=>{if(e.target.closest('.wb'))return;wlShow()};
 q('#wl_back').onclick=wlHide;
