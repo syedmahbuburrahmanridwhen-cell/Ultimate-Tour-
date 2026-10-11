@@ -1,0 +1,193 @@
+<!--
+Page 6: Home (bottom navigation bar is here too)
+This file is NOT opened directly. index.html loads it. It holds this page's css + html + js together.
+-->
+<script type="text/plain" data-kind="css" data-order="60">
+/* ===== pages/home/home.css ===== */
+/* @@HOME - home page: header, wallet card, empty cards, tabs, glass nav bar */
+#home{padding:0;flex-direction:column;overflow:hidden;background:radial-gradient(circle at 92% -4%,rgba(99,102,241,.16),transparent 46%),radial-gradient(circle at -8% 100%,rgba(79,116,244,.12),transparent 50%),var(--cream)}
+.ico{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#home{touch-action:pan-y}.hm-pg{position:absolute;inset:0;visibility:hidden;pointer-events:none;will-change:transform;backface-visibility:hidden}
+.hm-pg.on{visibility:visible;pointer-events:auto}
+.hm-sc{height:100%;box-sizing:border-box;overflow-y:auto;padding:calc(18px + env(safe-area-inset-top,0px)) 20px 130px;display:flex;flex-direction:column;gap:18px}
+.hm-sc>*{flex-shrink:0}
+.hm-sc,.wl-sc{overflow-x:hidden;scrollbar-width:none;-ms-overflow-style:none}.hm-sc::-webkit-scrollbar,.wl-sc::-webkit-scrollbar{display:none}
+.hm-top{display:flex;align-items:center;gap:12px}
+.hm-av{width:46px;height:46px;border-radius:50%;background:var(--grad);color:#fff;display:grid;place-items:center;font:800 20px var(--sans);box-shadow:0 8px 18px rgba(79,86,230,.3)}
+.hm-who{flex:1;min-width:0;display:grid;gap:2px}.hm-who small{font:700 10px var(--mono);letter-spacing:.2em;color:#6b7692}
+.hm-who b{font:800 18px var(--sans);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hm-ic{display:flex;gap:10px}
+.ib{all:unset;box-sizing:border-box;width:44px;height:44px;border-radius:50%;background:#fff;display:grid;place-items:center;color:var(--pri);box-shadow:0 8px 18px rgba(60,72,140,.14),inset 0 0 0 1px rgba(99,102,241,.1);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .2s}
+.ib:active,.wb:active{transform:scale(.95)}
+.wallet{position:relative;overflow:hidden;background:var(--grad);color:#fff;border-radius:30px;padding:36px 26px 30px;margin:0 -8px;box-shadow:0 20px 38px rgba(79,86,230,.34);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.wallet:before{content:"";position:absolute;right:-60px;top:-80px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.13)}
+.wallet:after{content:"";position:absolute;left:-50px;bottom:-80px;width:170px;height:170px;border-radius:50%;background:rgba(255,255,255,.08)}
+.w-l{font:700 11px var(--mono);letter-spacing:.2em;color:rgba(255,255,255,.8)}
+.w-b{position:relative;font:800 42px/1.1 var(--sans);margin:14px 0 34px;color:#fff}
+.w-r{position:relative;display:flex;gap:10px}
+.wb{all:unset;box-sizing:border-box;flex:1;display:flex;align-items:center;justify-content:center;gap:8px;padding:13px 0;border-radius:99px;font:700 12px var(--mono);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .2s}
+.wb .ico{width:18px;height:18px}.wb.add{background:#fff;color:var(--pri)}.wb.out{background:rgba(255,255,255,.2);border:0;color:#fff}
+.hm-h{margin:8px 0 -6px;font:italic 500 25px var(--serif);color:var(--green)}
+.empty{display:grid;justify-items:center;gap:8px;padding:26px 16px;border:1.5px dashed rgba(99,102,241,.3);border-radius:22px;background:rgba(255,255,255,.72);color:#6b7692;font:500 13px var(--mono);text-align:center}
+.empty p{margin:0}.empty .ico{width:30px;height:30px;opacity:.6}
+#toast{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));left:50%;z-index:9;transform:translate(-50%,-24px);opacity:0;pointer-events:none;background:var(--ink);color:#fff;padding:10px 18px;border-radius:99px;font:700 12px var(--mono);letter-spacing:.06em;transition:opacity .3s,transform .4s cubic-bezier(.2,.8,.2,1);white-space:nowrap}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+#nav{position:absolute;left:16px;right:16px;bottom:calc(14px + env(safe-area-inset-bottom,0px));z-index:5;display:grid;grid-template-columns:repeat(4,1fr);padding:6px;border-radius:32px;background:rgba(255,255,255,.92);-webkit-backdrop-filter:blur(18px) saturate(1.6);backdrop-filter:blur(18px) saturate(1.6);border:1px solid rgba(99,102,241,.12);box-shadow:0 14px 34px rgba(60,72,140,.22),inset 0 1px 0 #fff}
+.nv{all:unset;position:relative;z-index:1;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:5px;padding:10px 0 9px;cursor:pointer;color:#8791a8;-webkit-tap-highlight-color:transparent;transition:color .35s}
+.nv .ico{width:24px;height:24px;transition:transform .5s cubic-bezier(.34,1.56,.64,1)}.nv span{font:700 9.5px var(--mono);letter-spacing:.14em;text-transform:uppercase}
+.nv.on{color:#3f64ee}.nv.on .ico{transform:translateY(-1px) scale(1.1)}
+#navball{position:absolute;z-index:0;top:6px;bottom:6px;left:6px;width:0;border-radius:26px;background:rgba(99,102,241,.14);box-shadow:none;transition:left .55s cubic-bezier(.34,1.2,.5,1),width .55s cubic-bezier(.34,1.2,.5,1),background .4s,box-shadow .4s}
+#navball.red{background:#ff3b30;box-shadow:0 0 20px rgba(255,59,48,.6)}
+#home.busy .hm-pg{pointer-events:none}
+#jamsc{position:absolute;inset:0;z-index:6;display:none;opacity:0;background:rgba(30,41,100,.6)}
+#jam{position:absolute;z-index:8;box-sizing:border-box;border-radius:32px;background:rgba(255,255,255,.96);border:1px solid rgba(99,102,241,.12);box-shadow:0 14px 34px rgba(60,72,140,.22),inset 0 1px 0 #fff;overflow:hidden}
+#jamin{position:absolute;inset:5px;z-index:1;display:grid;grid-template-columns:repeat(4,1fr)}
+#jamball{position:absolute;display:grid;place-items:center;border-radius:26px;background:#ff3b30;box-shadow:0 0 20px rgba(255,59,48,.6)}
+#jamball svg{width:36px;height:36px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;opacity:0}
+#jamtx{position:absolute;left:20px;margin:0;opacity:0;text-align:center;color:var(--ink)}
+#jamtx b{display:block;font:italic 600 26px/1.1 var(--serif);letter-spacing:-.01em;margin-bottom:8px}
+#jamtx span{display:block;font:500 12px/1.6 var(--mono);color:rgba(15,23,48,.62)}
+</script>
+<script type="text/plain" data-kind="app" data-order="140">
+/* ===== pages/home/home.js ===== */
+// ======================================================================
+// @@PAGE-HOME   Home page: tabs (Home, Tours, Results, Profile), glass nav bar with sliding ball, toast
+//   HTML: <!-- @@HOME -->  CSS: /* @@HOME */  Filled by enter() in @@DATA.
+// ======================================================================
+// Tab switch: pages sit side by side like a carousel. Right tab = old page leaves LEFT, new page arrives from RIGHT; left tab = reverse.
+// Every tap goes into a queue and the pages change ONE BY ONE (faster when many are waiting), so animations never overlap.
+// If 10 taps are waiting (spam): finish the next page, stop, go Home, then the red "stop" animation plays and input is locked.
+let cur=0;const SLIDE={d:.38,e:'power3.out'},LIM=10;
+const PG=[...document.querySelectorAll('.hm-pg')],X=PG.map(()=>0),TW=PG.map(()=>null),DONE=PG.map(()=>null);
+const put=(i,x)=>{X[i]=x;PG[i].style.transform='translate3d('+x+'%,0,0)'};
+const hideP=i=>{if(TW[i])TW[i].kill();TW[i]=null;if(DONE[i]){DONE[i]();DONE[i]=null}PG[i].classList.remove('on');X[i]=0;PG[i].style.transform=''};
+function move(i,to,dur){return new Promise(res=>{if(TW[i])TW[i].kill();if(DONE[i])DONE[i]();DONE[i]=res;const o={x:X[i]};
+  TW[i]=gsap.to(o,{x:to,duration:dur,ease:SLIDE.e,onUpdate:()=>put(i,o.x),
+    onComplete:()=>{TW[i]=null;DONE[i]=null;if(i===cur){X[i]=0;PG[i].style.transform=''}else hideP(i);res()}})})}
+function ballTo(n,d){const items=[...document.querySelectorAll('#nav .nv')],nb=q('#navball'),bt=items[n];
+  items.forEach((b,i)=>b.classList.toggle('on',i===n));
+  nb.style.transitionDuration=d?d+'s':'';nb.style.left=(bt.offsetLeft+2)+'px';nb.style.width=(bt.offsetWidth-4)+'px'}
+function showTab(n,instant,d){
+  d=d||SLIDE.d;if(instant)ballTo(n,0);
+  if(instant){PG.forEach((p,i)=>{hideP(i);if(i===n)p.classList.add('on')});cur=n;Q.length=0;return Promise.resolve()}
+  const old=cur,dir=n>old?1:n<old?-1:0;cur=n;
+  let parked=false;
+  if(!PG[n].classList.contains('on')){PG[n].classList.add('on');put(n,(dir||1)*100);parked=true}
+  const jobs=[[n,0]];
+  PG.forEach((p,i)=>{if(i===n||!p.classList.contains('on'))return;
+    const side=i===old?-dir:(X[i]<0?-1:1);
+    if(parked&&i!==old&&side===dir){hideP(i);return}
+    jobs.push([i,side*100])});
+  const far=Math.max(...jobs.map(([i,t])=>Math.abs(t-X[i]))),dur=d*(.4+.6*Math.min(1,far/100));
+  return Promise.all(jobs.map(([i,t])=>move(i,t,dur)))}
+
+// ---- tap queue
+const Q=[];let running=false,locked=false;
+const lastTarget=()=>Q.length?Q[Q.length-1]:cur;
+async function pump(){if(running)return;running=true;q('#home').classList.add('busy');
+  while(Q.length){const n=Q.shift(),pend=Q.length;await showTab(n,false,pend>2?.2:pend>0?.28:SLIDE.d)}
+  running=false;if(locked)await penalty();
+  if(!running&&!Q.length)q('#home').classList.remove('busy')}
+function go(i){if(locked||i===lastTarget())return;
+  ballTo(i,.4);   // green ball goes to the tapped icon right away (it can change its mind mid-way)
+  Q.push(i);
+  if(Q.length>=LIM){locked=true;Q.splice(1);ballTo(Q[0],.4)}   // too many: keep only the very next page, then stop
+  pump()}
+document.querySelectorAll('#nav .nv').forEach((b,i)=>b.onclick=()=>{if(locked)return;try{navigator.vibrate&&navigator.vibrate(8)}catch(x){}go(i)});
+
+// ---- "stop spamming" animation
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+const tw=(el,v)=>new Promise(r=>gsap.to(el,{...v,onComplete:r}));
+async function penalty(){
+  const nav=q('#nav'),nb=q('#navball'),H=q('#home'),S=q('#jamsc');let card=null;
+  const ease='power3.inOut';
+  try{
+    if(cur!==0){ballTo(0,.45);await showTab(0,false,.4)}
+    await wait(150);
+    // 1) green ball -> middle of the nav bar, turns red
+    document.querySelectorAll('#nav .nv').forEach(b=>b.classList.remove('on'));
+    nb.style.transitionDuration='.6s';nb.style.left=((nav.clientWidth-nb.offsetWidth)/2)+'px';nb.classList.add('red');
+    await wait(750);
+    // 2) the nav bar (with the red ball in it) is swapped for an identical card that carries it to the middle of the screen
+    const hr=H.getBoundingClientRect(),nr=nav.getBoundingClientRect(),br=nb.getBoundingClientRect();
+    const rel={left:br.left-nr.left-1,top:br.top-nr.top-1,width:br.width,height:br.height};
+    const w=Math.min(320,hr.width-40),h=224,D=62,cx=hr.width/2,cy=hr.height/2-10;
+    card=document.createElement('div');card.id='jam';
+    card.innerHTML='<div id="jamball"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg></div><div id="jamin"></div><p id="jamtx"><b>Hey, what\'s going on?</b><span>Why all the rapid taps? Did something go wrong? Tell me and I\'ll help you out.</span></p>';
+    const ball=card.querySelector('#jamball'),I=card.querySelector('svg'),T=card.querySelector('#jamtx'),IN=card.querySelector('#jamin');
+    nav.querySelectorAll('.nv').forEach(b=>IN.appendChild(b.cloneNode(true)));
+    H.appendChild(card);
+    gsap.set(card,{left:nr.left-hr.left,top:nr.top-hr.top,width:nr.width,height:nr.height});
+    gsap.set(ball,rel);
+    T.style.top=(26+D+14)+'px';T.style.width=(w-42)+'px';
+    nav.style.visibility='hidden';
+    S.style.display='block';gsap.to(S,{opacity:1,duration:.6});
+    // 3) in ONE smooth motion: the bar grows into the card while flying to the middle, the red ball becomes the "no" sign
+    await Promise.all([
+      tw(IN,{opacity:0,duration:.35,ease:'power1.out'}),
+      tw(card,{left:cx-w/2,top:cy-h/2,width:w,height:h,borderRadius:30,duration:1,ease}),
+      tw(ball,{left:(w-2-D)/2,top:26,width:D,height:D,borderRadius:D/2,duration:1,ease})]);
+    gsap.fromTo(I,{opacity:0,scale:.5},{opacity:1,scale:1,duration:.5,ease:'back.out(2)'});
+    gsap.fromTo(T,{opacity:0,y:10},{opacity:1,y:0,duration:.6,delay:.15});
+    await wait(3200);
+    // 4) content fades, then card shrinks straight back into the nav bar (sign -> red ball) in one motion
+    gsap.to([T,I],{opacity:0,duration:.3});gsap.to(S,{opacity:0,duration:.7,delay:.2});
+    await wait(250);
+    await Promise.all([
+      tw(IN,{opacity:1,duration:.4,delay:.6,ease:'power1.in'}),
+      tw(card,{left:nr.left-hr.left,top:nr.top-hr.top,width:nr.width,height:nr.height,borderRadius:32,duration:1,ease}),
+      tw(ball,{...rel,borderRadius:26,duration:1,ease})]);
+    nav.style.visibility='';card.remove();card=null;S.style.display='none';
+    // 5) back to Home, ball green again
+    nb.classList.remove('red');ballTo(0,.6);
+    await wait(700);
+  }finally{
+    if(card)card.remove();nav.style.visibility='';S.style.display='none';nb.classList.remove('red');ballTo(cur,.4);
+    Q.length=0;locked=false}}
+
+// drag left/right on the home area: next page follows the finger, then settles (or snaps back).
+// Swiping while pages are still changing just adds to the queue.
+{const H=q('#home');let sx=0,sy=0,st=0,lock='',side=0,W=1;
+ H.addEventListener('touchstart',e=>{const t=e.touches[0];sx=t.clientX;sy=t.clientY;st=Date.now();side=0;W=H.clientWidth||1;
+  lock=(locked||e.target.closest('#nav,#wlpg'))?'no':(running||Q.length)?'anim':''},{passive:true});
+ H.addEventListener('touchmove',e=>{if(lock==='no'||lock==='anim')return;const t=e.touches[0],dx=t.clientX-sx,dy=t.clientY-sy;
+  if(!lock){if(Math.abs(dx)<8&&Math.abs(dy)<8)return;lock=Math.abs(dx)>Math.abs(dy)*1.2?'x':'y'}
+  if(lock!=='x')return;
+  const s2=dx<0?1:-1,nx=cur+s2,ok=nx>=0&&nx<PG.length,pc=dx/W*100,cl=Math.max(-100,Math.min(100,pc));
+  if(s2!==side){if(side&&PG[cur+side])hideP(cur+side);side=s2;if(ok){PG[nx].classList.add('on');put(nx,s2*100)}}
+  if(!ok){put(cur,pc/4);return}
+  put(cur,cl);put(nx,s2*100+cl)},{passive:true});
+ H.addEventListener('touchend',e=>{const t=e.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy;
+  if(lock==='x'){const nx=cur+(dx<0?1:-1),v=Math.abs(dx)/Math.max(1,Date.now()-st);
+   if(nx>=0&&nx<PG.length&&(Math.abs(dx)>W*.28||(v>.5&&Math.abs(dx)>30)))go(nx);else showTab(cur)}
+  else if(lock==='anim'&&Math.abs(dx)>45&&Math.abs(dx)>Math.abs(dy)*1.5){const nx=lastTarget()+(dx<0?1:-1);if(nx>=0&&nx<PG.length)go(nx)}},{passive:true});
+ H.addEventListener('touchcancel',()=>{if(lock==='x')showTab(cur)},{passive:true})}
+const toast=t=>{const e=q('#toast');e.textContent=t;e.classList.add('show');clearTimeout(e._t);e._t=setTimeout(()=>e.classList.remove('show'),2000)};
+document.querySelectorAll('[data-toast]').forEach(b=>b.onclick=()=>toast(b.dataset.toast));
+
+</script>
+<template data-stage="40">
+  <!-- @@HOME - home page after login: tabs hm0 Home, hm1 Tours, hm2 Results, hm3 Profile + glass nav bar -->
+  <div id="home">
+    <div id="toast"></div>
+    <div id="jamsc"></div>
+    <div data-include="wallet"></div>
+    <div class="hm-pg on" id="hm0"><div class="hm-sc">
+      <header class="hm-top"><div class="hm-av" id="hm_av">P</div><div class="hm-who"><small>WELCOME BACK</small><b id="hm_user">Player</b></div>
+        <div class="hm-ic"><button class="ib" type="button" aria-label="Notifications" data-toast="Notifications are coming soon"><svg class="ico" viewBox="0 0 24 24"><path d="M6 9a6 6 0 1 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg></button><button class="ib" type="button" aria-label="Messages" data-toast="Messages are coming soon"><svg class="ico" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4V5z"/></svg></button></div></header>
+      <section class="wallet"><div class="w-l">WALLET BALANCE</div><div class="w-b" id="hm_bal">BDT 0.00</div>
+        <div class="w-r"><button class="wb add" type="button" data-toast="Add money is coming soon"><svg class="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Add money</button><button class="wb out" type="button" data-toast="Withdraw is coming soon"><svg class="ico" viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8"/></svg>Withdraw</button></div></section>
+      <h3 class="hm-h">Upcoming matches</h3>
+      <!-- @@HOME-MATCHES: replace this empty card with the match list once the tournament system exists -->
+      <div class="empty"><svg class="ico" viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M9 3v4M15 3v4"/></svg><p>No upcoming matches yet</p></div>
+      <h3 class="hm-h">All rules</h3>
+      <!-- @@HOME-RULES: replace this empty card with the rules list once rules can be added -->
+      <div class="empty"><svg class="ico" viewBox="0 0 24 24"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4z"/><path d="M9 8h6"/></svg><p>No rules added yet</p></div>
+    </div></div>
+    <div data-include="tours"></div>
+    <div data-include="results"></div>
+    <div data-include="profile"></div>
+    <nav id="nav"><i id="navball"></i>
+      <button class="nv on" type="button"><svg class="ico" viewBox="0 0 24 24"><path d="M3 11.5 12 3.6l9 7.9"/><path d="M5.5 10v9.6h13V10"/><path d="M10 19.6v-4.4a2 2 0 0 1 4 0v4.4"/></svg><span>Home</span></button><button class="nv" type="button"><svg class="ico" viewBox="0 0 24 24"><path d="M8 21h8M12 17v4"/><path d="M7 4h10v5a5 5 0 0 1-10 0V4Z"/><path d="M7 6H4v1.5A3.5 3.5 0 0 0 7.5 11M17 6h3v1.5a3.5 3.5 0 0 1-3.5 3.5"/></svg><span>Tours</span></button><button class="nv" type="button"><svg class="ico" viewBox="0 0 24 24"><rect x="4.5" y="4" width="15" height="17" rx="3"/><path d="M9 2.8h6v3.4H9z"/><path d="m8.8 13.2 2.3 2.3 4.2-4.6"/><path d="M9 18.3h6"/></svg><span>Results</span></button><button class="nv" type="button"><svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.8"/><path d="M4.5 20.5c0-4.1 3.4-6.6 7.5-6.6s7.5 2.5 7.5 6.6"/></svg><span>Profile</span></button></nav>
+  </div>
+</template>
