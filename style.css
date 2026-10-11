@@ -322,5 +322,7 @@ button:focus,button:focus-visible,[role=button]:focus,a:focus{outline:none}
 .sr-cnt{flex:none;min-width:58px;height:38px;box-sizing:border-box;padding:0 12px;border-radius:99px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--lime);color:var(--ink)}
 .sr-cnt b{font:800 14px/1.05 var(--sans)}.sr-cnt small{font:700 7.5px/1.2 var(--mono);letter-spacing:.14em;text-transform:uppercase}
 /* while cards are moving the glass bars drop their blur (blurring a moving background is what makes phones lag) and get it back when the move ends */
-.adm-hd,.adm-nav,.adm-sr{transition:background-color .25s}
-.adm-pg.mv .adm-hd,.adm-pg.mv .adm-nav,.adm-pg.mv .adm-sr{-webkit-backdrop-filter:none;backdrop-filter:none;background-color:rgba(11,15,16,.72)}
+.adm-pg.mv .adm-hd,.adm-pg.mv .adm-nav,.adm-pg.mv .adm-sr{-webkit-backdrop-filter:none;backdrop-filter:none}
+/* "pull up to load more" label under the last card */
+.pl-more{all:unset;display:block;box-sizing:border-box;margin:20px auto 0;padding:10px 16px;text-align:center;cursor:pointer;color:#7a8386;font:700 11px var(--mono);letter-spacing:.12em;text-transform:uppercase;-webkit-tap-highlight-color:transparent;will-change:transform}
+.pl-more[hidden]{display:none}.pl-more.end{opacity:.6;cursor:default}
