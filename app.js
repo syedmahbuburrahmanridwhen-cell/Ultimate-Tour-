@@ -484,7 +484,7 @@ document.querySelectorAll('[data-toast]').forEach(b=>b.onclick=()=>toast(b.datas
 // ======================================================================
 {const H=q('#home'),W=q('#wlpg'),bg=q('#wl_bg'),gl=q('#wl_gl'),card=q('#hm0 .wallet'),sc=q('#wl_sc'),list=q('#wl_list');
 let wlBusy=false,wlOpen=false,wlFirst=true,wlUid='',gh=null;
-const DUR=.8,EASE='power3.inOut',INK='#4f6df0',CREAM='#eef2fb',wlMoney=n=>'BDT '+Number(n||0).toLocaleString('en-US',{minimumFractionDigits:2});
+const DUR=.8,EASE='power3.inOut',INK='#4f74f4',CREAM='#eef2fb',wlMoney=n=>'BDT '+Number(n||0).toLocaleString('en-US',{minimumFractionDigits:2});
 const kids=()=>[...sc.children];   // header, card, buttons, heading, list: they float up one by one
 const geo=()=>{const h=H.getBoundingClientRect(),c=card.getBoundingClientRect();return{c,t:c.top-h.top,l:c.left-h.left,r:h.right-c.right,b:h.bottom-c.bottom}};
 const clean=()=>{gsap.set([bg,gl,...kids()],{clearProps:'all'});if(gh){gh.remove();gh=null}};
