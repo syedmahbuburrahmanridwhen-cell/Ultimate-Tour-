@@ -140,7 +140,7 @@ function admPlayers(U){
   const atEnd=()=>sc.scrollTop+sc.clientHeight>=sc.scrollHeight-3;
   const setPull=p=>{pull=p;mel.style.transform=p?'translateY('+(-p*.4)+'px)':'';mel.style.opacity=p?Math.min(1,.45+p/110):'';if(!loading&&more&&!mel.hidden)mel.textContent=p>=70?'Release to load more':'Pull up to load more'};
   const tS=e=>{tracking=atEnd();ty=e.touches[0].clientY;pull=0};
-  const tM=e=>{if(mode!=='list'||!more||loading||busy)return;const y=e.touches[0].clientY;if(!tracking){if(!atEnd())return;tracking=true;ty=y}const dy=ty-y;setPull(dy>0?Math.min(dy,140):0)};
+  const tM=e=>{if(sec.hidden||mode!=='list'||!more||loading||busy)return;const y=e.touches[0].clientY;if(!tracking){if(!atEnd())return;tracking=true;ty=y}const dy=ty-y;setPull(dy>0?Math.min(dy,140):0)};
   const tE=()=>{const p=pull;setPull(0);tracking=false;if(p>=70)loadMore()};
   sc.addEventListener('touchstart',tS,{passive:true});sc.addEventListener('touchmove',tM,{passive:true});sc.addEventListener('touchend',tE,{passive:true});sc.addEventListener('touchcancel',tE,{passive:true});
   mel.onclick=loadMore;
