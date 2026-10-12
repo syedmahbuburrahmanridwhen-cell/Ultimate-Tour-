@@ -77,6 +77,8 @@ initAdmin({auth,db,E,q,DAY,PF_BYPASS,PF_LOCK,pfFmt,pfScrollBy,pfSl,pfTw,pfBusy:(
 function initAdmin(X){
 // Players page code lives in pages/players/players.js (plSetup returns admPlayers)
 const admPlayers=plSetup(X);
+// Transactions page code lives in pages/transactions/transactions.js (txSetup returns admTransactions)
+const admTransactions=txSetup(X);
 const {auth,db,E,q,DAY,PF_BYPASS,PF_LOCK,pfFmt,pfScrollBy,pfSl,pfTw,pfBusy}=X;   // from app.js (pfBusy is a function that tells if the profile card is busy)
 // ======================================================================
 // @@ADMIN   Admin Panel option (Profile tab) > "Admin Authentication" pop-up > blank white admin page with an X.
@@ -95,7 +97,8 @@ const admCT=(el,from,to,d,e)=>new Promise(r=>gsap.fromTo(el,{clipPath:from},{cli
 const admStag=(arr,v)=>new Promise(r=>{gsap.timeline({onComplete:r}).to(arr,v)});
 
 // ---- Admin pages. ADM_TABS = the navigation bar options (scrolls sideways). Add a new option = add one line here + its page.
-const ADM_TABS=[['players','Players','<circle cx="9" cy="8" r="3.4"/><path d="M2.8 20c0-3.6 2.8-5.6 6.2-5.6s6.2 2 6.2 5.6"/><path d="M16 5a3.4 3.4 0 0 1 0 6.4M18.5 14.8c1.9.7 2.9 2.4 2.9 5.2"/>']];
+const ADM_TABS=[['players','Players','<circle cx="9" cy="8" r="3.4"/><path d="M2.8 20c0-3.6 2.8-5.6 6.2-5.6s6.2 2 6.2 5.6"/><path d="M16 5a3.4 3.4 0 0 1 0 6.4M18.5 14.8c1.9.7 2.9 2.4 2.9 5.2"/>'],
+  ['transactions','Transactions','<path d="M7 4v14M3.5 14.5 7 18l3.5-3.5"/><path d="M17 20V6M13.5 9.5 17 6l3.5 3.5"/>']];
 async function admOpen(){
   let st=admGet();if(admLeft(st)===0&&st.u){st={f:0,u:0,bp:false};admSet(st)}
   // 1) if the box is already where the pop-up would sit in the middle of the screen (within 2px) the animation starts at once on tap;
@@ -164,11 +167,17 @@ async function admOpen(){
     nv.innerHTML='<div class="adm-trk"><i class="adm-ball"></i>'+ADM_TABS.map(([k,lb,ic],n)=>'<button class="adm-nv'+(n?'':' on')+'" type="button" data-k="'+k+'"><svg class="ico" viewBox="0 0 24 24">'+ic+'</svg><span>'+lb+'</span></button>').join('')+'</div>';
     const ball=nv.querySelector('.adm-ball'),tabs=[...nv.querySelectorAll('.adm-nv')];
     const ballTo=b=>{ball.style.left=b.offsetLeft+'px';ball.style.width=b.offsetWidth+'px'};
-    const bd2=document.createElement('main');bd2.className='adm-body';bd2.innerHTML='<section class="adm-sec" id="adm_players"><p class="pl-empty" hidden></p><div class="pl-list"></div><button class="pl-more" type="button" hidden></button></section>';
+    const bd2=document.createElement('main');bd2.className='adm-body';bd2.innerHTML='<section class="adm-sec" id="adm_players"><p class="pl-empty" hidden></p><div class="pl-list"></div><button class="pl-more" type="button" hidden></button></section><section class="adm-sec" id="adm_transactions" hidden></section>';
     const sr=document.createElement('div');sr.className='adm-sr';
     sr.innerHTML='<svg class="ico sr-i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6"/><path d="M16.6 16.6L21 21"/></svg><input class="sr-in" type="text" inputmode="search" enterkeyhint="search" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Search Players"><button class="sr-x" type="button" aria-label="Clear" hidden><svg class="ico" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button><span class="sr-cnt"><b>-</b><small>Players</small></span>';
-    tabs.forEach(b=>b.onclick=()=>{tabs.forEach(o=>o.classList.toggle('on',o===b));ballTo(b);sr.style.display=b.dataset.k==='players'?'':'none';b.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'})});
+    // one section per tab: the old one hides, the new one fades in, and each tab remembers where you had scrolled to
+    const secs={players:bd2.querySelector('#adm_players'),transactions:bd2.querySelector('#adm_transactions')},scrAt={};let curK='players';
+    const showSec=k=>{if(k===curK||!secs[k])return;scrAt[curK]=bd2.scrollTop;const from=secs[curK],to=secs[k];curK=k;gsap.killTweensOf([from,to]);
+      from.hidden=true;gsap.set(from,{clearProps:'transform,opacity'});to.hidden=false;bd2.scrollTop=scrAt[k]||0;
+      gsap.fromTo(to,{opacity:0,y:14},{opacity:1,y:0,duration:.4,ease:'power2.out',clearProps:'transform,opacity'})};
+    tabs.forEach(b=>b.onclick=()=>{tabs.forEach(o=>o.classList.toggle('on',o===b));ballTo(b);showSec(b.dataset.k);sr.style.display=b.dataset.k==='players'?'':'none';b.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'})});
     const eng=admPlayers({list:bd2.querySelector('.pl-list'),emp:bd2.querySelector('.pl-empty'),cnt:sr.querySelector('.sr-cnt b'),inp:sr.querySelector('.sr-in'),clr:sr.querySelector('.sr-x'),sc:bd2,ico:sr.querySelector('.sr-i'),mel:bd2.querySelector('.pl-more')});
+    const txEng=admTransactions({box:bd2.querySelector('#adm_transactions')});
     await verifyAnim();const pq=pp.getBoundingClientRect(),pR2={left:pq.left,right:pq.right,top:pq.top,bottom:pq.bottom};
     const pg=document.createElement('div');pg.className='adm-pg';document.body.append(pg);   // white page grows out of the pop-up
     gsap.set(pg,{clipPath:admClip(pR2,0,0,innerWidth,innerHeight,28)});
@@ -181,8 +190,8 @@ async function admOpen(){
     await new Promise(r=>requestAnimationFrame(()=>r()));
     gsap.fromTo(bk,{scale:0,rotation:90},{scale:1,rotation:0,duration:.5,ease:'back.out(1.8)'});
     gsap.to([hd,nv,sr],{opacity:1,y:0,duration:.55,stagger:.22,ease:'power2.out',clearProps:'transform,opacity'});
-    setTimeout(()=>eng.start(),950);
-    bk.onclick=async()=>{bk.onclick=null;eng.stop();await Promise.all([pfTw(hd,{opacity:0,duration:.25}),pfTw(nv,{opacity:0,duration:.25}),pfTw(sr,{opacity:0,duration:.25}),pfTw(bd2,{opacity:0,duration:.25})]);   // the page shrinks straight into the Admin Panel box
+    setTimeout(()=>{eng.start();txEng.start()},950);
+    bk.onclick=async()=>{bk.onclick=null;eng.stop();txEng.stop();await Promise.all([pfTw(hd,{opacity:0,duration:.25}),pfTw(nv,{opacity:0,duration:.25}),pfTw(sr,{opacity:0,duration:.25}),pfTw(bd2,{opacity:0,duration:.25})]);   // the page shrinks straight into the Admin Panel box
       const r2=admBtn.getBoundingClientRect(),cl=admBtn.cloneNode(true);cl.removeAttribute('id');
       cl.style.cssText='position:fixed;left:'+r2.left+'px;top:'+r2.top+'px;width:'+r2.width+'px;height:'+r2.height+'px;margin:0;opacity:0;pointer-events:none;background:transparent;box-shadow:none';pg.append(cl);   // the box's logo/label fade in as the page arrives
       await Promise.all([admCT(pg,'inset(0px 0px 0px 0px round 0px)',admClip(r2,0,0,innerWidth,innerHeight,22),.95,E),pfTw(cl,{opacity:1,duration:.4,delay:.55})]);
