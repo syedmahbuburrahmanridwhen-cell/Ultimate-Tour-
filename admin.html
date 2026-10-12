@@ -48,7 +48,7 @@ This file is NOT opened directly. index.html loads it. It holds this page's css 
 .pfp.adm .pfp-ok{height:48px}
 /* admin page: whole screen is the page; title capsule + navigation bar float above it (frosted glass) */
 .adm-pg{touch-action:auto}
-.adm-body{position:absolute;z-index:0;inset:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y;padding:calc(env(safe-area-inset-top,0px) + 146px) 16px calc(env(safe-area-inset-bottom,0px) + 28px)}
+.adm-body{position:absolute;z-index:0;inset:0;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;touch-action:pan-y;padding:calc(env(safe-area-inset-top,0px) + 146px) 16px calc(env(safe-area-inset-bottom,0px) + 28px)}
 .adm-hd{position:absolute;z-index:4;left:16px;top:calc(env(safe-area-inset-top,0px) + 10px);display:flex;align-items:center;gap:4px;height:46px;padding:0 18px 0 4px;border-radius:99px;background:rgba(255,255,255,.82);-webkit-backdrop-filter:blur(16px) saturate(1.6);backdrop-filter:blur(16px) saturate(1.6);border:1px solid rgba(99,102,241,.14);box-shadow:0 12px 28px rgba(60,72,140,.18),inset 0 1px 0 #fff}
 .adm-bk{all:unset;box-sizing:border-box;width:38px;height:38px;display:grid;place-items:center;border-radius:50%;color:var(--pri);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .2s}
 .adm-bk:active{background:rgba(99,102,241,.14)}.adm-bk .ico{width:26px;height:26px;stroke-width:3}
@@ -170,12 +170,38 @@ async function admOpen(){
     const bd2=document.createElement('main');bd2.className='adm-body';bd2.innerHTML='<section class="adm-sec" id="adm_players"><p class="pl-empty" hidden></p><div class="pl-list"></div><button class="pl-more" type="button" hidden></button></section><section class="adm-sec" id="adm_transactions" hidden></section>';
     const sr=document.createElement('div');sr.className='adm-sr';
     sr.innerHTML='<svg class="ico sr-i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="6"/><path d="M16.6 16.6L21 21"/></svg><input class="sr-in" type="text" inputmode="search" enterkeyhint="search" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="Search Players"><button class="sr-x" type="button" aria-label="Clear" hidden><svg class="ico" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button><span class="sr-cnt"><b>-</b><small>Players</small></span>';
-    // one section per tab: the old one hides, the new one fades in, and each tab remembers where you had scrolled to
-    const secs={players:bd2.querySelector('#adm_players'),transactions:bd2.querySelector('#adm_transactions')},scrAt={};let curK='players';
-    const showSec=k=>{if(k===curK||!secs[k])return;scrAt[curK]=bd2.scrollTop;const from=secs[curK],to=secs[k];curK=k;gsap.killTweensOf([from,to]);
-      from.hidden=true;gsap.set(from,{clearProps:'transform,opacity'});to.hidden=false;bd2.scrollTop=scrAt[k]||0;
-      gsap.fromTo(to,{opacity:0,y:14},{opacity:1,y:0,duration:.4,ease:'power2.out',clearProps:'transform,opacity'})};
-    tabs.forEach(b=>b.onclick=()=>{tabs.forEach(o=>o.classList.toggle('on',o===b));ballTo(b);showSec(b.dataset.k);sr.style.display=b.dataset.k==='players'?'':'none';b.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'})});
+    // ---- one section per tab, sliding like the Home pages: pages sit side by side; tab on the right = old page leaves LEFT and the new one arrives from the RIGHT (tab on the left = reverse).
+    //      Same speed/ease as Home (SLIDE). A tap in the middle of a slide just changes direction. The leaving page is taken out of the flow (absolute) so it never stacks under the new one.
+    const SK=ADM_TABS.map(t=>t[0]),SEC=SK.map(k=>bd2.querySelector('#adm_'+k)),SX=SK.map(()=>0),STW=SK.map(()=>null),SDONE=SK.map(()=>null),scrAt={},SLIDE={d:.38,e:'power3.out'};let sCur=0,srOn=true;
+    const sPut=(i,x)=>{SX[i]=x;SEC[i].style.transform='translate3d('+x+'px,0,0)'};
+    const sFree=i=>{const e=SEC[i].style;e.position=e.left=e.top=e.width=''};   // back in the normal flow
+    const sHide=i=>{if(STW[i])STW[i].kill();STW[i]=null;if(SDONE[i]){SDONE[i]();SDONE[i]=null}SEC[i].hidden=true;sFree(i);SX[i]=0;SEC[i].style.transform=''};
+    const sMove=(i,to,dur)=>new Promise(res=>{if(STW[i])STW[i].kill();if(SDONE[i])SDONE[i]();SDONE[i]=res;const o={x:SX[i]};
+      STW[i]=gsap.to(o,{x:to,duration:dur,ease:SLIDE.e,onUpdate:()=>sPut(i,o.x),
+        onComplete:()=>{STW[i]=null;SDONE[i]=null;if(i===sCur){SX[i]=0;SEC[i].style.transform=''}else sHide(i);res()}})});
+    const srSwap=on=>{if(on===srOn)return;srOn=on;gsap.killTweensOf(sr);   // the search bar belongs to Players only: it fades out / back in
+      if(on){sr.style.display='';gsap.fromTo(sr,{opacity:0},{opacity:1,duration:.35,delay:.1,clearProps:'opacity'})}
+      else gsap.to(sr,{opacity:0,duration:.2,onComplete:()=>{sr.style.display='none'}})};
+    function showSec(n){
+      if(n===sCur||n<0)return;
+      const old=sCur,dir=n>old?1:-1,W=bd2.clientWidth,S0=bd2.scrollTop,S1=scrAt[SK[n]]||0,pg2=bd2.parentNode;
+      scrAt[SK[old]]=S0;
+      // every page that is on screen (except the one arriving) leaves the flow and stays exactly where it is, even though the scroll position changes to the new tab's
+      SEC.forEach((el,i)=>{if(i===n||el.hidden)return;
+        if(el.style.position==='absolute')el.style.top=(parseFloat(el.style.top)-S0+S1)+'px';
+        else{const t=el.offsetTop;el.style.top=(t-S0+S1)+'px';el.style.left='16px';el.style.width=(W-32)+'px';el.style.position='absolute'}});
+      const parked=SEC[n].hidden;
+      if(parked){SEC[n].hidden=false;sPut(n,dir*W)}else sFree(n);
+      bd2.scrollTop=S1;sCur=n;
+      const jobs=[[n,0]];
+      SEC.forEach((el,i)=>{if(i===n||el.hidden)return;
+        const side=i===old?-dir:(SX[i]<0?-1:1);
+        if(parked&&i!==old&&side===dir){sHide(i);return}
+        jobs.push([i,side*W])});
+      const far=Math.max(...jobs.map(([i,t])=>Math.abs(t-SX[i]))),dur=SLIDE.d*(.4+.6*Math.min(1,far/W));
+      if(pg2&&pg2.classList)pg2.classList.add('mv');   // no blur on the glass bars while pages move (lighter for the phone)
+      Promise.all(jobs.map(([i,t])=>sMove(i,t,dur))).then(()=>{if(pg2&&pg2.classList&&sCur===n&&!STW.some(Boolean))pg2.classList.remove('mv')})}
+    tabs.forEach(b=>b.onclick=()=>{tabs.forEach(o=>o.classList.toggle('on',o===b));ballTo(b);showSec(SK.indexOf(b.dataset.k));srSwap(b.dataset.k==='players');b.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'})});
     const eng=admPlayers({list:bd2.querySelector('.pl-list'),emp:bd2.querySelector('.pl-empty'),cnt:sr.querySelector('.sr-cnt b'),inp:sr.querySelector('.sr-in'),clr:sr.querySelector('.sr-x'),sc:bd2,ico:sr.querySelector('.sr-i'),mel:bd2.querySelector('.pl-more')});
     const txEng=admTransactions({box:bd2.querySelector('#adm_transactions')});
     await verifyAnim();const pq=pp.getBoundingClientRect(),pR2={left:pq.left,right:pq.right,top:pq.top,bottom:pq.bottom};
