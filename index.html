@@ -6,7 +6,7 @@
 <title>Ultimate Team — Loading</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@700;800&family=Newsreader:ital,wght@1,500;1,600&family=JetBrains+Mono:wght@400;700&display=swap">
 <!--
-=====================  FILE MAP  (12 files, all in the SAME folder - no sub-folders)  =====================
+=====================  FILE MAP  (13 files, all in the SAME folder - no sub-folders)  =====================
 index.html    = shell + loader + shared core (firebase config, helpers, animations, startup, dormant code)
 loading.html  = pages 1+2  Loading (without login / with login)
 login.html    = page 3     Login
@@ -19,6 +19,7 @@ profile.html  = page 9     Profile
 wallet.html   = page 10    Wallet
 admin.html    = page 11    Admin panel
 players.html  = page 12    Players
+transactions.html = page 13 Transactions (Admin Panel > Transactions: add money / withdraw requests)
 Each page file holds its css + html + js together. After you change files, bump APP_VERSION below (1 -> 2) so phones do not show old cached files.
 @@DORMANT = code kept but INACTIVE until a domain is bought and Firebase "Customize action URL" is saved: core part below + reset.html
 =======================================================================================================
@@ -28,7 +29,7 @@ Each page file holds its css + html + js together. After you change files, bump 
 <div id="stage"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-<script>window.APP_VERSION='4';</script>
+<script>window.APP_VERSION='5';</script>
 
 <script type="text/plain" data-kind="css" data-order="10">
 /* ===== core/base.css ===== */
@@ -403,7 +404,7 @@ if(VERIFIED){history.replaceState(null,'',location.pathname);skipIntro();
 // Parts from all files are sorted by data-order, so the code runs in the same order as before.
 // ======================================================================
 (async function(){
-  const FILES=["loading.html", "login.html", "signup.html", "reset.html", "home.html", "tours.html", "results.html", "profile.html", "wallet.html", "admin.html", "players.html"], V='?v='+encodeURIComponent(window.APP_VERSION||'1');
+  const FILES=["loading.html", "login.html", "signup.html", "reset.html", "home.html", "tours.html", "results.html", "profile.html", "wallet.html", "admin.html", "players.html", "transactions.html"], V='?v='+encodeURIComponent(window.APP_VERSION||'1');
   const fail=e=>{console.error('[loader]',e);const d=document.createElement('pre');
     d.style.cssText='position:fixed;inset:0;z-index:999999;margin:0;padding:24px;background:#fff;color:#d6452a;font:13px/1.6 monospace;white-space:pre-wrap;overflow:auto';
     d.textContent='Could not load the app files.\n'+((e&&e.message)||e)+'\n\nOpen the app through a web server (GitHub Pages, Firebase Hosting, Live Server, ...). Opening index.html directly as a file does not work.';
