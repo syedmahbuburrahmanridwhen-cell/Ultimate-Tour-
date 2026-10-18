@@ -1697,6 +1697,30 @@ This file is NOT opened directly. index.html loads it. It holds this page's css 
 .wl-mid{flex:1;min-width:0;display:grid;gap:3px}.wl-mid b{font:800 15px var(--sans)}
 .wl-mid small{font:500 11px var(--mono);color:#6b7692;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .wl-am{font:800 15px var(--sans);white-space:nowrap}.wl-it.add .wl-am{color:#0d9488}.wl-it.out .wl-am{color:#c0392b}
+/* @@WALLET-ADDMONEY - pop-up that the wallet page's Add money button grows into */
+#ad_sc{position:absolute;inset:0;z-index:3;display:none;opacity:0;background:rgba(15,23,48,.5);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px)}
+#ad_pop{position:absolute;z-index:4;display:none;box-sizing:border-box;border-radius:26px;color:var(--ink);will-change:transform}
+#ad_wh,#ad_gr{position:absolute;inset:0;border-radius:inherit;pointer-events:none}
+#ad_wh{background:#fff;opacity:0}#ad_gr{background:var(--grad)}
+#ad_in{position:absolute;left:0;top:0;box-sizing:border-box;padding:28px 22px 22px;display:flex;flex-direction:column;gap:16px}
+#ad_hd{display:flex;flex-direction:column;align-items:center;gap:12px;margin-bottom:2px}
+#ad_ic{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;background:rgba(99,102,241,.14);color:var(--pri)}
+#ad_ic .ico{width:28px;height:28px}
+#ad_ti{font:700 17px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink);white-space:nowrap}
+#ad_x{appearance:none;-webkit-appearance:none;position:absolute;right:12px;top:12px;width:34px;height:34px;padding:0;border:0;border-radius:50%;background:rgba(99,102,241,.1);color:var(--pri);display:grid;place-items:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#ad_x .ico{width:18px;height:18px}
+.ad-box{display:flex;align-items:center;gap:10px;padding:0 16px;height:60px;border-radius:20px;background:#f3f6fe;border:1.5px solid rgba(99,102,241,.18);transition:border-color .25s,box-shadow .25s}
+.ad-box:focus-within{border-color:var(--pri);box-shadow:0 0 0 4px rgba(79,116,244,.14)}
+.ad-box b{font:700 13px var(--mono);letter-spacing:.08em;color:#6b7692}
+.ad-box input{flex:1;min-width:0;width:100%;margin:0;padding:0;border:0;outline:0;background:transparent;font:800 22px var(--sans);color:var(--ink);caret-color:var(--pri);-webkit-user-select:text;user-select:text}
+.ad-box input::placeholder{font:500 15px var(--mono);color:#9aa4bd}
+.ad-ch{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.ad-ch button{appearance:none;-webkit-appearance:none;height:46px;padding:0;border:1.5px solid rgba(99,102,241,.2);border-radius:16px;background:#fff;color:var(--pri);font:800 15px var(--sans);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .25s,color .25s,border-color .25s,box-shadow .25s,transform .2s}
+.ad-ch button:active{transform:scale(.94)}
+.ad-ch button.on{background:var(--grad);color:#fff;border-color:transparent;box-shadow:0 8px 18px rgba(79,86,230,.3)}
+.ad-go{appearance:none;-webkit-appearance:none;display:flex;align-items:center;justify-content:center;gap:12px;margin-top:2px;padding:18px 10px;border:0;border-radius:99px;background:var(--grad);box-shadow:0 12px 26px rgba(79,86,230,.32);color:#fff;font:700 13px var(--mono);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+.ad-go i{width:9px;height:9px;border-radius:50%;background:#fff}
+.ad-go:active{transform:scale(.97)}
 </script>
 <script type="text/plain" data-kind="app" data-order="150">
 /* ===== pages/wallet/wallet.js ===== */
@@ -1707,7 +1731,7 @@ This file is NOT opened directly. index.html loads it. It holds this page's css 
 //   HTML: <!-- @@WALLET -->  CSS: /* @@WALLET */
 // ======================================================================
 {const H=q('#home'),W=q('#wlpg'),bg=q('#wl_bg'),gl=q('#wl_gl'),card=q('#hm0 .wallet'),sc=q('#wl_sc'),list=q('#wl_list');
-let wlBusy=false,wlOpen=false,wlFirst=true,wlUid='',gh=null,SH='',SH0='';
+let wlBusy=false,wlOpen=false,wlFirst=true,wlUid='',gh=null,SH='',SH0='',adState=0,adReset=()=>{};   // adState: 0 closed, 1 animating, 2 pop-up open (see @@WALLET-ADDMONEY)
 const DUR=.8,EASE='power3.inOut',INK='#4f74f4',CREAM='#eef2fb',wlMoney=n=>'BDT '+Number(n||0).toLocaleString('en-US',{minimumFractionDigits:2});
 const kids=()=>[...sc.children];   // header, card, buttons, heading, list: they float up one by one
 const geo=()=>{const h=H.getBoundingClientRect(),c=card.getBoundingClientRect();return{c,t:c.top-h.top,l:c.left-h.left,r:h.right-c.right,b:h.bottom-c.bottom}};
@@ -1739,7 +1763,7 @@ async function wlLoad(){
 async function wlShow(){
   if(wlBusy||wlOpen||locked||running||Q.length)return;wlBusy=true;
   q('#wl_bal').textContent=q('#hm_bal').textContent;
-  W.style.display='block';sc.scrollTop=0;clean();
+  W.style.display='block';sc.scrollTop=0;clean();adReset();
   const g=geo(),G=ghost(g.c);
   // the sheet takes over the home card's shadow (same frame), so the shadow never doubles up or jumps
   card.style.boxShadow='';SH=getComputedStyle(card).boxShadow;SH0=SH.replace(/rgba?\(([^)]*)\)/,(m,a)=>{const p=a.split(',').map(x=>x.trim());return 'rgba('+p[0]+', '+p[1]+', '+p[2]+', 0)'});card.style.boxShadow='none';
@@ -1755,7 +1779,7 @@ async function wlShow(){
     .to(kids(),{opacity:1,y:0,duration:.6,stagger:.11,ease:'power3.out'},DUR-.2)})}            // title, card, buttons, history float up one by one
   finally{clean();wlBusy=false}}
 async function wlHide(){
-  if(wlBusy||!wlOpen)return;wlBusy=true;
+  if(wlBusy||!wlOpen||adState)return;wlBusy=true;
   if(sc.scrollTop>2){sc.scrollTo({top:0,behavior:'smooth'});await wait(300)}
   const g=geo();let G=null;
   try{
@@ -1771,7 +1795,112 @@ async function wlHide(){
 let wbDown=false;card.addEventListener('pointerdown',e=>{wbDown=!!e.target.closest('.wb')},true);   // a press that STARTED on Add money / Withdraw never opens the wallet
 card.onclick=e=>{const hit=wbDown||e.target.closest('.wb');wbDown=false;if(hit)return;wlShow()};
 q('#wl_back').onclick=wlHide;
-document.querySelectorAll('#wlpg [data-toast]').forEach(b=>b.onclick=()=>toast(b.dataset.toast))}
+document.querySelectorAll('#wlpg [data-toast]').forEach(b=>b.onclick=()=>toast(b.dataset.toast))
+
+// ======================================================================
+// @@WALLET-ADDMONEY   "Add money" button of the wallet page
+//   Tap Add money > it pushes Withdraw off the right edge like soft slime (the page glides to the top at the same time), settles in the middle
+//   of the row, then grows into a pop-up. The + icon and the "Add money" label fly from the button to the top of the pop-up.
+//   Pop-up: Enter amount box, quick amounts 20 / 50 / 100 / 500, Proceed to payment (does nothing yet).
+//   Tap outside the pop-up or the X to close: the whole thing plays backwards (pop-up shrinks into the button, Withdraw slides back).
+//   HTML: <!-- @@WALLET-ADDMONEY -->  CSS: /* @@WALLET-ADDMONEY */
+// ======================================================================
+{const row=q('.wl-act'),bAdd=q('#wl_add'),bOut=row.querySelector('.wb.out'),scrim=q('#ad_sc'),pop=q('#ad_pop'),inn=q('#ad_in'),wh=q('#ad_wh'),gr=q('#ad_gr'),ic=q('#ad_ic'),ti=q('#ad_ti'),xb=q('#ad_x'),amt=q('#ad_amt'),
+  chips=[...pop.querySelectorAll('.ad-ch button')],items=[...pop.querySelectorAll('.ad-i')],all=[bAdd,bOut,pop,scrim,ic,ti,wh,gr,xb,...items];
+let adOut=300,AG={};
+const rel=r=>{const w=W.getBoundingClientRect();return{l:r.left-w.left,t:r.top-w.top,w:r.width,h:r.height}};
+const adTxt=()=>{const n=[...bAdd.childNodes].find(x=>x.nodeType===3&&x.textContent.trim()),r=document.createRange();r.selectNodeContents(n);return r.getBoundingClientRect()};
+const adTop=async()=>{for(let i=0;i<40&&sc.scrollTop>1;i++)await wait(30)};
+const mark=()=>chips.forEach(c=>c.classList.toggle('on',c.dataset.v===amt.value));
+// where the + icon and the label must start (on top of the button's own icon / text) so they can fly into the pop-up
+const adFlip=ar=>{const oi=rel(bAdd.querySelector('svg').getBoundingClientRect()),ot=rel(adTxt());
+  return{ic:{x:oi.l+oi.w/2-(ar.l+AG.icx),y:oi.t+oi.h/2-(ar.t+AG.icy),scale:oi.w/AG.iw},ti:{x:ot.l+ot.w/2-(ar.l+AG.tcx),y:ot.t+ot.h/2-(ar.t+AG.tcy),scale:ot.w/AG.tw}}};
+adReset=()=>{gsap.killTweensOf(all);gsap.set(all,{clearProps:'all'});amt.value='';mark();adState=0};
+
+// 1) slime push: Add money squats, stretches into Withdraw, Withdraw squashes and is flung off the right edge, Add wobbles into the middle
+function adPush(){return new Promise(res=>{
+  const sr=sc.getBoundingClientRect(),a=bAdd.getBoundingClientRect(),w=bOut.getBoundingClientRect(),r=row.getBoundingClientRect();
+  const dx=r.left+r.width/2-(a.left+a.width/2);adOut=sr.right-w.left+40;
+  gsap.set(bAdd,{transformOrigin:'0% 50%'});gsap.set(bOut,{transformOrigin:'100% 50%'});
+  const F={v:0};let prev=0;
+  const sync=()=>{   // Withdraw is never overlapped: Add's front edge squashes it, and once Add slows down Withdraw flies free (stretching)
+    const R=a.left+gsap.getProperty(bAdd,'x')+gsap.getProperty(bAdd,'scaleX')*a.width+3,vF=F.v-prev;prev=F.v;
+    let s=1,xw=F.v;const c=R-(w.left+F.v);
+    if(c>0){s=Math.max(.55,1-c/w.width);xw=Math.max(F.v,R-w.right+s*w.width)}
+    s+=Math.min(.3,vF*.02);
+    gsap.set(bOut,{x:xw,scaleX:s,scaleY:1+(1-s)*.6,skewX:(1-s)*-14})};
+  gsap.timeline({onUpdate:sync,onComplete:()=>{gsap.set(bOut,{visibility:'hidden'});res()}})
+    .to(bAdd,{scaleX:.9,scaleY:1.08,duration:.2,ease:'power2.out'},0)
+    .to(bAdd,{x:dx*.5,scaleX:1.22,scaleY:.9,duration:.34,ease:'power2.out'},.2)
+    .to(bAdd,{x:dx,scaleX:1,scaleY:1,duration:.75,ease:'elastic.out(1,.42)'},.54)
+    .to(F,{v:adOut,duration:.9,ease:'power2.out'},.4)})}
+
+// 2) the button grows into the pop-up (icon + label travel into it)
+async function adGrow(){
+  const Wr=W.getBoundingClientRect(),ar=rel(bAdd.getBoundingClientRect()),pw=Math.min(Wr.width-40,360);
+  gsap.set([ic,ti,wh,gr,pop,scrim,xb,...items],{clearProps:'all'});
+  inn.style.width=pw+'px';pop.style.display='block';pop.style.visibility='hidden';
+  const ph=inn.offsetHeight,fl=(Wr.width-pw)/2,ft=Math.max(16,(Wr.height-ph)*.42);
+  const ib=inn.getBoundingClientRect(),ir=ic.getBoundingClientRect(),tr=ti.getBoundingClientRect();
+  AG={iw:ir.width,tw:tr.width,icx:ir.left-ib.left+ir.width/2,icy:ir.top-ib.top+ir.height/2,tcx:tr.left-ib.left+tr.width/2,tcy:tr.top-ib.top+tr.height/2};
+  const f=adFlip(ar);
+  gsap.set(pop,{left:ar.l,top:ar.t,width:ar.w,height:ar.h,borderRadius:26,boxShadow:'0 12px 26px rgba(79,86,230,.3)',visibility:'visible'});
+  gsap.set(ic,{...f.ic,backgroundColor:'rgba(255,255,255,.24)',color:'#fff'});gsap.set(ti,{...f.ti,color:'#fff'});
+  gsap.set(gr,{opacity:1});gsap.set(wh,{opacity:0});gsap.set(items,{opacity:0,y:18});gsap.set(xb,{opacity:0});
+  scrim.style.display='block';gsap.set(scrim,{opacity:0});gsap.set(bAdd,{opacity:0});
+  await new Promise(res=>{gsap.timeline({onComplete:res})
+    .to(scrim,{opacity:1,duration:.5,ease:'power1.out'},0)
+    .to(pop,{left:fl,top:ft,width:pw,height:ph,borderRadius:30,duration:.8,ease:'power3.inOut'},0)
+    .to(pop,{boxShadow:'0 30px 70px rgba(30,41,100,.35)',duration:.8,ease:'sine.inOut'},0)
+    .to(wh,{opacity:1,duration:.3,ease:'none'},0)
+    .to(gr,{opacity:0,duration:.5,ease:'sine.inOut'},.2)
+    .to(ic,{x:0,y:0,scale:1,duration:.8,ease:'power3.inOut'},0)
+    .to(ic,{backgroundColor:'rgba(99,102,241,.14)',color:'#4f74f4',duration:.5,ease:'sine.inOut'},.2)
+    .to(ti,{x:0,y:0,scale:1,duration:.8,ease:'power3.inOut'},0)
+    .to(ti,{color:'#0f1730',duration:.5,ease:'sine.inOut'},.2)
+    .fromTo(pop,{scaleX:1.035,scaleY:.97},{scaleX:1,scaleY:1,duration:.75,ease:'elastic.out(1,.35)',immediateRender:false},.8)   // soft jelly settle
+    .to(items,{opacity:1,y:0,duration:.5,stagger:.08,ease:'power3.out'},.55)
+    .to(xb,{opacity:1,duration:.3},.9)});
+  gsap.set([ic,ti],{clearProps:'backgroundColor,color'})}
+
+async function adOpen(){
+  if(adState||wlBusy||!wlOpen)return;adState=1;
+  bAdd.style.transition=bOut.style.transition='none';   // the buttons' css press-transition would fight the slime animation
+  try{sc.scrollTo({top:0,behavior:'smooth'});await adPush();await adTop();await adGrow();adState=2}
+  catch(e){console.error('add money',e);adReset()}}
+
+// 3) close: everything plays backwards
+async function adClose(){
+  if(adState!==2)return;adState=1;amt.blur();
+  const ar=rel(bAdd.getBoundingClientRect()),f=adFlip(ar);
+  await new Promise(res=>{gsap.timeline({onComplete:res})
+    .to(items,{opacity:0,y:10,duration:.25,stagger:{each:.04,from:'end'},ease:'power2.in'},0)
+    .to(xb,{opacity:0,duration:.2},0)
+    .to(pop,{left:ar.l,top:ar.t,width:ar.w,height:ar.h,borderRadius:26,y:0,duration:.75,ease:'power3.inOut'},.2)
+    .to(pop,{boxShadow:'0 12px 26px rgba(79,86,230,.3)',duration:.75,ease:'sine.inOut'},.2)
+    .to(gr,{opacity:1,duration:.4,ease:'sine.inOut'},.45)
+    .to(ic,{...f.ic,backgroundColor:'rgba(255,255,255,.24)',color:'#fff',duration:.75,ease:'power3.inOut'},.2)
+    .to(ti,{...f.ti,color:'#fff',duration:.75,ease:'power3.inOut'},.2)
+    .to(scrim,{opacity:0,duration:.5,ease:'power1.in'},.35)});
+  gsap.set(bAdd,{opacity:1});gsap.set([pop,scrim,ic,ti,wh,gr,xb,...items],{clearProps:'all'});
+  gsap.set(bOut,{visibility:'visible',x:adOut,scaleX:1.25,scaleY:.92,skewX:0});
+  await new Promise(res=>{gsap.timeline({onComplete:res})
+    .to(bAdd,{scaleX:1.2,scaleY:.93,duration:.16,ease:'power2.out'},0)
+    .to(bAdd,{x:0,scaleX:1,scaleY:1,duration:.85,ease:'elastic.out(1,.5)'},.14)
+    .to(bOut,{x:0,duration:.6,ease:'power3.out'},.32)
+    .to(bOut,{scaleX:1,scaleY:1,duration:.9,ease:'elastic.out(1,.4)'},.32)});
+  gsap.set([bAdd,bOut],{clearProps:'all'});bAdd.style.transition=bOut.style.transition='';adState=0}
+
+bAdd.onclick=adOpen;scrim.onclick=adClose;xb.onclick=adClose;
+chips.forEach(c=>c.onclick=()=>{amt.value=c.dataset.v;mark();gsap.fromTo(amt.parentNode,{scale:.97},{scale:1,duration:.5,ease:'elastic.out(1,.4)',clearProps:'scale'})});
+amt.oninput=()=>{amt.value=amt.value.replace(/\D/g,'').replace(/^0+(?=\d)/,'');mark()};
+amt.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();amt.blur()}};
+// keyboard: if it would cover the pop-up, lift the pop-up so the box and the button stay visible
+const kb=()=>{if(adState!==2)return;const vv=window.visualViewport;if(!vv)return;const y=gsap.getProperty(pop,'y'),r=pop.getBoundingClientRect(),top=r.top-y,bot=r.bottom-y;
+  gsap.to(pop,{y:Math.max(-(top-8),Math.min(0,vv.offsetTop+vv.height-12-bot)),duration:.3,ease:'power2.out'})};
+amt.addEventListener('focus',()=>setTimeout(kb,350));amt.addEventListener('blur',()=>{if(adState===2)gsap.to(pop,{y:0,duration:.3,ease:'power2.out'})});
+window.visualViewport&&window.visualViewport.addEventListener('resize',kb)}
+}
 
 </script>
 <template data-name="wallet">
@@ -1780,10 +1909,22 @@ document.querySelectorAll('#wlpg [data-toast]').forEach(b=>b.onclick=()=>toast(b
       <header class="wl-top"><button class="ib" id="wl_back" type="button" aria-label="Back"><svg class="ico" viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button><h2>My wallet</h2></header>
       <section class="wallet wl-card"><div class="w-l">WALLET BALANCE</div><div class="w-b" id="wl_bal">BDT 0.00</div>
         <div class="w-r"><div class="wl-sec"><svg class="ico" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg>Wallet secured by Ultimate Tour</div></div></section>
-      <div class="wl-act"><button class="wb add" type="button" data-toast="Add money is coming soon"><svg class="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Add money</button><button class="wb out" type="button" data-toast="Withdraw is coming soon"><svg class="ico" viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8"/></svg>Withdraw</button></div>
+      <div class="wl-act"><button class="wb add" type="button" id="wl_add"><svg class="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Add money</button><button class="wb out" type="button" data-toast="Withdraw is coming soon"><svg class="ico" viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8"/></svg>Withdraw</button></div>
       <h3 class="hm-h wl-h">Transaction history</h3>
       <div class="wl-ls" id="wl_list"></div>
-    </div></div>
+    </div>
+    <!-- @@WALLET-ADDMONEY - dim layer + pop-up (the Add money button grows into it): + icon, title, Enter amount box, quick amounts, Proceed to payment -->
+    <div id="ad_sc"></div>
+    <div id="ad_pop"><i id="ad_wh"></i><i id="ad_gr"></i>
+      <div id="ad_in">
+        <button type="button" id="ad_x" aria-label="Close"><svg class="ico" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+        <div id="ad_hd"><span id="ad_ic"><svg class="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span><span id="ad_ti">Add money</span></div>
+        <label class="ad-box ad-i"><b>BDT</b><input id="ad_amt" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="7" autocomplete="off" placeholder="Enter amount"></label>
+        <div class="ad-ch ad-i"><button type="button" data-v="20">20</button><button type="button" data-v="50">50</button><button type="button" data-v="100">100</button><button type="button" data-v="500">500</button></div>
+        <button type="button" class="ad-go ad-i"><i></i><span>Proceed to payment</span></button>
+      </div>
+    </div>
+  </div>
 </template>
 <!-- ####  END OF FILE: wallet.html  #### -->
 
