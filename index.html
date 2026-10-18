@@ -1713,7 +1713,8 @@ This file is NOT opened directly. index.html loads it. It holds this page's css 
 .ad-box:focus-within{border-color:var(--pri);box-shadow:0 0 0 4px rgba(79,116,244,.14)}
 .ad-box b{font:700 13px var(--mono);letter-spacing:.08em;color:#6b7692}
 .ad-box input{flex:1;min-width:0;width:100%;margin:0;padding:0;border:0;outline:0;background:transparent;font:800 22px var(--sans);color:var(--ink);caret-color:var(--pri);-webkit-user-select:text;user-select:text}
-.ad-box input::placeholder{font:500 15px var(--mono);color:#9aa4bd}
+.ad-box input::placeholder{font:500 15px var(--mono);color:#9aa4bd;transition:color .25s}
+.ad-box.bad{border-color:#d6452a;box-shadow:0 0 0 4px rgba(214,69,42,.12)}.ad-box.bad input::placeholder{color:#d6452a}
 .ad-ch{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
 .ad-ch button{appearance:none;-webkit-appearance:none;height:46px;padding:0;border:1.5px solid rgba(99,102,241,.2);border-radius:16px;background:#fff;color:var(--pri);font:800 15px var(--sans);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .25s,color .25s,border-color .25s,box-shadow .25s,transform .2s}
 .ad-ch button:active{transform:scale(.94)}
@@ -1818,7 +1819,7 @@ let adOut=300,AG={};
 const rel=r=>{const w=W.getBoundingClientRect();return{l:r.left-w.left,t:r.top-w.top,w:r.width,h:r.height}};
 const adTxt=()=>{const n=[...bAdd.childNodes].find(x=>x.nodeType===3&&x.textContent.trim()),r=document.createRange();r.selectNodeContents(n);return r.getBoundingClientRect()};
 const adTop=async()=>{for(let i=0;i<40&&sc.scrollTop>1;i++)await wait(30)};
-const mark=()=>chips.forEach(c=>c.classList.toggle('on',c.dataset.v===amt.value));
+const mark=()=>{amt.parentNode.classList.remove('bad');chips.forEach(c=>c.classList.toggle('on',c.dataset.v===amt.value))};
 // where the + icon and the label must start (on top of the button's own icon / text) so they can fly into the pop-up
 const adFlip=ar=>{const oi=rel(bAdd.querySelector('svg').getBoundingClientRect()),ot=rel(adTxt());
   return{ic:{x:oi.l+oi.w/2-(ar.l+AG.icx),y:oi.t+oi.h/2-(ar.t+AG.icy),scale:oi.w/AG.iw},ti:{x:ot.l+ot.w/2-(ar.l+AG.tcx),y:ot.t+ot.h/2-(ar.t+AG.tcy),scale:ot.w/AG.tw}}};
@@ -1906,34 +1907,37 @@ amt.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();amt.blur()}};
 //   the ball then returns and writes Confirm in the coloured box. Cancel closes the pop-up. Confirm does nothing yet.
 const gw=q('#ad_gw'),gb=q('#ad_gb'),gf=q('#ad_gf'),ball=q('#ad_ball'),tx=q('#ad_tx'),cl=q('#ad_cl'),cf=q('#ad_cf'),clw=q('#ad_clw'),cfw=q('#ad_cfw');
 let gwState=0,GM={};   // gwState: 0 ready, 1 animating, 2 split (Cancel | Confirm)
-const gwReset=()=>{gsap.killTweensOf([gb,gf,ball,tx,cl,cf]);gsap.set([gb,gf,ball,tx,cl,cf],{clearProps:'all'});gwState=0};
+const gwReset=()=>{gsap.killTweensOf([gb,gf,ball,tx,cl,cf]);gsap.set([gb,gf,ball,tx,cl,cf],{clearProps:'all'});gwState=0;amt.parentNode.classList.remove('bad')};
 const gwInit=()=>{const g=12,Wd=gw.offsetWidth,wl=(Wd-g)/2;
   clw.style.width=wl+'px';cfw.style.left=(wl+g)+'px';cfw.style.width=wl+'px';
   GM={Wd,wl,xr:wl+g,cx0:tx.offsetLeft+4.5};gsap.set(ball,{x:GM.cx0})};
+// empty amount: no animation, the Enter amount box shakes and its text turns red (until something is typed / a quick amount is tapped)
+function gwShake(){const b=amt.parentNode;b.classList.add('bad');gsap.killTweensOf(b);
+  gsap.timeline({onComplete:()=>gsap.set(b,{x:0})}).to(b,{x:-11,duration:.06}).to(b,{x:10,duration:.1}).to(b,{x:-8,duration:.1}).to(b,{x:6,duration:.09}).to(b,{x:-3,duration:.08}).to(b,{x:0,duration:.07})}
 async function gwGo(){
-  if(gwState||adState!==2)return;gwState=1;amt.blur();
-  const{Wd,wl,xr,cx0}=GM,xEnd=xr+16,xe=Wd-27,cfL=xr+cf.offsetLeft,cfW=cf.offsetWidth,ts=cfL+21,te=cfL+cfW,dot=cfL+4.5;
+  if(gwState||adState!==2)return;
+  if(!(Number(amt.value)>0)){gwShake();return}
+  gwState=1;amt.blur();
+  const{Wd,wl,xr,cx0}=GM,xS=xr+16,xe=Wd-27,cfL=xr+cf.offsetLeft,cfW=cf.offsetWidth,ts=cfL+21,te=cfL+cfW,dot=cfL+4.5;
   const clip=bx=>{tx.style.clipPath='inset(0 0 0 '+Math.min(tx.offsetWidth,Math.max(0,bx-tx.offsetLeft))+'px)'};   // the label vanishes into the ball
-  // 1) ball runs right, the colour's left edge is pulled along (the outline stays where it is)
-  const P={v:0};gsap.to(gb,{opacity:1,duration:.12});
-  await new Promise(res=>gsap.to(P,{v:1,duration:.7,ease:'power2.inOut',onUpdate:()=>{
-    const bx=cx0+(xEnd-cx0)*P.v;gsap.set(ball,{x:bx});gsap.set(gf,{width:Wd-xr*P.v});clip(bx)},onComplete:res}));
-  // 2) the colour reaches the middle: it jellies out as the right box, the outline shrinks into the left box, Cancel floats in, ball swallows the rest of the label
-  await new Promise(res=>{gsap.timeline()
-    .to(gb,{width:wl,duration:.9,ease:'elastic.out(1,.45)'},0)
-    .fromTo(gf,{scaleX:.88,scaleY:1.1},{scaleX:1,scaleY:1,duration:.9,ease:'elastic.out(1,.4)'},0)
-    .fromTo(cl,{opacity:0,y:10},{opacity:1,y:0,duration:.5,ease:'power3.out'},.15)
-    .to(ball,{x:xe,duration:.4,ease:'power2.out',onUpdate:()=>clip(gsap.getProperty(ball,'x'))},0)
-    .set(tx,{opacity:0},.4)
-    .call(res,null,.42)});   // the box is still wobbling while the ball already turns back
-  // 3) ball comes back, writes Confirm, settles in the dot place
-  cf.style.clipPath='inset(0 100% 0 0)';gsap.set(cf,{opacity:1});
-  await new Promise(res=>gsap.to(ball,{x:ts,duration:.45,ease:'power3.inOut',onComplete:res}));
-  const o={v:ts};
-  await new Promise(res=>gsap.to(o,{v:te,duration:Math.min(.9,.3+cf.textContent.length*.05),ease:'none',onUpdate:()=>{gsap.set(ball,{x:o.v});cf.style.clipPath='inset(0 '+Math.max(0,te-o.v)+'px 0 0)'},onComplete:res}));
-  cf.style.clipPath='';
-  await new Promise(res=>gsap.to(ball,{x:dot,duration:.4,ease:'power3.inOut',onComplete:res}));
-  gwState=2}
+  let split=false;const B={v:0},Wt={v:ts};
+  cf.style.clipPath='inset(0 100% 0 0)';
+  // ONE continuous run (the ball never stops): the colour is pulled left>right; the moment it gets to the middle the box tears in two:
+  // the outline (left box) and the colour (right box) both squeeze a little and wobble into their own places, while Cancel floats in
+  gsap.timeline({onComplete:()=>{cf.style.clipPath='';gwState=2}})
+    .to(gb,{opacity:1,duration:.1},0)
+    .to(B,{v:1,duration:.45,ease:'power2.in',onUpdate:()=>{
+      const bx=cx0+(xe-cx0)*B.v;gsap.set(ball,{x:bx});clip(bx);
+      if(split)return;
+      const k=Math.min(1,(bx-cx0)/(xS-cx0));gsap.set(gf,{width:Wd-(xr-14)*k});   // colour's left edge follows the ball
+      if(k>=1){split=true;
+        gsap.to(gb,{width:wl,duration:.8,ease:'elastic.out(1,.5)'});
+        gsap.to(gf,{width:wl,duration:.8,ease:'elastic.out(1,.5)'});
+        gsap.fromTo(cl,{opacity:0,y:10},{opacity:1,y:0,duration:.45,ease:'power3.out',delay:.1})}}},0)
+    .set(tx,{opacity:0},.45).set(cf,{opacity:1},.45)
+    .fromTo(ball,{x:xe},{x:ts,duration:.22,ease:'power2.inOut',immediateRender:false},.45)                  // ball turns back to the start of the new label...
+    .to(Wt,{v:te,duration:.3,ease:'none',onUpdate:()=>{gsap.set(ball,{x:Wt.v});cf.style.clipPath='inset(0 '+Math.max(0,te-Wt.v)+'px 0 0)'}},'>')   // ...writes Confirm...
+    .fromTo(ball,{x:te},{x:dot,duration:.2,ease:'power2.inOut',immediateRender:false},'>')}                 // ...and settles in the dot place
 gw.onclick=e=>{if(!gwState)return gwGo();if(gwState===2&&e.clientX-gw.getBoundingClientRect().left<GM.wl+6)adClose()};
 // keyboard: if it would cover the pop-up, lift the pop-up so the box and the button stay visible
 const kb=()=>{if(adState!==2)return;const vv=window.visualViewport;if(!vv)return;const y=gsap.getProperty(pop,'y'),r=pop.getBoundingClientRect(),top=r.top-y,bot=r.bottom-y;
