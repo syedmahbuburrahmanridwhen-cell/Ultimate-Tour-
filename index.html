@@ -1918,10 +1918,10 @@ async function gwGo(){
   if(gwState||adState!==2)return;
   if(!(Number(amt.value)>0)){gwShake();return}
   gwState=1;amt.blur();
-  const{Wd,wl,xr,cx0}=GM,xS=xr+16,xe=Wd-27,cfL=xr+cf.offsetLeft,cfW=cf.offsetWidth,ts=cfL+21,te=cfL+cfW,dot=cfL+4.5;
+  const{Wd,wl,xr,cx0}=GM,xS=xr+16,xe=Wd-27,cfL=xr+cf.offsetLeft,dot=cfL+4.5;
   const clip=bx=>{tx.style.clipPath='inset(0 0 0 '+Math.min(tx.offsetWidth,Math.max(0,bx-tx.offsetLeft))+'px)'};   // the label vanishes into the ball
-  let split=false;const B={v:0},Wt={v:ts};
-  cf.style.clipPath='inset(0 100% 0 0)';
+  let split=false;const B={v:0};
+  cf.style.clipPath='inset(0 0 0 100%)';
   // ONE continuous run (the ball never stops): the colour is pulled left>right; the moment it gets to the middle the box tears in two:
   // the outline (left box) and the colour (right box) both squeeze a little and wobble into their own places, while Cancel floats in
   gsap.timeline({onComplete:()=>{cf.style.clipPath='';gwState=2}})
@@ -1935,9 +1935,8 @@ async function gwGo(){
         gsap.to(gf,{width:wl,duration:.8,ease:'elastic.out(1,.5)'});
         gsap.fromTo(cl,{opacity:0,y:10},{opacity:1,y:0,duration:.45,ease:'power3.out',delay:.1})}}},0)
     .set(tx,{opacity:0},.45).set(cf,{opacity:1},.45)
-    .fromTo(ball,{x:xe},{x:ts,duration:.22,ease:'power2.inOut',immediateRender:false},.45)                  // ball turns back to the start of the new label...
-    .to(Wt,{v:te,duration:.3,ease:'none',onUpdate:()=>{gsap.set(ball,{x:Wt.v});cf.style.clipPath='inset(0 '+Math.max(0,te-Wt.v)+'px 0 0)'}},'>')   // ...writes Confirm...
-    .fromTo(ball,{x:te},{x:dot,duration:.2,ease:'power2.inOut',immediateRender:false},'>')}                 // ...and settles in the dot place
+    .fromTo(ball,{x:xe},{x:dot,duration:.55,ease:'power2.inOut',immediateRender:false,   // ball comes back right>left, writing Confirm as it goes, and settles in the dot place
+      onUpdate:()=>{cf.style.clipPath='inset(0 0 0 '+Math.max(0,gsap.getProperty(ball,'x')-cfL)+'px)'}},.45)}
 gw.onclick=e=>{if(!gwState)return gwGo();if(gwState===2&&e.clientX-gw.getBoundingClientRect().left<GM.wl+6)adClose()};
 // keyboard: if it would cover the pop-up, lift the pop-up so the box and the button stay visible
 const kb=()=>{if(adState!==2)return;const vv=window.visualViewport;if(!vv)return;const y=gsap.getProperty(pop,'y'),r=pop.getBoundingClientRect(),top=r.top-y,bot=r.bottom-y;
