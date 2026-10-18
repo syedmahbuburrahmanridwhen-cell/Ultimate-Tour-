@@ -1822,18 +1822,19 @@ function adPush(){return new Promise(res=>{
   const sr=sc.getBoundingClientRect(),a=bAdd.getBoundingClientRect(),w=bOut.getBoundingClientRect(),r=row.getBoundingClientRect();
   const dx=r.left+r.width/2-(a.left+a.width/2);adOut=sr.right-w.left+40;
   gsap.set(bAdd,{transformOrigin:'0% 50%'});gsap.set(bOut,{transformOrigin:'100% 50%'});
-  const F={v:0};let prev=0;
-  const sync=()=>{   // Withdraw is never overlapped: Add's front edge squashes it, and once Add slows down Withdraw flies free (stretching)
-    const R=a.left+gsap.getProperty(bAdd,'x')+gsap.getProperty(bAdd,'scaleX')*a.width+3,vF=F.v-prev;prev=F.v;
-    let s=1,xw=F.v;const c=R-(w.left+F.v);
-    if(c>0){s=Math.max(.55,1-c/w.width);xw=Math.max(F.v,R-w.right+s*w.width)}
-    s+=Math.min(.3,vF*.02);
-    gsap.set(bOut,{x:xw,scaleX:s,scaleY:1+(1-s)*.6,skewX:(1-s)*-14})};
-  gsap.timeline({onUpdate:sync,onComplete:()=>{gsap.set(bOut,{visibility:'hidden'});res()}})
-    .to(bAdd,{scaleX:.9,scaleY:1.08,duration:.2,ease:'power2.out'},0)
-    .to(bAdd,{x:dx*.5,scaleX:1.22,scaleY:.9,duration:.34,ease:'power2.out'},.2)
-    .to(bAdd,{x:dx,scaleX:1,scaleY:1,duration:.75,ease:'elastic.out(1,.42)'},.54)
-    .to(F,{v:adOut,duration:.9,ease:'power2.out'},.4)})}
+  const F={v:0};let prev=0;gsap.set(bAdd,{zIndex:2});   // Add is always on top of Withdraw
+  const sync=()=>{   // Withdraw's left edge can never go inside Add: Add's front edge squashes it, then it flies free (stretching a little)
+    const R=a.left+gsap.getProperty(bAdd,'x')+gsap.getProperty(bAdd,'scaleX')*a.width+2,vF=F.v-prev;prev=F.v;
+    const c=R-(w.left+F.v);let s=1;
+    if(c>0)s=Math.max(.55,1-c/w.width);else s=1+Math.min(.25,vF*.02);
+    const xw=Math.max(F.v,R-w.right+s*w.width);
+    gsap.set(bOut,{x:xw,scaleX:s,scaleY:1+(1-s)*.5})};
+  gsap.timeline({onUpdate:sync,onComplete:()=>gsap.set(bOut,{visibility:'hidden'})})
+    .to(bAdd,{scaleX:.92,scaleY:1.06,duration:.15,ease:'power2.out'},0)
+    .to(bAdd,{x:dx*.55,scaleX:1.2,scaleY:.92,duration:.28,ease:'power2.out'},.15)
+    .to(bAdd,{x:dx,scaleX:1,scaleY:1,duration:.45,ease:'power3.out'},.43)
+    .to(F,{v:adOut,duration:.8,ease:'power2.out'},.3)
+    .call(res,null,.88)})}   // the pop-up starts growing the moment Add reaches the middle (Withdraw is still flying out underneath)
 
 // 2) the button grows into the pop-up (icon + label travel into it)
 async function adGrow(){
@@ -1858,7 +1859,6 @@ async function adGrow(){
     .to(ic,{backgroundColor:'rgba(99,102,241,.14)',color:'#4f74f4',duration:.5,ease:'sine.inOut'},.2)
     .to(ti,{x:0,y:0,scale:1,duration:.8,ease:'power3.inOut'},0)
     .to(ti,{color:'#0f1730',duration:.5,ease:'sine.inOut'},.2)
-    .fromTo(pop,{scaleX:1.035,scaleY:.97},{scaleX:1,scaleY:1,duration:.75,ease:'elastic.out(1,.35)',immediateRender:false},.8)   // soft jelly settle
     .to(items,{opacity:1,y:0,duration:.5,stagger:.08,ease:'power3.out'},.55)
     .to(xb,{opacity:1,duration:.3},.9)});
   gsap.set([ic,ti],{clearProps:'backgroundColor,color'})}
@@ -1883,12 +1883,10 @@ async function adClose(){
     .to(ti,{...f.ti,color:'#fff',duration:.75,ease:'power3.inOut'},.2)
     .to(scrim,{opacity:0,duration:.5,ease:'power1.in'},.35)});
   gsap.set(bAdd,{opacity:1});gsap.set([pop,scrim,ic,ti,wh,gr,xb,...items],{clearProps:'all'});
-  gsap.set(bOut,{visibility:'visible',x:adOut,scaleX:1.25,scaleY:.92,skewX:0});
-  await new Promise(res=>{gsap.timeline({onComplete:res})
-    .to(bAdd,{scaleX:1.2,scaleY:.93,duration:.16,ease:'power2.out'},0)
-    .to(bAdd,{x:0,scaleX:1,scaleY:1,duration:.85,ease:'elastic.out(1,.5)'},.14)
-    .to(bOut,{x:0,duration:.6,ease:'power3.out'},.32)
-    .to(bOut,{scaleX:1,scaleY:1,duration:.9,ease:'elastic.out(1,.4)'},.32)});
+  gsap.set(bOut,{visibility:'visible',x:adOut,scaleX:1,scaleY:1,skewX:0});
+  await new Promise(res=>{gsap.timeline({onComplete:res})   // same duration + same ease for both: Add glides left, Withdraw slides in from the right edge, never touching
+    .to(bAdd,{x:0,duration:.75,ease:'power3.inOut'},0)
+    .to(bOut,{x:0,duration:.75,ease:'power3.inOut'},0)});
   gsap.set([bAdd,bOut],{clearProps:'all'});bAdd.style.transition=bOut.style.transition='';adState=0}
 
 bAdd.onclick=adOpen;scrim.onclick=adClose;xb.onclick=adClose;
