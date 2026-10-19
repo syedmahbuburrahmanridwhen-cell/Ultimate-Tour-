@@ -1887,9 +1887,10 @@ async function adOpen(){
 
 // 3) close: everything plays backwards
 async function adClose(){
-  if(adState!==2||gwState===1)return;adState=1;amt.blur();if(gwState===4)await adPmUndo();
-  const ar=rel(bAdd.getBoundingClientRect()),f=adFlip(ar);
-  await new Promise(res=>{gsap.timeline({onComplete:res})
+  if(adState!==2||gwState===1)return;adState=1;amt.blur();
+  const ar=rel(bAdd.getBoundingClientRect()),f=adFlip(ar),pm=gwState===4;   // pm: closing from the payment boxes screen - goes straight into the Add money button
+  if(pm)gsap.set(ti,{visibility:'visible',opacity:0,x:f.ti.x,y:f.ti.y,scale:f.ti.scale,color:'#fff'});
+  await new Promise(res=>{const tl=gsap.timeline({onComplete:res});tl
     .to(items,{opacity:0,y:10,duration:.25,stagger:{each:.04,from:'end'},ease:'power2.in'},0)
     .to(xb,{opacity:0,duration:.2},0)
     .to(pop,{left:ar.l,top:ar.t,width:ar.w,height:ar.h,borderRadius:26,y:0,duration:.75,ease:'power3.inOut'},.2)
@@ -1897,7 +1898,9 @@ async function adClose(){
     .to(gr,{opacity:1,duration:.4,ease:'sine.inOut'},.45)
     .to(ic,{...f.ic,backgroundColor:'rgba(255,255,255,.24)',color:'#fff',duration:.75,ease:'power3.inOut'},.2)
     .to(ti,{...f.ti,color:'#fff',duration:.75,ease:'power3.inOut'},.2)
-    .to(scrim,{opacity:0,duration:.5,ease:'power1.in'},.35)});
+    .to(scrim,{opacity:0,duration:.5,ease:'power1.in'},.35);
+    if(pm)tl.to(pms,{opacity:0,duration:.2,ease:'power2.in'},0).to(t2,{opacity:0,duration:.15},0)   // boxes + title vanish at once, the ball turns into the + while the pop-up shrinks
+      .to(icSv,{opacity:1,duration:.3},.2).to(ti,{opacity:1,duration:.35},.35)});
   gsap.set(bAdd,{opacity:1});gsap.set([pop,scrim,ic,ti,wh,gr,xb,...items],{clearProps:'all'});
   gsap.set(bOut,{visibility:'visible',x:adOut,scaleX:1,scaleY:1,skewX:0});
   await new Promise(res=>{gsap.timeline({onComplete:res})   // same duration + same ease for both: Add glides left, Withdraw slides in from the right edge, never touching
@@ -1968,15 +1971,6 @@ async function adPay(){
     .to(ic,{x:bx0-AG.icx,y:by-AG.icy,duration:.5,ease:'power3.inOut'},.3)                 // ball goes up beside the title's start
     .to(ic,{x:bx1-AG.icx,duration:.7,ease:'power2.inOut',onUpdate:clip},.8)});             // runs left>right writing the title, sits at its right end
   gsap.set(t2,{clearProps:'clipPath'});gsap.set(pms,{clearProps:'transform'});gwState=4}
-async function adPmUndo(){   // closing from the payment screen: boxes and title go, the ball turns back into +, "Add money" returns, then the normal close runs
-  gsap.set(ti,{visibility:'visible'});
-  await new Promise(res=>{gsap.timeline({onComplete:res})
-    .to(pms,{opacity:0,duration:.22,ease:'power2.in'},0)
-    .to(t2,{opacity:0,duration:.2},0)
-    .to(ic,{x:0,y:0,scale:1,backgroundColor:'rgba(99,102,241,.14)',duration:.4,ease:'power3.inOut'},0)
-    .to(icSv,{opacity:1,duration:.25},.15)
-    .to(ti,{opacity:1,scale:1,duration:.3},.1)});
-  gsap.set(pmw,{visibility:'hidden'});gwState=2}
 pms.forEach(b=>b.onclick=()=>{if(gwState!==4)return;pms.forEach(x=>x.classList.toggle('on',x===b))});
 gw.onclick=e=>{if(!gwState)return gwGo();if(gwState!==2)return;if(e.clientX-gw.getBoundingClientRect().left<GM.wl+6)adClose();else adPay()};
 // keyboard: if it would cover the pop-up, lift the pop-up so the box and the button stay visible
