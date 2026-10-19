@@ -289,7 +289,7 @@ async function lineAnim0(btn,job,cover){
 //   Firestore read/write for players.
 // ======================================================================
 const getProfile=async u=>{const s=await getDoc(doc(db,'users',u.uid));return s.exists()?s.data():null};
-const saveProfile=(u,d)=>runTransaction(db,async tx=>{const r=doc(db,'usernames',d.username);if((await tx.get(r)).exists())throw{code:'app/username-taken'};tx.set(r,{uid:u.uid});tx.set(doc(db,'users',u.uid),{...d,createdAt:serverTimestamp()})});
+const saveProfile=async(u,d)=>{await u.getIdToken(true);return runTransaction(db,async tx=>{const r=doc(db,'usernames',d.username);if((await tx.get(r)).exists())throw{code:'app/username-taken'};tx.set(r,{uid:u.uid});tx.set(doc(db,'users',u.uid),{...d,createdAt:serverTimestamp()})})};   // getIdToken(true): refresh the login token first, so the server rules see email_verified = true
 const enter=(p,np)=>{try{localStorage.setItem('ut_in','1')}catch(e){}const u=p.username||'player';q('#hm_user').textContent=u;q('#hm_av').textContent=u[0].toUpperCase();
   try{pfReset();fillPf(p)}catch(e){console.error(e)}   // a card problem must never block login/home
   
