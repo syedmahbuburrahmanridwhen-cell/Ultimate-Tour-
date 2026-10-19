@@ -1729,6 +1729,14 @@ This file is NOT opened directly. index.html loads it. It holds this page's css 
 .ad-gw span{font:700 13px var(--mono);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
 #ad_tx,#ad_cf{padding-left:21px;color:#fff}#ad_cl{color:var(--pri)}#ad_cl,#ad_cf{opacity:0}
 #ad_ball{left:0;top:50%;width:9px;height:9px;margin:-4.5px 0 0 -4.5px;border-radius:50%;background:#fff}
+/* @@WALLET-ADDMONEY-PAYMETHOD - after Confirm: the 4 payment method boxes (bKash / Nagad / Rocket / Binance) + "Select payment method" title */
+#ad_t2{position:absolute;top:25px;height:30px;font:700 13px/30px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink);white-space:nowrap;opacity:0}
+#ad_pm{position:absolute;left:22px;right:22px;top:68px;bottom:22px;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:12px;visibility:hidden}
+.pm{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;border-radius:22px;background:#f3f6fe;border:1.5px solid rgba(99,102,241,.16);box-shadow:0 6px 16px rgba(30,41,100,.06);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .25s,border-color .25s,box-shadow .25s,transform .2s}
+.pm:active{transform:scale(.96)}
+.pm svg{width:54px;height:54px;border-radius:15px;display:block}
+.pm span{font:700 12px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--ink)}
+.pm.on{background:#fff;border-color:var(--pri);box-shadow:0 0 0 3px rgba(79,116,244,.15),0 10px 22px rgba(79,86,230,.18)}
 </script>
 <script type="text/plain" data-kind="app" data-order="150">
 /* ===== pages/wallet/wallet.js ===== */
@@ -1879,7 +1887,7 @@ async function adOpen(){
 
 // 3) close: everything plays backwards
 async function adClose(){
-  if(adState!==2||gwState===1)return;adState=1;amt.blur();
+  if(adState!==2||gwState===1)return;adState=1;amt.blur();if(gwState===4)await adPmUndo();
   const ar=rel(bAdd.getBoundingClientRect()),f=adFlip(ar);
   await new Promise(res=>{gsap.timeline({onComplete:res})
     .to(items,{opacity:0,y:10,duration:.25,stagger:{each:.04,from:'end'},ease:'power2.in'},0)
@@ -1905,9 +1913,9 @@ amt.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();amt.blur()}};
 // ---- @@WALLET-ADDMONEY-PROCEED   Proceed to payment button: ball runs left > right, eating the label; the colour is pulled out of the left side
 //   (the outline stays), when the colour reaches the middle it jellies out as the right box; the outline shrinks into the left box (Cancel);
 //   the ball then returns and writes Confirm in the coloured box. Cancel closes the pop-up. Confirm does nothing yet.
-const gw=q('#ad_gw'),gb=q('#ad_gb'),gf=q('#ad_gf'),ball=q('#ad_ball'),tx=q('#ad_tx'),cl=q('#ad_cl'),cf=q('#ad_cf'),clw=q('#ad_clw'),cfw=q('#ad_cfw');
+const t2=q('#ad_t2'),pmw=q('#ad_pm'),pms=[...pmw.children],gw=q('#ad_gw'),gb=q('#ad_gb'),gf=q('#ad_gf'),ball=q('#ad_ball'),tx=q('#ad_tx'),cl=q('#ad_cl'),cf=q('#ad_cf'),clw=q('#ad_clw'),cfw=q('#ad_cfw');
 let gwState=0,GM={};   // gwState: 0 ready, 1 animating, 2 split (Cancel | Confirm)
-const gwReset=()=>{gsap.killTweensOf([gb,gf,ball,tx,cl,cf]);gsap.set([gb,gf,ball,tx,cl,cf],{clearProps:'all'});gwState=0;amt.parentNode.classList.remove('bad')};
+const gwReset=()=>{gsap.killTweensOf([gb,gf,ball,tx,cl,cf,t2,pmw,...pms]);gsap.set([gb,gf,ball,tx,cl,cf,t2,pmw,...pms],{clearProps:'all'});pms.forEach(b=>b.classList.remove('on'));gwState=0;amt.parentNode.classList.remove('bad')};
 const gwInit=()=>{const g=12,Wd=gw.offsetWidth,wl=(Wd-g)/2;
   clw.style.width=wl+'px';cfw.style.left=(wl+g)+'px';cfw.style.width=wl+'px';
   GM={Wd,wl,xr:wl+g,cx0:tx.offsetLeft+4.5};gsap.set(ball,{x:GM.cx0})};
@@ -1937,7 +1945,33 @@ async function gwGo(){
     .set(tx,{opacity:0},.45).set(cf,{opacity:1},.45)
     .fromTo(ball,{x:xe},{x:dot,duration:.55,ease:'power2.inOut',immediateRender:false,   // ball comes back right>left, writing Confirm as it goes, and settles in the dot place
       onUpdate:()=>{cf.style.clipPath='inset(0 0 0 '+Math.max(0,gsap.getProperty(ball,'x')-cfL)+'px)'}},.45)}
-gw.onclick=e=>{if(!gwState)return gwGo();if(gwState===2&&e.clientX-gw.getBoundingClientRect().left<GM.wl+6)adClose()};
+// ---- @@WALLET-ADDMONEY-PAYMETHOD   tap Confirm: everything except the + icon melts into the pop-up, 4 payment boxes slide in from the left and right
+//   and fill the pop-up, the + shrinks, climbs to the top and "Select payment method" is written next to it. (gwState 4 = payment boxes shown)
+async function adPay(){
+  gwState=1;amt.blur();
+  const Wr=W.getBoundingClientRect(),pw=inn.offsetWidth,melt=[ti,...items,xb];
+  const rowW=28+10+t2.offsetWidth,rowL=(pw-rowW)/2;t2.style.left=(rowL+38)+'px';        // + (28px) and the title sit together, centred
+  const ix=rowL+14-AG.icx,iy=40-AG.icy;
+  gsap.set(pmw,{visibility:'visible'});
+  pms.forEach((b,i)=>gsap.set(b,{x:i%2?Wr.width:-Wr.width,opacity:1}));                 // left column from the left, right column from the right
+  await new Promise(res=>{gsap.timeline({onComplete:res})
+    .to(melt,{opacity:0,scale:.8,duration:.4,ease:'power2.in',stagger:.04},0)
+    .set(melt,{visibility:'hidden'},.65)
+    .to(ic,{scale:.5,duration:.3,ease:'power2.inOut'},.05)                               // + gets smaller...
+    .to(ic,{x:ix,y:iy,duration:.55,ease:'power3.inOut'},.3)                              // ...then climbs to the top
+    .to(pms,{x:0,duration:.7,ease:'power3.out',stagger:.09},.2)                          // boxes fill the pop-up
+    .fromTo(t2,{opacity:1,clipPath:'inset(0 100% 0 0)'},{clipPath:'inset(0 0% 0 0)',duration:.5,ease:'power2.inOut',immediateRender:false},.6)});   // title is written
+  gsap.set(t2,{clearProps:'clipPath'});gsap.set(pms,{clearProps:'transform'});gwState=4}
+async function adPmUndo(){   // closing from the payment screen: boxes and title go, + grows back, "Add money" returns, then the normal close runs
+  gsap.set(ti,{visibility:'visible'});
+  await new Promise(res=>{gsap.timeline({onComplete:res})
+    .to(pms,{opacity:0,scale:.9,duration:.22,ease:'power2.in'},0)
+    .to(t2,{opacity:0,duration:.2},0)
+    .to(ic,{x:0,y:0,scale:1,duration:.35,ease:'power3.inOut'},0)
+    .to(ti,{opacity:1,scale:1,duration:.3},.1)});
+  gsap.set(pmw,{visibility:'hidden'});gwState=2}
+pms.forEach(b=>b.onclick=()=>{if(gwState!==4)return;pms.forEach(x=>x.classList.toggle('on',x===b))});
+gw.onclick=e=>{if(!gwState)return gwGo();if(gwState!==2)return;if(e.clientX-gw.getBoundingClientRect().left<GM.wl+6)adClose();else adPay()};
 // keyboard: if it would cover the pop-up, lift the pop-up so the box and the button stay visible
 const kb=()=>{if(adState!==2)return;const vv=window.visualViewport;if(!vv)return;const y=gsap.getProperty(pop,'y'),r=pop.getBoundingClientRect(),top=r.top-y,bot=r.bottom-y;
   gsap.to(pop,{y:Math.max(-(top-8),Math.min(0,vv.offsetTop+vv.height-12-bot)),duration:.3,ease:'power2.out'})};
@@ -1969,6 +2003,14 @@ window.visualViewport&&window.visualViewport.addEventListener('resize',kb)}
           <div id="ad_tp"><span id="ad_tx">Proceed to payment</span></div>
           <div id="ad_clw"><span id="ad_cl">Cancel</span></div><div id="ad_cfw"><span id="ad_cf">Confirm</span></div>
           <i id="ad_ball"></i>
+        </div>
+        <!-- @@WALLET-ADDMONEY-PAYMETHOD  (logos below are simple drawn look-alikes; swap each <svg> for the real logo image when you have it) -->
+        <span id="ad_t2">Select payment method</span>
+        <div id="ad_pm">
+          <div class="pm" data-p="bkash"><svg viewBox="0 0 52 52"><rect width="52" height="52" fill="#E2136E"/><path d="M12 15l28 10-10 4 5 12-10-7-8 10z" fill="#fff"/><path d="M12 15l18 14-8 8z" fill="#fff" opacity=".55"/></svg><span>bKash</span></div>
+          <div class="pm" data-p="nagad"><svg viewBox="0 0 52 52"><rect width="52" height="52" fill="#F26522"/><path d="M14 38V14h6l12 15V14h6v24h-6L20 23v15z" fill="#fff"/><path d="M10 41c10 3 24 2 33-7" stroke="#ED1C24" stroke-width="3" fill="none" stroke-linecap="round"/></svg><span>Nagad</span></div>
+          <div class="pm" data-p="rocket"><svg viewBox="0 0 52 52"><rect width="52" height="52" fill="#8C3494"/><path d="M26 9c7 4 9 11 8 19l-3 3H21l-3-3c-1-8 1-15 8-19z" fill="#fff"/><circle cx="26" cy="22" r="3" fill="#8C3494"/><path d="M18 28l-6 7 7-1zM34 28l6 7-7-1z" fill="#fff"/><path d="M22 34h8l-4 9z" fill="#FFD2F5"/></svg><span>Rocket</span></div>
+          <div class="pm" data-p="binance"><svg viewBox="0 0 52 52"><rect width="52" height="52" fill="#1E2329"/><g fill="#F3BA2F"><path d="M26 22l4 4-4 4-4-4z"/><path d="M26 10l7 7-3 3-4-4-4 4-3-3z"/><path d="M26 42l7-7-3-3-4 4-4-4-3 3z"/><path d="M10 26l7-7 3 3-4 4 4 4-3 3z"/><path d="M42 26l-7-7-3 3 4 4-4 4 3 3z"/></g></svg><span>Binance</span></div>
         </div>
       </div>
     </div>
