@@ -1744,8 +1744,8 @@ This file is NOT opened directly. index.html loads it. It holds this page's css 
 .pm.on{background:#fff;border-color:var(--pri);box-shadow:0 0 0 3px rgba(79,116,244,.15),0 10px 22px rgba(79,86,230,.18)}
 
 /* @@WALLET-ADDMONEY-BKASH - full-screen bKash payment page (the pop-up grows into it after: bKash > Confirm). Everything fits one phone screen, no scrolling */
-#bk_pg{position:absolute;inset:0;z-index:6;display:none;flex-direction:column;opacity:0;font-family:var(--sans);color:var(--ink)}
-#bk_top{flex:none;position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;padding:calc(10px + env(safe-area-inset-top,0px)) 16px 24px;background:#E2136E;border-radius:0 0 40px 40px;box-shadow:0 14px 30px rgba(226,19,110,.28);color:#fff;overflow:hidden}
+#bk_pg{--bkc:var(--bkc);--bkd:var(--bkd);--bkl:var(--bkl);--bkr:226,19,110;--bkbg:var(--bkc);position:absolute;inset:0;z-index:6;display:none;flex-direction:column;opacity:0;font-family:var(--sans);color:var(--ink)}
+#bk_top{flex:none;position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;padding:calc(10px + env(safe-area-inset-top,0px)) 16px 24px;background:var(--bkbg);border-radius:0 0 40px 40px;box-shadow:0 14px 30px rgba(var(--bkr),.28);color:#fff;overflow:hidden}
 #bk_top::before,#bk_top::after{content:"";position:absolute;border-radius:50%;background:rgba(255,255,255,.1);pointer-events:none}
 #bk_top::before{width:150px;height:150px;right:-44px;top:-62px}#bk_top::after{width:96px;height:96px;left:-30px;bottom:-34px}
 #bk_back{appearance:none;-webkit-appearance:none;position:absolute;left:14px;top:calc(12px + env(safe-area-inset-top,0px));z-index:2;width:40px;height:40px;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.2);color:#fff;display:grid;place-items:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
@@ -1756,40 +1756,44 @@ This file is NOT opened directly. index.html loads it. It holds this page's css 
 #bk_amt{position:relative;z-index:1;display:flex;align-items:baseline;gap:6px;font:800 34px/1.05 var(--sans);letter-spacing:-.01em;color:#fff}
 #bk_amt em{font:700 13px var(--mono);font-style:normal;letter-spacing:.12em;opacity:.85}
 #bk_sc{flex:1;min-height:0;overflow-y:auto;padding:12px 14px 6px;-webkit-overflow-scrolling:touch}
-#bk_card{background:#fff;border-radius:26px;padding:6px 16px 8px;box-shadow:0 14px 34px rgba(226,19,110,.14)}
+#bk_card{background:#fff;border-radius:26px;padding:6px 16px 8px;box-shadow:0 14px 34px rgba(var(--bkr),.14)}
 #bk_st{list-style:none;margin:0;padding:0}
-#bk_st li{display:flex;align-items:center;gap:10px;min-height:38px;padding:5px 0;border-bottom:1px dashed rgba(226,19,110,.22);font:500 13.5px/1.35 var(--sans);color:var(--ink)}
-#bk_st li>span:first-child{flex:none;width:22px;height:22px;border-radius:50%;background:#E2136E;color:#fff;display:grid;place-items:center;font:700 11px var(--mono)}
+#bk_st li{display:flex;align-items:center;gap:10px;min-height:38px;padding:5px 0;border-bottom:1px dashed rgba(var(--bkr),.22);font:500 13.5px/1.35 var(--sans);color:var(--ink)}
+#bk_st li>span:first-child{flex:none;width:22px;height:22px;border-radius:50%;background:var(--bkbg);color:#fff;display:grid;place-items:center;font:700 11px var(--mono)}
 #bk_st li>span:nth-child(2){flex:1;min-width:0}
 #bk_st li b{font-weight:800}
-.bk-cp{appearance:none;-webkit-appearance:none;flex:none;margin-left:auto;width:32px;height:32px;padding:0;border:0;border-radius:11px;background:rgba(226,19,110,.1);color:#E2136E;display:grid;place-items:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.bk-cp{appearance:none;-webkit-appearance:none;flex:none;margin-left:auto;width:32px;height:32px;padding:0;border:0;border-radius:11px;background:rgba(var(--bkr),.1);color:var(--bkc);display:grid;place-items:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .bk-cp .ico{width:17px;height:17px}
 .bk-fm{padding-top:10px}
-.bk-l{display:block;margin:0 0 5px 3px;font:700 10.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:#b0105a}
-.bk-in{display:flex;align-items:center;height:46px;margin-bottom:9px;border-radius:15px;background:#fdf1f6;border:1.5px solid rgba(226,19,110,.2);overflow:hidden;transition:border-color .25s,background .25s}
-.bk-in:focus-within{background:#fff;border-color:#E2136E}
+.bk-l{display:block;margin:0 0 5px 3px;font:700 10.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--bkd)}
+.bk-in{display:flex;align-items:center;height:46px;margin-bottom:9px;border-radius:15px;background:var(--bkl);border:1.5px solid rgba(var(--bkr),.2);overflow:hidden;transition:border-color .25s,background .25s}
+.bk-in:focus-within{background:#fff;border-color:var(--bkc)}
 .bk-in.bad{border-color:#d6252a;background:#fff4f4}
-.bk-in input{flex:1;min-width:0;height:100%;margin:0;padding:0 14px;border:0;outline:0;background:transparent;font:700 16px var(--sans);letter-spacing:.02em;color:var(--ink);caret-color:#E2136E;-webkit-user-select:text;user-select:text}
+.bk-in input{flex:1;min-width:0;height:100%;margin:0;padding:0 14px;border:0;outline:0;background:transparent;font:700 16px var(--sans);letter-spacing:.02em;color:var(--ink);caret-color:var(--bkc);-webkit-user-select:text;user-select:text}
 .bk-in input::placeholder{font:500 13px var(--mono);letter-spacing:0;color:#b79aa8}
-.bk-in button{appearance:none;-webkit-appearance:none;flex:none;width:48px;height:100%;padding:0;border:0;border-left:1.5px solid rgba(226,19,110,.2);background:rgba(226,19,110,.08);color:#E2136E;display:grid;place-items:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.bk-in button{appearance:none;-webkit-appearance:none;flex:none;width:48px;height:100%;padding:0;border:0;border-left:1.5px solid rgba(var(--bkr),.2);background:rgba(var(--bkr),.08);color:var(--bkc);display:grid;place-items:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .bk-in button .ico{width:20px;height:20px}
 #bk_msg{margin:-2px 0 2px;min-height:15px;text-align:center;font:700 11.5px/1.3 var(--mono);color:#d6252a}
 #bk_ft{flex:none;padding:8px 14px calc(12px + env(safe-area-inset-bottom,0px))}
-#bk_sub{appearance:none;-webkit-appearance:none;position:relative;width:100%;height:54px;border:0;border-radius:99px;background:#E2136E;color:#fff;font:700 13px var(--mono);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;box-shadow:0 12px 24px rgba(226,19,110,.32);-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;gap:10px;transition:opacity .25s}
-#bk_sub.busy{opacity:.75;pointer-events:none}
+#bk_sub{appearance:none;-webkit-appearance:none;position:relative;width:100%;height:54px;border:0;border-radius:99px;background:var(--bkbg);color:#fff;font:700 13px var(--mono);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;box-shadow:0 12px 24px rgba(var(--bkr),.32);-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;gap:10px;transition:opacity .25s}
+#bk_sub.busy{pointer-events:none}
 @media (max-height:640px){#bk_top{padding-bottom:18px}#bk_amt{font-size:28px}.bk-lg{width:48px;height:48px}.bk-lg img{height:34px}#bk_st li{min-height:33px;padding:3px 0}.bk-in{height:42px;margin-bottom:7px}}
 /* request sent: the Submit button itself stretches into a centred pop-up card (#bk_ok) over a dimmed page (#bk_dim) */
 #bk_dim{position:absolute;inset:0;z-index:5;display:none;background:rgba(15,23,48,.5);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
-#bk_ok{position:absolute;z-index:6;display:none;overflow:hidden;background:#E2136E;border-radius:99px;box-shadow:0 26px 60px rgba(15,23,48,.35)}
+#bk_ok{position:absolute;z-index:6;display:none;background:#fff;border-radius:32px;box-shadow:0 26px 60px rgba(15,23,48,.35)}
 #bk_oki{position:absolute;left:0;top:0;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;text-align:center;gap:11px;padding:28px 20px 20px}
-#bk_ok .ring{position:relative;width:76px;height:76px;border-radius:50%;background:#E2136E;display:grid;place-items:center;box-shadow:0 12px 26px rgba(226,19,110,.35)}
+#bk_ok .ring{position:relative;width:76px;height:76px;border-radius:50%;background:var(--bkbg);display:grid;place-items:center;box-shadow:0 12px 26px rgba(var(--bkr),.35)}
 #bk_ok .ring svg{width:40px;height:40px;fill:none;stroke:#fff;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
 #bk_ok .ring path{stroke-dasharray:1;stroke-dashoffset:1}
-#bk_ok .rp{position:absolute;inset:0;border-radius:50%;border:2px solid #E2136E;opacity:0;pointer-events:none}
+#bk_ok .rp{position:absolute;inset:0;border-radius:50%;border:2px solid var(--bkc);opacity:0;pointer-events:none}
 #bk_ok h3{margin:2px 0 0;font:800 21px var(--sans);color:var(--ink)}
 #bk_ok p{margin:0;font:500 12.5px/1.6 var(--mono);color:#5b6785}
-#bk_ok .bk-sm{width:100%;padding:11px 14px;border-radius:16px;background:#fdf1f6;border:1px solid rgba(226,19,110,.16);font:700 12px/1.7 var(--mono);color:var(--ink)}
-#bk_okb{appearance:none;-webkit-appearance:none;width:100%;height:50px;margin-top:4px;border:0;border-radius:99px;background:#E2136E;color:#fff;font:700 13px var(--mono);letter-spacing:.14em;text-transform:uppercase;cursor:pointer;box-shadow:0 10px 22px rgba(226,19,110,.3);-webkit-tap-highlight-color:transparent}
+#bk_ok .bk-sm{width:100%;padding:11px 14px;border-radius:16px;background:var(--bkl);border:1px solid rgba(var(--bkr),.16);font:700 12px/1.7 var(--mono);color:var(--ink)}
+#bk_okb{appearance:none;-webkit-appearance:none;width:100%;height:50px;margin-top:4px;border:0;border-radius:99px;background:var(--bkbg);color:#fff;font:700 13px var(--mono);letter-spacing:.14em;text-transform:uppercase;cursor:pointer;box-shadow:0 10px 22px rgba(var(--bkr),.3);-webkit-tap-highlight-color:transparent}
+#bk_sub span{transition:opacity .2s}#bk_sub.busy span{opacity:0}
+#bk_sub .bk-sp{position:absolute;left:50%;top:50%;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;border:3px solid rgba(255,255,255,.35);border-top-color:#fff;opacity:0;transition:opacity .2s;pointer-events:none}
+#bk_sub.busy .bk-sp{opacity:1;animation:bkspin .7s linear infinite}
+@keyframes bkspin{to{transform:rotate(360deg)}}
 </script>
 <script type="text/plain" data-kind="app" data-order="150">
 /* ===== pages/wallet/wallet.js ===== */
@@ -2067,9 +2071,14 @@ pms.forEach((b,i)=>b.onclick=()=>pmPick(b,i));
 //   The player sends money to PAY_NO.bkash, then types the number he paid FROM + the Transaction ID and taps "Submit request".
 //   The request is saved in Firestore:  depositRequests/bkash_<TRXID>  (one request per Transaction ID). Admin adds the money later (console for now).
 //   gwState 5 = bKash page shown.   Back arrow = the page shrinks back into the payment methods screen.
-const PAY_NO={bkash:'01XXXXXXXXX'};   // <<<<<  PUT YOUR OWN bKash NUMBER (where players send money) HERE  <<<<<
+const PAY_NO={bkash:'01XXXXXXXXX',nagad:'01XXXXXXXXX',rocket:'01XXXXXXXXXX'};   // <<<<<  PUT YOUR OWN bKash / Nagad / Rocket NUMBERS (where players send money) HERE  <<<<<
+const BK={   // look + wording of each payment page (Binance is not built yet)
+  bkash:{n:'bKash',bg:'#E2136E',c:'#E2136E',d:'#b0105a',l:'#fdf1f6',r:'226,19,110',pg:'#fce7f0',len:11,s1:'Open <b>bKash</b> app &rsaquo; <b>Send Money</b>'},
+  nagad:{n:'Nagad',bg:'linear-gradient(135deg,#F7941D,#ED1C24)',c:'#EA4A25',d:'#b8330f',l:'#fff3ee',r:'234,74,37',pg:'#ffe9dc',len:11,s1:'Open <b>Nagad</b> app &rsaquo; <b>Send Money</b>'},
+  rocket:{n:'Rocket',bg:'#8A288F',c:'#8A288F',d:'#6b1a70',l:'#f8effa',r:'138,40,143',pg:'#f1e1f3',len:12,s1:'Dial <b>*322#</b> or open <b>Rocket</b> app &rsaquo; <b>Send Money</b>'}};
+let bkM='bkash';
 const bkPg=q('#bk_pg'),bkTop=q('#bk_top'),bkCard=q('#bk_card'),bkFt=q('#bk_ft'),bkSc=q('#bk_sc'),bkParts=[bkTop,bkCard,bkFt],bkBack0=q('#bk_back'),bkLogo=q('#bk_logo'),bkAmt=q('#bk_amt'),bkAm2=q('#bk_am2'),bkTo=q('#bk_to'),
-  bkNum=q('#bk_num'),bkTid=q('#bk_tid'),bkMsg=q('#bk_msg'),bkSub=q('#bk_sub'),bkOk=q('#bk_ok'),bkPaste=q('#bk_paste'),bkDim=q('#bk_dim'),bkOki=q('#bk_oki'),bkOkb=q('#bk_okb');
+  bkNum=q('#bk_num'),bkTid=q('#bk_tid'),bkMsg=q('#bk_msg'),bkSub=q('#bk_sub'),bkOk=q('#bk_ok'),bkPaste=q('#bk_paste'),bkDim=q('#bk_dim'),bkOki=q('#bk_oki'),bkOkb=q('#bk_okb'),bkS1=q('#bk_s1'),bkLn=q('#bk_ln');
 let bkBusy=false,bkDone=false,G0={};
 function bkReset(){gsap.killTweensOf([bkPg,...bkParts,bkOk,bkDim,bkOki,...bkOk.querySelectorAll('*'),inn,wh]);gsap.set([bkOk,bkDim,bkOki,...bkOk.querySelectorAll('*')],{clearProps:'all'});bkSub.style.visibility='';bkPg.style.display='none';bkPg.style.height='';gsap.set([bkPg,...bkParts],{clearProps:'all'});gsap.set(inn,{opacity:1});
   bkNum.value=bkTid.value='';bkMsg.textContent='';bkNum.parentNode.classList.remove('bad');bkTid.parentNode.classList.remove('bad');
@@ -2077,7 +2086,7 @@ function bkReset(){gsap.killTweensOf([bkPg,...bkParts,bkOk,bkDim,bkOki,...bkOk.q
 const bkErr=(m,box)=>{bkMsg.textContent=m;box.classList.add('bad');gsap.killTweensOf(box);
   gsap.timeline({onComplete:()=>gsap.set(box,{x:0})}).to(box,{x:-11,duration:.06}).to(box,{x:10,duration:.1}).to(box,{x:-8,duration:.1}).to(box,{x:6,duration:.09}).to(box,{x:-3,duration:.08}).to(box,{x:0,duration:.07})};
 const bkClr=box=>{box.classList.remove('bad');bkMsg.textContent=''};
-bkNum.oninput=()=>{bkNum.value=bkNum.value.replace(/\D/g,'').slice(0,11);bkClr(bkNum.parentNode)};
+bkNum.oninput=()=>{bkNum.value=bkNum.value.replace(/\D/g,'').slice(0,BK[bkM].len);bkClr(bkNum.parentNode)};
 bkTid.oninput=()=>{bkTid.value=bkTid.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,20);bkClr(bkTid.parentNode)};
 [bkNum,bkTid].forEach(i=>i.addEventListener('focus',()=>setTimeout(()=>{try{i.scrollIntoView({block:'center',behavior:'smooth'})}catch(e){}},350)));
 // keep the Submit button above the keyboard: the page is only as tall as the visible part of the screen
@@ -2087,22 +2096,25 @@ async function bkCopy(txt,btn){let ok=false;
   try{await navigator.clipboard.writeText(txt);ok=true}catch(e){try{const t=document.createElement('textarea');t.value=txt;t.style.cssText='position:fixed;opacity:0;left:-999px';document.body.append(t);t.select();ok=document.execCommand('copy');t.remove()}catch(x){}}
   if(!ok){toast('Could not copy');return}
   const o=btn.innerHTML;btn.innerHTML='<svg class="ico" viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg>';gsap.fromTo(btn,{scale:.8},{scale:1,duration:.4,ease:'back.out(2.5)'});setTimeout(()=>{btn.innerHTML=o},1200)}
-pop.querySelectorAll('.bk-cp').forEach(b=>b.onclick=()=>bkCopy(b.dataset.c==='to'?PAY_NO.bkash:String(Number(amt.value)||0),b));
+pop.querySelectorAll('.bk-cp').forEach(b=>b.onclick=()=>bkCopy(b.dataset.c==='to'?PAY_NO[bkM]:String(Number(amt.value)||0),b));
 bkPaste.onclick=async()=>{try{const t=((await navigator.clipboard.readText())||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,20);if(t){bkTid.value=t;bkClr(bkTid.parentNode)}else bkTid.focus()}catch(e){bkTid.focus();toast('Long-press the box to paste')}};
 
-async function bkOpen(){
+async function bkOpen(m){
   if(gwState!==4||pickBusy)return;gwState=1;
   const Wr=W.getBoundingClientRect(),n=Number(amt.value)||0;
   G0={l:gsap.getProperty(pop,'left'),t:gsap.getProperty(pop,'top'),w:gsap.getProperty(pop,'width'),h:gsap.getProperty(pop,'height')};
   bkReset();
-  bkLogo.src=pms.find(b=>b.dataset.p==='bkash').querySelector('img').src;
-  bkAmt.innerHTML=n.toLocaleString('en-US')+'<em>BDT</em>';bkAm2.textContent=String(n);bkTo.textContent=PAY_NO.bkash;
+  bkM=m;const C=BK[m];   // dress the page in the chosen method's colours + words
+  bkPg.style.setProperty('--bkc',C.c);bkPg.style.setProperty('--bkd',C.d);bkPg.style.setProperty('--bkl',C.l);bkPg.style.setProperty('--bkr',C.r);bkPg.style.setProperty('--bkbg',C.bg);
+  bkS1.innerHTML=C.s1;bkLn.textContent='Your '+C.n+' number';bkNum.placeholder=m==='rocket'?'01XXXXXXXXXX':'01XXXXXXXXX';bkNum.maxLength=C.len;
+  bkLogo.src=pms.find(b=>b.dataset.p===m).querySelector('img').src;
+  bkAmt.innerHTML=n.toLocaleString('en-US')+'<em>BDT</em>';bkAm2.textContent=String(n);bkTo.textContent=PAY_NO[m];
   bkPg.style.display='flex';gsap.set(bkPg,{opacity:0});gsap.set(bkParts,{opacity:0,y:22});
   await new Promise(res=>{gsap.timeline({onComplete:res})
     .to(inn,{opacity:0,duration:.3,ease:'power1.in'},0)                                              // payment boxes fade away
     .to(pop,{left:0,top:0,width:Wr.width,height:Wr.height,borderRadius:0,duration:.8,ease:'power3.inOut'},0)   // the pop-up grows to the whole screen
     .to(pop,{boxShadow:'0 0px 0px rgba(30,41,100,0)',duration:.8,ease:'sine.inOut'},0)
-    .to(wh,{backgroundColor:'#fce7f0',duration:.6,ease:'sine.inOut'},.1)                              // white > light bKash pink
+    .to(wh,{backgroundColor:BK[m].pg,duration:.6,ease:'sine.inOut'},.1)                              // white > light bKash pink
     .set(bkPg,{opacity:1},.55)
     .to(bkParts,{opacity:1,y:0,duration:.55,stagger:.1,ease:'power3.out'},.6)});                      // header, card, button float up one by one
   gwState=5;bkFit()}
@@ -2116,18 +2128,20 @@ async function bkBack(){
     .to(wh,{backgroundColor:'#ffffff',duration:.6,ease:'sine.inOut'},.3)
     .to(inn,{opacity:1,duration:.45,ease:'power1.out'},.65)});
   bkPg.style.display='none';gsap.set([bkPg,...bkParts],{clearProps:'all'});gwState=4}
-// OK (after a request was sent): the card melts away, the whole page shrinks straight into the Add money button (no white flash, nothing jumps)
+// OK (after a request was sent): 1) the pop-up card floats away  2) then the whole page shrinks straight into the Add money button (no flash, no jump)
 async function bkFinish(){
   if(gwState!==5)return;gwState=1;adState=1;
+  await new Promise(res=>{gsap.timeline({onComplete:res})
+    .to(bkOk,{opacity:0,y:34,scale:.92,duration:.35,ease:'power2.in'},0)
+    .to(bkDim,{opacity:0,duration:.35},0)});
+  bkOk.style.display='none';bkDim.style.display='none';
   const ar=rel(bAdd.getBoundingClientRect());
   await new Promise(res=>{gsap.timeline({onComplete:res})
-    .to(bkOk,{opacity:0,scale:.92,duration:.22,ease:'power2.in'},0)
-    .to(bkDim,{opacity:0,duration:.25},0)
-    .to(bkPg,{opacity:0,duration:.25,ease:'power1.in'},.05)
-    .to(pop,{left:ar.l,top:ar.t,width:ar.w,height:ar.h,borderRadius:26,duration:.8,ease:'power3.inOut'},.1)
-    .to(pop,{boxShadow:'0 12px 26px rgba(79,86,230,.3)',duration:.8,ease:'sine.inOut'},.1)
-    .to(gr,{opacity:1,duration:.5,ease:'sine.inOut'},.3)
-    .to(scrim,{opacity:0,duration:.5,ease:'power1.in'},.3)});
+    .to(bkPg,{opacity:0,duration:.25,ease:'power1.in'},0)
+    .to(pop,{left:ar.l,top:ar.t,width:ar.w,height:ar.h,borderRadius:26,duration:.8,ease:'power3.inOut'},0)
+    .to(pop,{boxShadow:'0 12px 26px rgba(79,86,230,.3)',duration:.8,ease:'sine.inOut'},0)
+    .to(gr,{opacity:1,duration:.5,ease:'sine.inOut'},.2)
+    .to(scrim,{opacity:0,duration:.5,ease:'power1.in'},.2)});
   gsap.set(bAdd,{opacity:1});bkPg.style.display='none';
   gsap.set([pop,scrim,ic,ti,wh,gr,xb,inn,...items],{clearProps:'all'});gwReset();amt.value='';mark();bkReset();
   gsap.set(bOut,{visibility:'visible',x:adOut,scaleX:1,scaleY:1,skewX:0});
@@ -2135,39 +2149,45 @@ async function bkFinish(){
     .to(bAdd,{x:0,duration:.75,ease:'power3.inOut'},0)
     .to(bOut,{x:0,duration:.75,ease:'power3.inOut'},0)});
   gsap.set([bAdd,bOut],{clearProps:'all'});bAdd.style.transition=bOut.style.transition='';adState=0}
+// Submit: the button spins for a moment while the request is really sent. Only when Firebase confirms it, the pop-up floats up in the middle of the page.
 async function bkSend(){
-  if(gwState!==5||bkBusy)return;
-  if(bkDone)return;
-  const no=bkNum.value.replace(/\D/g,''),tid=bkTid.value.trim().toUpperCase(),n=Number(amt.value)||0;
-  if(!/^01[3-9]\d{8}$/.test(no)){bkErr('Enter the bKash number you sent money from (11 digits)',bkNum.parentNode);return}
-  if(!/^[A-Z0-9]{8,20}$/.test(tid)){bkErr('Enter the Transaction ID from your bKash message',bkTid.parentNode);return}
+  if(gwState!==5||bkBusy||bkDone)return;
+  const C=BK[bkM],no=bkNum.value.replace(/\D/g,''),tid=bkTid.value.trim().toUpperCase(),n=Number(amt.value)||0;
+  if(!(bkM==='rocket'?/^01[3-9]\d{8,9}$/:/^01[3-9]\d{8}$/).test(no)){bkErr('Enter the '+C.n+' number you sent money from ('+(bkM==='rocket'?'11 or 12':'11')+' digits)',bkNum.parentNode);return}
+  if(!/^[A-Z0-9]{8,20}$/.test(tid)){bkErr('Enter the Transaction ID from your '+C.n+' message',bkTid.parentNode);return}
   const u=auth.currentUser;if(!u){bkMsg.textContent='Please log in again';return}
-  bkBusy=true;bkSub.classList.add('busy');bkSub.firstChild.textContent='Sending...';if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
+  bkBusy=true;bkSub.classList.add('busy');if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
+  const hold=new Promise(r=>setTimeout(r,1400));   // the spinner always spins at least ~1.4 s
+  let err=null;
   try{
-    await setDoc(doc(db,'depositRequests','bkash_'+tid),{uid:u.uid,method:'bkash',amount:n,senderNumber:no,txid:tid,status:'pending',createdAt:serverTimestamp()});
+    if(navigator.onLine===false)throw{code:'unavailable'};
+    await Promise.race([setDoc(doc(db,'depositRequests',bkM+'_'+tid),{uid:u.uid,method:bkM,amount:n,senderNumber:no,txid:tid,status:'pending',createdAt:serverTimestamp()}),
+      new Promise((_,j)=>setTimeout(()=>j({code:'unavailable'}),15000))]);
+  }catch(e){err=e||{code:'x'}}
+  await hold;
+  if(!err){
     q('#bk_okp').textContent='We will add the money to your wallet after we verify your payment.';
-    q('#bk_oks').innerHTML='BDT '+n.toLocaleString('en-US')+' &middot; bKash<br>From '+no+'<br>TrxID '+tid;
+    q('#bk_oks').innerHTML='BDT '+n.toLocaleString('en-US')+' &middot; '+C.n+'<br>From '+no+'<br>TrxID '+tid;
     await bkShowOk();bkDone=true}
-  catch(e){console.error('deposit request',e);
-    bkMsg.textContent=e&&e.code==='permission-denied'?'This Transaction ID was already submitted':/unavailable|network/.test((e&&e.code)||'')?'No internet connection':'Could not send the request. Try again'}
-  bkBusy=false;bkSub.classList.remove('busy');if(!bkDone)bkSub.firstChild.textContent='Submit request'}
-// request sent: the Submit button stretches (same pink, same place) into a white pop-up card in the middle, the tick draws itself, a ripple rings out
+  else{console.error('deposit request',err);
+    bkMsg.textContent=err.code==='permission-denied'?'This Transaction ID was already submitted':/unavailable|network/.test(err.code||'')?'No internet connection. Try again':'Could not send the request. Try again'}
+  bkBusy=false;bkSub.classList.remove('busy')}
+// request really sent: dim layer fades in, the white card floats up from below and settles in the middle, the tick draws itself, a ripple rings out
 async function bkShowOk(){
-  const pr=bkPg.getBoundingClientRect(),sr=bkSub.getBoundingClientRect(),cw=Math.min(pr.width-44,340);
+  const pr=bkPg.getBoundingClientRect(),cw=Math.min(pr.width-48,340);
   bkOki.style.width=cw+'px';bkOk.style.display='block';bkOk.style.visibility='hidden';
   const ch=bkOki.offsetHeight,ring=bkOk.querySelector('.ring'),path=ring.querySelector('path'),rp=ring.querySelector('.rp'),
     parts=[ring,bkOk.querySelector('h3'),q('#bk_okp'),q('#bk_oks'),bkOkb];
-  gsap.set(bkOk,{left:sr.left-pr.left,top:sr.top-pr.top,width:sr.width,height:sr.height,borderRadius:99,backgroundColor:'#E2136E',visibility:'visible'});
-  gsap.set(parts,{opacity:0,y:16});gsap.set(bkDim,{opacity:0,display:'block'});bkSub.style.visibility='hidden';
+  gsap.set(bkOk,{left:(pr.width-cw)/2,top:Math.max(16,(pr.height-ch)*.42),width:cw,height:ch,visibility:'visible',opacity:0,y:70,scale:.88});
+  gsap.set(parts,{opacity:0,y:12});gsap.set(bkDim,{opacity:0,display:'block'});
   await new Promise(res=>{gsap.timeline({onComplete:res})
-    .to(bkDim,{opacity:1,duration:.45,ease:'power1.out'},0)
-    .to(bkOk,{left:(pr.width-cw)/2,top:Math.max(16,(pr.height-ch)*.42),width:cw,height:ch,borderRadius:32,duration:.7,ease:'power3.inOut'},0)
-    .to(bkOk,{backgroundColor:'#ffffff',duration:.4,ease:'sine.inOut'},.2)
-    .to(parts,{opacity:1,y:0,duration:.5,stagger:.08,ease:'power3.out'},.5)
-    .fromTo(path,{strokeDashoffset:1},{strokeDashoffset:0,duration:.5,ease:'power2.out'},.75)
-    .fromTo(rp,{scale:1,opacity:.55},{scale:2,opacity:0,duration:.9,ease:'power2.out'},.95)})}
+    .to(bkDim,{opacity:1,duration:.4,ease:'power1.out'},0)
+    .to(bkOk,{opacity:1,y:0,scale:1,duration:.75,ease:'back.out(1.4)'},0)
+    .to(parts,{opacity:1,y:0,duration:.45,stagger:.07,ease:'power3.out'},.25)
+    .fromTo(path,{strokeDashoffset:1},{strokeDashoffset:0,duration:.5,ease:'power2.out'},.5)
+    .fromTo(rp,{scale:1,opacity:.55},{scale:2,opacity:0,duration:.9,ease:'power2.out'},.7)})}
 bkBack0.onclick=bkBack;bkSub.onclick=bkSend;bkOkb.onclick=bkFinish;
-cb.onclick=()=>{if(gwState!==4||pickBusy||!selP)return;const m=selP.dataset.p;if(m==='bkash')bkOpen();else toast((m[0].toUpperCase()+m.slice(1))+' is coming soon')};
+cb.onclick=()=>{if(gwState!==4||pickBusy||!selP)return;const m=selP.dataset.p;if(BK[m])bkOpen(m);else toast((m[0].toUpperCase()+m.slice(1))+' is coming soon')};
 gw.onclick=e=>{if(!gwState)return gwGo();if(gwState!==2)return;if(e.clientX-gw.getBoundingClientRect().left<GM.wl+6)adClose();else adPay()};
 // keyboard: if it would cover the pop-up, lift the pop-up so the box and the button stay visible
 const kb=()=>{if(adState!==2||gwState===5)return;const vv=window.visualViewport;if(!vv)return;const y=gsap.getProperty(pop,'y'),r=pop.getBoundingClientRect(),top=r.top-y,bot=r.bottom-y;
@@ -2217,13 +2237,13 @@ window.visualViewport&&window.visualViewport.addEventListener('resize',kb)}
         <div id="bk_sc">
           <div id="bk_card">
             <ol id="bk_st">
-              <li><span>1</span><span>Open <b>bKash</b> app &rsaquo; <b>Send Money</b></span></li>
+              <li><span>1</span><span id="bk_s1">Open <b>bKash</b> app &rsaquo; <b>Send Money</b></span></li>
               <li><span>2</span><span>Number: <b id="bk_to">-</b></span><button type="button" class="bk-cp" data-c="to" aria-label="Copy number"><svg class="ico" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="3"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg></button></li>
               <li><span>3</span><span>Amount: <b id="bk_am2">0</b></span><button type="button" class="bk-cp" data-c="am" aria-label="Copy amount"><svg class="ico" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="3"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg></button></li>
-              <li><span>4</span><span>Enter your PIN, finish, then fill the boxes below</span></li>
+              <li><span>4</span><span id="bk_s4">Enter your PIN, finish, then fill the boxes below</span></li>
             </ol>
             <div class="bk-fm">
-              <label class="bk-l" for="bk_num">Your bKash number</label>
+              <label class="bk-l" for="bk_num" id="bk_ln">Your bKash number</label>
               <div class="bk-in"><input id="bk_num" type="text" inputmode="numeric" maxlength="11" autocomplete="off" placeholder="01XXXXXXXXX"></div>
               <label class="bk-l" for="bk_tid">Transaction ID</label>
               <div class="bk-in"><input id="bk_tid" type="text" maxlength="20" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Enter Transaction ID"><button type="button" id="bk_paste" aria-label="Paste"><svg class="ico" viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="3"/><path d="M9 4h6v3H9z"/></svg></button></div>
@@ -2231,7 +2251,7 @@ window.visualViewport&&window.visualViewport.addEventListener('resize',kb)}
           </div>
           <p id="bk_msg"></p>
         </div>
-        <div id="bk_ft"><button type="button" id="bk_sub"><span>Submit request</span></button></div>
+        <div id="bk_ft"><button type="button" id="bk_sub"><span>Submit request</span><i class="bk-sp"></i></button></div>
         <div id="bk_dim"></div>
         <div id="bk_ok"><div id="bk_oki"><i class="ring"><svg viewBox="0 0 24 24"><path pathLength="1" d="M5 13l4 4L19 7"/></svg><b class="rp"></b></i><h3>Request submitted</h3><p id="bk_okp"></p><div class="bk-sm" id="bk_oks"></div><button type="button" id="bk_okb">OK</button></div></div>
       </div>
@@ -2343,7 +2363,7 @@ const admStag=(arr,v)=>new Promise(r=>{gsap.timeline({onComplete:r}).to(arr,v)})
 
 // ---- Admin pages. ADM_TABS = the navigation bar options (scrolls sideways). Add a new option = add one line here + its page.
 const ADM_TABS=[['players','Players','<circle cx="9" cy="8" r="3.4"/><path d="M2.8 20c0-3.6 2.8-5.6 6.2-5.6s6.2 2 6.2 5.6"/><path d="M16 5a3.4 3.4 0 0 1 0 6.4M18.5 14.8c1.9.7 2.9 2.4 2.9 5.2"/>'],
-  ['transactions','Transactions','<path d="M7 4v14M3.5 14.5 7 18l3.5-3.5"/><path d="M17 20V6M13.5 9.5 17 6l3.5 3.5"/>']];
+  ['transactions','Requests','<path d="M7 4v14M3.5 14.5 7 18l3.5-3.5"/><path d="M17 20V6M13.5 9.5 17 6l3.5 3.5"/>']];
 async function admOpen(){
   let st=admGet();if(admLeft(st)===0&&st.u){st={f:0,u:0,bp:false};admSet(st)}
   // 1) if the box is already where the pop-up would sit in the middle of the screen (within 2px) the animation starts at once on tap;
@@ -2682,30 +2702,98 @@ so for now it only shows "No transactions yet". Called by initAdmin() in admin.h
 -->
 <script type="text/plain" data-kind="css" data-order="105">
 /* ===== pages/transactions/transactions.css ===== */
-/* Transactions page: sits under the navigation bar, same place as the Players list (the "empty" box style is shared, it lives in home.html) */
+/* Admin > Requests: money requests of the players (cards). The "empty" box style is shared, it lives in home.html */
 #adm_transactions{padding-top:6px}
 #adm_transactions .empty{padding:34px 16px}
+.rq-chips{display:flex;gap:8px;margin-bottom:14px}
+.rq-ch{all:unset;box-sizing:border-box;flex:1;text-align:center;padding:11px 4px;border-radius:99px;background:#fff;box-shadow:0 8px 18px rgba(30,41,100,.06);font:700 10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:#6b7692;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .3s,color .3s}
+.rq-ch.on{background:var(--grad);color:#fff}.rq-ch i{font-style:normal;margin-left:5px;opacity:.85}
+.rq-list{display:grid;gap:14px}
+.rq{background:#fff;border-radius:24px;box-shadow:0 12px 26px rgba(30,41,100,.08);padding:14px;display:grid;gap:12px}
+.rq-h{display:flex;align-items:center;gap:11px}
+.rq-m{flex:none;width:42px;height:42px;border-radius:14px;display:grid;place-items:center;color:#fff;font:800 13px var(--sans);font-style:normal}
+.rq-w{flex:1;min-width:0;display:grid;gap:2px}.rq-w b{font:800 15px var(--sans);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rq-w small{font:500 11px var(--mono);color:#6b7692;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rq-s{flex:none;padding:5px 10px;border-radius:99px;font:700 9.5px var(--mono);letter-spacing:.1em;text-transform:uppercase}
+.rq-s.pending{background:rgba(245,158,11,.15);color:#b45309}.rq-s.approved{background:rgba(13,148,136,.14);color:#0d9488}.rq-s.rejected{background:rgba(214,69,42,.12);color:#c0392b}
+.rq-am{font:800 28px/1 var(--sans);letter-spacing:-.01em}.rq-am small{font:700 12px var(--mono);letter-spacing:.1em;color:#6b7692;margin-right:6px}
+.rq-d{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.rq-d p{margin:0;padding:9px 11px;border-radius:14px;background:#f3f6fe;display:grid;gap:2px;min-width:0}.rq-d p.w{grid-column:1/-1}
+.rq-d small{font:700 9px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:#8791a8}
+.rq-d b{font:800 13.5px var(--sans);letter-spacing:.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;-webkit-user-select:text;user-select:text}
+.rq-a{display:flex;gap:10px}
+.rq-a button{all:unset;box-sizing:border-box;flex:1;height:46px;border-radius:99px;display:grid;place-items:center;font:700 12px var(--mono);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .2s,opacity .2s,background .25s}
+.rq-a button:active{transform:scale(.96)}.rq-a button[disabled]{opacity:.55;pointer-events:none}
+.rq-no{background:rgba(214,69,42,.1);color:#c0392b}.rq-yes{background:#0d9488;color:#fff;box-shadow:0 10px 20px rgba(13,148,136,.25)}
+.rq-no.arm{background:#c0392b;color:#fff}.rq-yes.arm{background:#0a7a70}
+.rq-err{margin:0;min-height:0;text-align:center;font:700 11px var(--mono);color:#c0392b}
 </script>
 <script type="text/plain" data-kind="app" data-order="205">
 /* ===== pages/transactions/transactions.js ===== */
 // ======================================================================
 // @@TRANSACTIONS
-// Admin Panel > Transactions page: all players' Add money / Withdraw requests.
+// Admin Panel > Requests page: every player's "Add money" request as a card (live, newest first).
+//   Accept  = in ONE safe step: the request becomes 'approved', the amount is added to users/{uid}.balance, and a line is added to users/{uid}/transactions.
+//   Reject  = the request becomes 'rejected', no money moves.   A request can only be decided once (it must still be 'pending').
+//   Tap Accept / Reject once = the button asks "Tap again", tap again = done (so nobody adds money by a mistaken touch).
 // Called by initAdmin() in admin.html:  const admTransactions = txSetup(X);  ->  admTransactions({box}) gives { start, stop }.
-// TODO (when the request system exists): read the requests from Firestore here, then draw them in txDraw(rows).
-//   a request row is expected to look like: { name, username, type:'add'|'withdraw', amount:number, status:'pending'|'done'|'rejected', createdAt:Timestamp }
 // ======================================================================
 function txSetup(X){
+const {db}=X;
+const TXM={bkash:['bKash','bK','#E2136E'],nagad:['Nagad','Ng','#EA4A25'],rocket:['Rocket','Rk','#8A288F'],binance:['Binance','Bn','#C99A06']};
+const FL=[['pending','Pending'],['approved','Accepted'],['rejected','Rejected']];
 const TX_ICON='<svg class="ico" viewBox="0 0 24 24"><path d="M7 4v14M3.5 14.5 7 18l3.5-3.5"/><path d="M17 20V6M13.5 9.5 17 6l3.5 3.5"/></svg>';
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=ts=>{const d=ts&&ts.toDate?ts.toDate():null;return d?d.toLocaleString('en-GB',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit',hour12:true}):'just now'};
+const money=n=>Number(n||0).toLocaleString('en-US');
 function admTransactions(U){
-  const {box}=U;let on=false;
-  // draws the page: no requests exist yet = one friendly box
-  function txDraw(rows){
-    box.innerHTML='';
-    if(!rows||!rows.length){const d=document.createElement('div');d.className='empty';d.innerHTML=TX_ICON+'<p>No transactions yet</p>';box.appendChild(d);return}
-  }
-  txDraw([]);
-  return{start:()=>{on=true},stop:()=>{on=false;gsap.killTweensOf(box);box.innerHTML=''}}}
+  const {box}=U;let on=false,unsub=null,rows=[],flt='pending',loaded=false,failed=false;const uc={};
+  box.innerHTML='<div class="rq-chips"></div><div class="rq-list"></div>';
+  const chEl=box.querySelector('.rq-chips'),ls=box.querySelector('.rq-list');
+  // who sent it: name + username from users/{uid} (the admin may read it), cached
+  async function names(){const ids=[...new Set(rows.map(r=>r.uid).filter(u=>u&&!uc[u]))];
+    await Promise.all(ids.map(async u=>{try{const s=await getDoc(doc(db,'users',u));uc[u]=s.exists()?s.data():{}}catch(e){uc[u]={}}}));
+    ls.querySelectorAll('[data-uid]').forEach(el=>{const d=uc[el.dataset.uid]||{};if(el.dataset.f==='n')el.textContent=d.name||d.username||'Player';else el.textContent=(d.username?'@'+d.username+' · ':'')+el.dataset.t})}
+  function drawChips(){chEl.innerHTML=FL.map(([k,l])=>'<button type="button" class="rq-ch'+(k===flt?' on':'')+'" data-k="'+k+'">'+l+'<i>'+rows.filter(r=>(r.status||'pending')===k).length+'</i></button>').join('')}
+  function draw(anim){
+    drawChips();const list=rows.filter(r=>(r.status||'pending')===flt);ls.innerHTML='';
+    if(!loaded||!list.length){const d=document.createElement('div');d.className='empty';d.innerHTML=TX_ICON+'<p>'+(failed?'Could not load requests':!loaded?'Loading...':'No '+flt+' requests')+'</p>';ls.appendChild(d);return}
+    ls.innerHTML=list.map(r=>{const m=TXM[r.method]||[r.method||'?','?','#6b7692'],st=r.status||'pending';
+      return '<div class="rq" data-id="'+esc(r.id)+'"><div class="rq-h"><i class="rq-m" style="background:'+m[2]+'">'+m[1]+'</i><div class="rq-w"><b data-uid="'+esc(r.uid)+'" data-f="n">Player</b><small data-uid="'+esc(r.uid)+'" data-t="'+esc(fmt(r.createdAt))+'">'+esc(fmt(r.createdAt))+'</small></div><span class="rq-s '+st+'">'+(st==='approved'?'Accepted':st==='rejected'?'Rejected':'Pending')+'</span></div>'
+        +'<div class="rq-am"><small>BDT</small>'+money(r.amount)+'</div>'
+        +'<div class="rq-d"><p><small>Method</small><b>'+esc(m[0])+'</b></p><p><small>Sent from</small><b>'+esc(r.senderNumber)+'</b></p><p class="w"><small>Transaction ID</small><b>'+esc(r.txid)+'</b></p></div>'
+        +(st==='pending'?'<p class="rq-err"></p><div class="rq-a"><button type="button" class="rq-no" data-a="rej">Reject</button><button type="button" class="rq-yes" data-a="acc">Accept</button></div>':'')+'</div>'}).join('');
+    if(anim)gsap.from(ls.children,{opacity:0,y:18,duration:.5,stagger:.06,ease:'power2.out',clearProps:'transform,opacity'});
+    names()}
+  // Accept / Reject, all-or-nothing (a Firestore transaction)
+  async function decide(id,ok){
+    await runTransaction(db,async tx=>{
+      const rRef=doc(db,'depositRequests',id),r=await tx.get(rRef);
+      if(!r.exists()||r.data().status!=='pending')throw{code:'handled'};
+      const d=r.data();
+      if(ok){const uRef=doc(db,'users',d.uid),u=await tx.get(uRef);if(!u.exists())throw{code:'nouser'};
+        tx.update(uRef,{balance:(Number(u.data().balance)||0)+Number(d.amount)});
+        tx.set(doc(db,'users',d.uid,'transactions','dep_'+id),{type:'add',amount:Number(d.amount),method:d.method,status:'done',createdAt:serverTimestamp(),requestId:id})}
+      tx.update(rRef,{status:ok?'approved':'rejected',reviewedAt:serverTimestamp()})})}
+  box.onclick=async e=>{
+    const ch=e.target.closest('.rq-ch');if(ch){if(ch.dataset.k===flt)return;flt=ch.dataset.k;draw(true);return}
+    const b=e.target.closest('.rq-a button');if(!b||b.disabled)return;
+    const card=b.closest('.rq'),id=card.dataset.id,ok=b.dataset.a==='acc',row=rows.find(r=>r.id===id),err=card.querySelector('.rq-err'),both=[...card.querySelectorAll('.rq-a button')];
+    if(!b.classList.contains('arm')){   // first tap: ask again
+      both.forEach(x=>{x.classList.remove('arm');x.textContent=x.dataset.a==='acc'?'Accept':'Reject'});
+      b.classList.add('arm');b.textContent=ok?'Add BDT '+money(row&&row.amount)+'?':'Sure? Reject';err.textContent='';
+      clearTimeout(card._t);card._t=setTimeout(()=>{if(b.isConnected){b.classList.remove('arm');b.textContent=ok?'Accept':'Reject'}},3500);return}
+    clearTimeout(card._t);both.forEach(x=>x.disabled=true);b.textContent='Please wait...';err.textContent='';
+    try{await decide(id,ok)}
+    catch(x){console.error('request decision',x);const c=x&&x.code;
+      err.textContent=c==='handled'?'Already decided':c==='nouser'?'This player no longer exists':c==='permission-denied'?'Not allowed: update the Firestore rules':'Failed. Check internet and try again';
+      both.forEach(y=>{y.disabled=false;y.classList.remove('arm');y.textContent=y.dataset.a==='acc'?'Accept':'Reject'})}}
+  draw(false);
+  return{start:()=>{if(on)return;on=true;failed=false;
+      try{unsub=admFS_onSnapshot(admFS_query(admFS_collection(db,'depositRequests'),admFS_orderBy('createdAt','desc'),admFS_limit(150)),
+        s=>{const first=!loaded;rows=s.docs.map(d=>({id:d.id,...d.data()}));loaded=true;failed=false;draw(first)},
+        e=>{console.error('requests',e);failed=true;loaded=false;draw(false)})}catch(e){console.error(e);failed=true;draw(false)}},
+    stop:()=>{on=false;if(unsub){unsub();unsub=null}gsap.killTweensOf(ls.children);rows=[];loaded=false;draw(false)}}}
 return admTransactions}
 </script>
 <!-- ####  END OF FILE: transactions.html  #### -->
