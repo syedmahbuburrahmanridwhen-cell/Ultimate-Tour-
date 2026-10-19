@@ -1699,7 +1699,7 @@ This file is NOT opened directly. index.html loads it. It holds this page's css 
 .wl-am{font:800 15px var(--sans);white-space:nowrap}.wl-it.add .wl-am{color:#0d9488}.wl-it.out .wl-am{color:#c0392b}
 /* @@WALLET-ADDMONEY - pop-up that the wallet page's Add money button grows into */
 #ad_sc{position:absolute;inset:0;z-index:3;display:none;opacity:0;background:rgba(15,23,48,.5);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px)}
-#ad_pop{position:absolute;z-index:4;display:none;box-sizing:border-box;border-radius:26px;color:var(--ink);will-change:transform}
+#ad_pop{position:absolute;z-index:4;display:none;box-sizing:border-box;border-radius:26px;color:var(--ink);will-change:transform,top,height}
 #ad_wh,#ad_gr{position:absolute;inset:0;border-radius:inherit;pointer-events:none}
 #ad_wh{background:#fff;opacity:0}#ad_gr{background:var(--grad)}
 #ad_in{position:absolute;left:0;top:0;box-sizing:border-box;padding:28px 22px 22px;display:flex;flex-direction:column;gap:16px}
@@ -1731,8 +1731,8 @@ This file is NOT opened directly. index.html loads it. It holds this page's css 
 #ad_tx,#ad_cf{padding-left:21px;color:#fff}#ad_cl{color:var(--pri)}#ad_cl,#ad_cf{opacity:0}
 #ad_ball{left:0;top:50%;width:9px;height:9px;margin:-4.5px 0 0 -4.5px;border-radius:50%;background:#fff}
 /* @@WALLET-ADDMONEY-PAYMETHOD - after Confirm: the 4 payment method boxes (bKash / Nagad / Rocket / Binance) + "Select payment method" title */
-#ad_t2{position:absolute;top:14px;height:30px;font:700 13px/30px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink);white-space:nowrap;opacity:0}
-#ad_pm{position:absolute;left:22px;right:22px;top:68px;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:12px;visibility:hidden}
+#ad_t2{position:absolute;top:27px;height:30px;font:700 15px/30px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink);white-space:nowrap;opacity:0}
+#ad_pm{position:absolute;left:22px;right:22px;top:84px;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:12px;visibility:hidden}
 .pm{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;border-radius:22px;background:#f3f6fe;border:1.5px solid rgba(99,102,241,.16);box-shadow:0 6px 16px rgba(30,41,100,.06);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .25s,border-color .25s,box-shadow .25s,scale .2s}
 .pm:active{scale:.96}
 .pm img{width:60px;height:60px;display:block;pointer-events:none}
@@ -1956,17 +1956,17 @@ async function gwGo(){
 async function adPay(){
   gwState=1;amt.blur();
   const Wr=W.getBoundingClientRect(),pw=inn.offsetWidth,melt=[ti,...items,xb];
-  const BH=Math.min(136,Math.floor((Wr.height-32-68-12-22)/2)),gh=2*BH+12,ph2=68+gh+22,ft2=Math.max(16,(Wr.height-ph2)*.42);   // taller pop-up
+  const BH=Math.min(136,Math.floor((Wr.height-32-84-12-22)/2)),gh=2*BH+12,ph2=84+gh+22,ft2=Math.max(16,(Wr.height-ph2)*.42);   // taller pop-up
   pmw.style.height=gh+'px';
-  t2.style.left=((pw-t2.offsetWidth)/2)+'px';
+  t2.style.left=(68+((pw-20-68)-t2.offsetWidth)/2)+'px';   // title sits in the space to the right of the back arrow
   gsap.set(pmw,{visibility:'visible'});gsap.set(t2,{opacity:0,y:10});
   pms.forEach((b,i)=>gsap.set(b,{x:i%2?Wr.width:-Wr.width}));       // left column waits outside the left edge, right column outside the right edge
   await new Promise(res=>{gsap.timeline({onComplete:res})
     .to(melt,{opacity:0,scale:.8,duration:.4,ease:'power2.in',stagger:.04},0)
     .set(melt,{visibility:'hidden'},.65)
-    .to(pop,{top:ft2,height:ph2,duration:.7,ease:'power3.inOut'},0)
+    .to(pop,{top:ft2,height:ph2,duration:.8,ease:'power2.inOut'},0)
     .to(pms,{x:0,duration:.8,ease:'power3.out'},.3)                                       // straight, smooth slide-in
-    .to(ic,{scale:34/56,x:29-AG.icx,y:29-AG.icy,duration:.7,ease:'power3.inOut'},.15)     // + goes to the top-left corner...
+    .to(ic,{scale:40/56,x:40-AG.icx,y:42-AG.icy,duration:.7,ease:'power3.inOut'},.15)     // + goes to the top-left (a bit inside the corner)...
     .to(icSv,{opacity:0,rotation:90,duration:.3,ease:'power2.in'},.25)
     .fromTo(bkSv,{opacity:0,rotation:-90},{opacity:1,rotation:0,duration:.4,ease:'power2.out',immediateRender:false},.5)   // ...and becomes a back arrow
     .to(t2,{opacity:1,y:0,duration:.55,ease:'power3.out'},.6)});                          // title floats up
@@ -1974,6 +1974,7 @@ async function adPay(){
 async function adBack(){
   if(gwState!==4)return;gwState=1;
   const Wr=W.getBoundingClientRect(),melt=[ti,...items,xb];
+  gsap.killTweensOf([gb,gf,ball,tx,cl,cf]);gsap.set([gb,gf,ball,tx,cl,cf],{clearProps:'all'});gwInit();   // button back to "Proceed to payment" while still invisible
   gsap.set(melt,{visibility:'visible'});
   await new Promise(res=>{gsap.timeline({onComplete:res})
     .to(pms,{x:i=>i%2?Wr.width:-Wr.width,duration:.7,ease:'power3.in'},0)                  // boxes leave the way they came
@@ -1981,7 +1982,7 @@ async function adBack(){
     .to(bkSv,{opacity:0,rotation:90,duration:.3,ease:'power2.in'},.05)
     .to(icSv,{opacity:1,rotation:0,duration:.4,ease:'power2.out'},.3)
     .to(ic,{x:0,y:0,scale:1,duration:.7,ease:'power3.inOut'},.1)
-    .to(pop,{top:AG.ft,height:AG.ph,duration:.7,ease:'power3.inOut'},.3)                   // pop-up shrinks back
+    .to(pop,{top:AG.ft,height:AG.ph,duration:.8,ease:'power2.inOut'},.2)                   // pop-up shrinks back
     .to(melt,{opacity:1,scale:1,duration:.45,ease:'power2.out',stagger:.05},.5)});         // title, amount box, quick amounts, button, X come back
   gwReset();gwInit();}                                                                      // button is "Proceed to payment" again, the amount stays
 ic.onclick=()=>{if(gwState===4)adBack()};
