@@ -2149,10 +2149,10 @@ const admTransactions=txSetup(X);
 const {auth,db,E,q,DAY,PF_BYPASS,PF_LOCK,pfFmt,pfScrollBy,pfSl,pfTw,pfBusy}=X;   // from app.js (pfBusy is a function that tells if the profile card is busy)
 // ======================================================================
 // @@ADMIN   Admin Panel option (Profile tab) > "Admin Authentication" pop-up > blank white admin page with an X.
-//   Password: ADM_PW. 3 wrong tries lock the Verify button for 24h (saved in this phone's localStorage per account).
+//   Password: NOT in this file anymore. It is read from Firestore doc  admins/{your uid}  field  pw  (only that admin can read it). 3 wrong tries lock the Verify button for 24h (saved in this phone's localStorage per account).
 //   Hold the locked Verify button 10s = unlock; the pop-up then also asks for the bypass code (PF_BYPASS) until you get in.
 // ======================================================================
-const ADM_PW='Ridwhen109210921092838383',ADM_SHIELD='<path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>',admBtn=q('#adm_btn');
+const ADM_SHIELD='<path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/>',admBtn=q('#adm_btn');
 let admBusy=false;
 const admKey=()=>'adm_'+(auth.currentUser?auth.currentUser.uid:'x');
 const admGet=()=>{try{return JSON.parse(localStorage.getItem(admKey()))||{}}catch(e){return{}}};
@@ -2291,8 +2291,12 @@ async function admOpen(){
       pg.remove();pp.remove();bd.remove();admBtn.style.opacity='';admBusy=false}};
   bd.onclick=()=>close();
   // --- Verify
-  okb.onclick=()=>{if(okb._lk||done)return;
-    if(pwIn.value===ADM_PW&&(!st.bp||bpIn.value.trim()===PF_BYPASS)){st={f:0,u:0,bp:false};admSet(st);enter();return}
+  let chk=false;
+  okb.onclick=async()=>{if(okb._lk||done||chk)return;chk=true;
+    // the password lives in Firestore (admins/{uid}.pw). Only a real admin account can read that doc, everybody else just gets "wrong password".
+    let ok=false;try{const u=auth.currentUser,a=u&&await getDoc(doc(db,'admins',u.uid));ok=!!(a&&a.exists()&&typeof a.data().pw==='string'&&a.data().pw!==''&&pwIn.value===a.data().pw)}catch(e){ok=false}
+    chk=false;if(done)return;
+    if(ok&&(!st.bp||bpIn.value.trim()===PF_BYPASS)){st={f:0,u:0,bp:false};admSet(st);enter();return}
     st.f=(st.f||0)+1;pwIn.value='';bpIn.value='';
     if(st.f>=3){st={f:0,u:Date.now()+DAY,bp:false};admSet(st);msg.textContent='';lockNow(true,true);reflow(false)}
     else{admSet(st);const n=3-st.f;msg.textContent='Wrong '+(st.bp?'password or code':'password')+' · '+n+(n===1?' try':' tries')+' left';
