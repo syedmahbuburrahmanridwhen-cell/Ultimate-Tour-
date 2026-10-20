@@ -71,7 +71,7 @@ body{height:100%;margin:0;background:#fff;overflow:hidden}
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import {getAuth,GoogleAuthProvider,signInWithPopup,signInWithEmailAndPassword,createUserWithEmailAndPassword,sendPasswordResetEmail,confirmPasswordReset,verifyPasswordResetCode,fetchSignInMethodsForEmail,onAuthStateChanged,signOut,deleteUser,sendEmailVerification} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import {initializeFirestore,doc,getDoc,setDoc,runTransaction,serverTimestamp,collection as wlCol,getDocs as wlGet,query as wlQry,orderBy as wlOrd,limit as wlLim} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
-import {collection as admFS_collection,onSnapshot as admFS_onSnapshot,query as admFS_query,orderBy as admFS_orderBy,limit as admFS_limit,startAfter as admFS_startAfter,where as admFS_where,getDocs as admFS_getDocs,getCountFromServer as admFS_getCountFromServer} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";   // used only by the Admin Panel code at the bottom of this file
+import {collection as admFS_collection,onSnapshot as admFS_onSnapshot,query as admFS_query,orderBy as admFS_orderBy,limit as admFS_limit,startAfter as admFS_startAfter,where as admFS_where,getDocs as admFS_getDocs,getCountFromServer as admFS_getCountFromServer,deleteDoc as admFS_deleteDoc,writeBatch as admFS_writeBatch} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";   // used only by the Admin Panel code at the bottom of this file
 const app=initializeApp({apiKey:"AIzaSyB7WRLBVRufPnlFck0dreWcU8-yWh9f7_0",authDomain:"ultimate-tour-1.firebaseapp.com",projectId:"ultimate-tour-1",storageBucket:"ultimate-tour-1.firebasestorage.app",messagingSenderId:"593726515356",appId:"1:593726515356:web:bafe179aed7d77015be559"});
 const auth=getAuth(app),db=initializeFirestore(app,{experimentalForceLongPolling:true}),q=s=>document.querySelector(s),v=i=>q('#su_'+i).value.trim();
 
@@ -298,7 +298,8 @@ function liveBalance(){const u=auth.currentUser;if(!u||balUid===u.uid)return;if(
     gsap.killTweensOf(liveBalance);gsap.to(o,{v:b,duration:b>from?1.1:.5,ease:'power2.out',overwrite:true,onUpdate:()=>els.forEach(e=>e.textContent=balTxt(o.v)),onComplete:()=>els.forEach(e=>e.textContent=balTxt(b))});
     if(b>from){const t=q('#toast');if(t){t.textContent='BDT '+(b-from).toLocaleString('en-US')+' added to your wallet';t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2600)}
       document.querySelectorAll('#hm_bal,#wl_bal').forEach(e=>gsap.fromTo(e,{scale:1.12},{scale:1,duration:.8,ease:'elastic.out(1,.4)',clearProps:'transform'}));
-      window.dispatchEvent(new Event('wl-refresh'))}},e=>console.error('balance listener',e))}
+      }
+    window.dispatchEvent(new Event('wl-refresh'))},e=>console.error('balance listener',e))}
 onAuthStateChanged(auth,u=>{if(!u&&balUnsub){balUnsub();balUnsub=null;balUid=null;balPrev=0}});
 const enter=(p,np)=>{try{localStorage.setItem('ut_in','1')}catch(e){}const u=p.username||'player';q('#hm_user').textContent=u;q('#hm_av').textContent=u[0].toUpperCase();
   try{pfReset();fillPf(p)}catch(e){console.error(e)}   // a card problem must never block login/home
@@ -1805,6 +1806,44 @@ This file is NOT opened directly. index.html loads it. It holds this page's css 
 #bk_sub .bk-sp{position:absolute;left:50%;top:50%;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;border:3px solid rgba(128,128,128,.3);border-top-color:var(--bkt);opacity:0;transition:opacity .2s;pointer-events:none}
 #bk_sub.busy .bk-sp{opacity:1;animation:bkspin .7s linear infinite}
 @keyframes bkspin{to{transform:rotate(360deg)}}
+/* @@WALLET-WITHDRAW - pop-up that the wallet page's Withdraw button grows into (same look as Add money) */
+#wd_sc{position:absolute;inset:0;z-index:3;display:none;opacity:0;background:rgba(15,23,48,.5);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px)}
+#wd_pop{position:absolute;z-index:4;display:none;box-sizing:border-box;border-radius:26px;color:var(--ink);will-change:transform,top,height}
+#wd_wh,#wd_gr{position:absolute;inset:0;border-radius:inherit;pointer-events:none}#wd_wh{background:#fff;opacity:0}#wd_gr{background:var(--grad)}
+#wd_fk{position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;gap:8px;color:#fff;font:700 12px var(--mono);letter-spacing:.06em;text-transform:uppercase;pointer-events:none;opacity:0;white-space:nowrap}
+#wd_fk .ico{flex:none;width:40px;height:40px;padding:10px;border-radius:50%;background:rgba(255,255,255,.24)}
+#wd_in{position:absolute;left:0;top:0;box-sizing:border-box;padding:28px 22px 22px;display:flex;flex-direction:column;gap:14px}
+#wd_hd{display:flex;flex-direction:column;align-items:center;gap:10px}
+#wd_ic{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;background:rgba(99,102,241,.14);color:var(--pri)}#wd_ic .ico{width:28px;height:28px}
+#wd_ti{font:700 17px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink)}
+#wd_x{appearance:none;-webkit-appearance:none;position:absolute;right:12px;top:12px;width:34px;height:34px;padding:0;border:0;border-radius:50%;background:rgba(99,102,241,.1);color:var(--pri);display:grid;place-items:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#wd_x .ico{width:18px;height:18px}
+#wd_av{margin:0;text-align:center;font:500 12.5px var(--mono);color:#6b7692}#wd_av b{font-weight:800;color:var(--ink);margin-left:4px}
+.wd-pm{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.wd-pm button{appearance:none;-webkit-appearance:none;height:44px;padding:0;border:1.5px solid rgba(99,102,241,.2);border-radius:16px;background:#fff;color:var(--pri);font:700 13px var(--mono);cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .25s,color .25s,border-color .25s,box-shadow .25s,transform .2s}
+.wd-pm button:active{transform:scale(.94)}
+.wd-pm button.on{background:var(--grad);color:#fff;border-color:transparent;box-shadow:0 8px 18px rgba(79,86,230,.3)}
+#wd_msg{margin:-4px 0 -4px;min-height:16px;text-align:center;font:700 11.5px/1.35 var(--mono);color:#d6452a}
+#wd_go{appearance:none;-webkit-appearance:none;position:relative;height:54px;border:0;border-radius:99px;background:var(--grad);color:#fff;font:700 13px var(--mono);letter-spacing:.1em;text-transform:uppercase;cursor:pointer;box-shadow:0 12px 26px rgba(79,86,230,.32);-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center}
+#wd_go span{transition:opacity .2s}#wd_go.busy{pointer-events:none}#wd_go.busy span{opacity:0}
+#wd_go .bk-sp{position:absolute;left:50%;top:50%;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;border:3px solid rgba(255,255,255,.35);border-top-color:#fff;opacity:0;transition:opacity .2s;pointer-events:none}
+#wd_go.busy .bk-sp{opacity:1;animation:bkspin .7s linear infinite}
+#wd_okv{position:absolute;left:0;top:0;box-sizing:border-box;display:none;flex-direction:column;align-items:center;text-align:center;gap:11px;padding:28px 20px 20px}
+#wd_okv .ring{position:relative;width:76px;height:76px;border-radius:50%;background:var(--grad);display:grid;place-items:center;box-shadow:0 12px 26px rgba(79,86,230,.35)}
+#wd_okv .ring svg{width:40px;height:40px;fill:none;stroke:#fff;stroke-width:3.2;stroke-linecap:round;stroke-linejoin:round}
+#wd_okv .ring path{stroke-dasharray:1;stroke-dashoffset:1}
+#wd_okv .rp{position:absolute;inset:0;border-radius:50%;border:2px solid var(--pri);opacity:0;pointer-events:none}
+#wd_okv h3{margin:2px 0 0;font:800 21px var(--sans);color:var(--ink)}
+#wd_okv p{margin:0;font:500 12.5px/1.6 var(--mono);color:#5b6785}
+#wd_oks{width:100%;box-sizing:border-box;padding:11px 14px;border-radius:16px;background:#f3f6fe;border:1px solid rgba(99,102,241,.16);font:700 12px/1.7 var(--mono);color:var(--ink)}
+#wd_okb{appearance:none;-webkit-appearance:none;width:100%;height:50px;margin-top:4px;border:0;border-radius:99px;background:var(--grad);color:#fff;font:700 13px var(--mono);letter-spacing:.14em;text-transform:uppercase;cursor:pointer;box-shadow:0 10px 22px rgba(79,86,230,.3);-webkit-tap-highlight-color:transparent}
+/* history: Clear all + a delete icon on every line (testing helpers) */
+.wl-hh{display:flex;align-items:center;justify-content:space-between;margin:6px 0 -4px}.wl-hh .wl-h{margin:0}
+#wl_clr{all:unset;box-sizing:border-box;padding:7px 13px;border-radius:99px;background:rgba(214,69,42,.1);color:#c0392b;font:700 10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#wl_clr.arm{background:#c0392b;color:#fff}
+.wl-del{all:unset;box-sizing:border-box;flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:#9aa4bd;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.wl-del .ico{width:17px;height:17px}.wl-del:active{background:rgba(214,69,42,.12);color:#c0392b}
+.wl-it.rej .wl-am{color:#9aa4bd;text-decoration:line-through}
 </script>
 <script type="text/plain" data-kind="app" data-order="150">
 /* ===== pages/wallet/wallet.js ===== */
@@ -1823,17 +1862,20 @@ const clean=()=>{gsap.set([bg,gl,...kids()],{clearProps:'all'});if(gh){gh.remove
 function ghost(c){   // a look-alike of the home card (text + glow) that sits inside the sheet, so the card seems to be the thing that grows
   gh=card.cloneNode(true);gh.removeAttribute('id');gh.querySelectorAll('[id]').forEach(e=>e.removeAttribute('id'));gh.querySelectorAll('[data-toast]').forEach(e=>e.removeAttribute('data-toast'));
   gh.classList.add('wl-gh');gh.style.width=c.width+'px';gh.style.height=c.height+'px';bg.appendChild(gh);return gh}
+let wlRows=[];
 const WL_IC={add:'<path d="M12 5v14M5 12h14"/>',out:'<path d="M7 17 17 7M9 7h8v8"/>'};
 function wlDate(t){try{const d=t&&t.toDate?t.toDate():null;return d?d.toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):''}catch(e){return''}}
 function wlNote(txt){list.innerHTML='';const d=document.createElement('div');d.className='empty';d.innerHTML='<svg class="ico" viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 10h18M16 15h2"/></svg><p></p>';d.querySelector('p').textContent=txt;list.appendChild(d)}
 function wlRender(rows){
   if(!rows)return wlNote('Could not load transactions');
+  wlRows=rows;
   if(!rows.length)return wlNote('No transactions yet');
   list.innerHTML='';
-  for(const t of rows){const out=t.type==='withdraw'||t.type==='out',el=document.createElement('div');el.className='wl-it '+(out?'out':'add');
-    el.innerHTML='<i class="wl-ic"><svg class="ico" viewBox="0 0 24 24">'+(out?WL_IC.out:WL_IC.add)+'</svg></i><div class="wl-mid"><b></b><small></small></div><span class="wl-am"></span>';
+  for(const t of rows){const out=t.type==='withdraw'||t.type==='out',rej=t.status==='rejected',el=document.createElement('div');el.className='wl-it '+(out?'out':'add')+(rej?' rej':'');
+    el.innerHTML='<i class="wl-ic"><svg class="ico" viewBox="0 0 24 24">'+(out?WL_IC.out:WL_IC.add)+'</svg></i><div class="wl-mid"><b></b><small></small></div><span class="wl-am"></span><button type="button" class="wl-del" aria-label="Delete"><svg class="ico" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg></button>';
     el.querySelector('b').textContent=out?'Withdraw':'Add money';
-    el.querySelector('small').textContent=[wlDate(t.createdAt),t.method,t.status].filter(Boolean).join(' · ');
+    el.querySelector('small').textContent=[wlDate(t.createdAt),t.method,rej?'rejected · refunded':t.status].filter(Boolean).join(' · ');
+    el.querySelector('.wl-del').onclick=()=>wlDel(t,el);
     el.querySelector('.wl-am').textContent=(out?'- ':'+ ')+wlMoney(t.amount);
     list.appendChild(el)}
   gsap.from(list.children,{y:18,opacity:0,duration:.45,stagger:.04,ease:'power3.out',clearProps:'transform,opacity'})}
@@ -1842,8 +1884,18 @@ async function wlLoad(){
   if(wlUid!==u.uid){wlUid=u.uid;wlFirst=true}
   if(wlFirst)wlNote('Loading...');
   try{const s=await wlGet(wlQry(wlCol(db,'users',u.uid,'transactions'),wlOrd('createdAt','desc'),wlLim(100)));
-    if(!wlOpen)return;wlFirst=false;wlRender(s.docs.map(d=>d.data()))}
+    if(!wlOpen)return;wlFirst=false;wlRender(s.docs.map(d=>({id:d.id,...d.data()})))}
   catch(e){console.error('wallet history',e);if(wlOpen)wlRender(null)}}
+async function wlDel(t,el){const u=auth.currentUser;if(!u||!t.id)return;el.style.pointerEvents='none';
+  try{await admFS_deleteDoc(doc(db,'users',u.uid,'transactions',t.id));wlRows=wlRows.filter(x=>x.id!==t.id);
+    gsap.to(el,{opacity:0,x:50,duration:.28,ease:'power2.in',onComplete:()=>{el.remove();if(!wlRows.length)wlNote('No transactions yet')}})}
+  catch(e){console.error('delete history line',e);el.style.pointerEvents='';toast('Could not delete')}}
+{const b=q('#wl_clr');b.onclick=async()=>{const u=auth.currentUser;if(!u||!wlRows.length)return;
+  if(!b.classList.contains('arm')){b.classList.add('arm');b.textContent='Tap again';clearTimeout(b._t);b._t=setTimeout(()=>{b.classList.remove('arm');b.textContent='Clear all'},3000);return}
+  clearTimeout(b._t);b.classList.remove('arm');b.textContent='Clear all';
+  try{const bt=admFS_writeBatch(db);wlRows.slice(0,400).forEach(x=>bt.delete(doc(db,'users',u.uid,'transactions',x.id)));await bt.commit();wlRows=[];
+    gsap.to(list.children,{opacity:0,y:-10,duration:.25,stagger:.02,onComplete:()=>wlNote('No transactions yet')})}
+  catch(e){console.error('clear history',e);toast('Could not clear')}}}
 window.addEventListener('wl-refresh',()=>{if(wlOpen)wlLoad()});   // balance changed (request accepted): reload the history lines
 async function wlShow(){
   if(wlBusy||wlOpen||locked||running||Q.length)return;wlBusy=true;
@@ -2220,6 +2272,148 @@ const kb=()=>{if(adState!==2||gwState===5)return;const vv=window.visualViewport;
   gsap.to(pop,{y:Math.max(-(top-8),Math.min(0,vv.offsetTop+vv.height-12-bot)),duration:.3,ease:'power2.out'})};
 amt.addEventListener('focus',()=>setTimeout(kb,350));amt.addEventListener('blur',()=>{if(adState===2)gsap.to(pop,{y:0,duration:.3,ease:'power2.out'})});
 window.visualViewport&&window.visualViewport.addEventListener('resize',kb)}
+
+// ======================================================================
+// @@WALLET-WITHDRAW   "Withdraw" button of the wallet page (the mirror of Add money)
+//   Tap Withdraw > it pushes Add money off the LEFT edge like soft slime, settles in the middle of the row, then grows into a pop-up.
+//   Pop-up: Available balance, amount (min BDT 20), method (bKash / Nagad / Rocket), the player's number, Request withdraw.
+//   Request withdraw = ONE safe Firestore transaction: balance is cut at once, withdrawRequests/{id} (pending) and a history line are created.
+//   Admin (Admin Panel > Requests > Withdraw): Accept = money was sent (nothing else changes) / Reject = the amount goes back to the wallet.
+//   Success: the same pop-up turns into a "Withdraw requested" card; OK = the pop-up shrinks into the Withdraw button and Add money slides back.
+//   HTML: <!-- @@WALLET-WITHDRAW -->  CSS: /* @@WALLET-WITHDRAW */
+// ======================================================================
+{const row=q('.wl-act'),bAdd=q('#wl_add'),bOut=q('#wl_out'),scrim=q('#wd_sc'),pop=q('#wd_pop'),inn=q('#wd_in'),wh=q('#wd_wh'),gr=q('#wd_gr'),fk=q('#wd_fk'),xb=q('#wd_x'),hd=q('#wd_hd'),
+  amt=q('#wd_amt'),num=q('#wd_num'),nl=q('#wd_nl'),msg=q('#wd_msg'),go=q('#wd_go'),av=q('#wd_av b'),okv=q('#wd_okv'),okb=q('#wd_okb'),
+  pms=[...pop.querySelectorAll('#wd_pm button')],items=[...pop.querySelectorAll('.wd-i')];
+const WDM={bkash:{n:'bKash',len:11},nagad:{n:'Nagad',len:11},rocket:{n:'Rocket',len:12}};
+let wdM='bkash',wdState=0,wdBusy=false,wdX=-300;   // wdState: 0 closed, 1 animating, 2 pop-up open, 3 success card
+const rel=r=>{const w=W.getBoundingClientRect();return{l:r.left-w.left,t:r.top-w.top,w:r.width,h:r.height}};
+const top0=async()=>{for(let i=0;i<40&&sc.scrollTop>1;i++)await wait(30)};
+const syncM=()=>{const C=WDM[wdM];nl.textContent=C.n;num.placeholder=wdM==='rocket'?'01XXXXXXXXXX':'01XXXXXXXXX';num.maxLength=C.len;num.value=num.value.slice(0,C.len)};
+const clr=()=>{msg.textContent='';amt.parentNode.classList.remove('bad');num.parentNode.classList.remove('bad')};
+const shake=b=>{b.classList.add('bad');gsap.killTweensOf(b);gsap.timeline({onComplete:()=>gsap.set(b,{x:0})}).to(b,{x:-9,duration:.06}).to(b,{x:8,duration:.09}).to(b,{x:-6,duration:.09}).to(b,{x:0,duration:.07})};
+const err=(m,b)=>{msg.textContent=m;if(b)shake(b)};
+const EL=()=>[bOut,bAdd,pop,scrim,wh,gr,fk,xb,hd,inn,okv,...items,...okv.querySelectorAll('*')];
+function reset(){gsap.killTweensOf(EL());gsap.set(EL(),{clearProps:'all'});amt.value='';num.value='';wdM='bkash';pms.forEach(b=>b.classList.toggle('on',b.dataset.m===wdM));syncM();clr();
+  go.classList.remove('busy');wdBusy=false;wdState=0;adState=0;bAdd.style.transition=bOut.style.transition=''}
+{const _ar=adReset;adReset=()=>{_ar();if(wdState)reset()}}
+
+// 1) slime push (mirror of Add money): Withdraw squats, stretches into Add money, Add squashes and is flung off the left edge, Withdraw wobbles into the middle
+function push(){return new Promise(res=>{
+  const sr=sc.getBoundingClientRect(),a=bAdd.getBoundingClientRect(),w=bOut.getBoundingClientRect(),r=row.getBoundingClientRect();
+  const dx=r.left+r.width/2-(w.left+w.width/2),M=a.right-sr.left+40;wdX=-M;
+  gsap.set(bOut,{transformOrigin:'100% 50%',zIndex:2});gsap.set(bAdd,{transformOrigin:'0% 50%'});
+  const F={v:0};let prev=0;
+  const sync=()=>{   // Add money's right edge can never go inside Withdraw: Withdraw's front edge squashes it, then it flies free (stretching a little)
+    const L=w.right+gsap.getProperty(bOut,'x')-gsap.getProperty(bOut,'scaleX')*w.width-2,vF=F.v-prev;prev=F.v;
+    const c=(a.right-F.v)-L;let s=1;
+    if(c>0)s=Math.max(.55,1-c/a.width);else s=1+Math.min(.25,vF*.02);
+    gsap.set(bAdd,{x:Math.min(-F.v,L-a.left-s*a.width),scaleX:s,scaleY:1+(1-s)*.5})};
+  gsap.timeline({onUpdate:sync,onComplete:()=>gsap.set(bAdd,{visibility:'hidden'})})
+    .to(bOut,{scaleX:.92,scaleY:1.06,duration:.15,ease:'power2.out'},0)
+    .to(bOut,{x:dx*.55,scaleX:1.2,scaleY:.92,duration:.28,ease:'power2.out'},.15)
+    .to(bOut,{x:dx,scaleX:1,scaleY:1,duration:.45,ease:'power3.out'},.43)
+    .to(F,{v:M,duration:.8,ease:'power2.out'},.3)
+    .call(res,null,.88)})}
+
+// 2) the button grows into the pop-up
+async function grow(){
+  const Wr=W.getBoundingClientRect(),ar=rel(bOut.getBoundingClientRect()),pw=Math.min(Wr.width-40,360);
+  gsap.set([wh,gr,fk,pop,scrim,xb,hd,...items],{clearProps:'all'});
+  inn.style.width=pw+'px';okv.style.width=pw+'px';av.textContent=wlMoney(balPrev);
+  pop.style.display='block';pop.style.visibility='hidden';
+  const ph=inn.offsetHeight,fl=(Wr.width-pw)/2,ft=Math.max(16,(Wr.height-ph)*.42);
+  gsap.set(pop,{left:ar.l,top:ar.t,width:ar.w,height:ar.h,borderRadius:26,boxShadow:'0 12px 26px rgba(79,86,230,.3)',visibility:'visible'});
+  gsap.set(gr,{opacity:1});gsap.set(wh,{opacity:0});gsap.set(fk,{opacity:1});gsap.set([hd,...items],{opacity:0,y:16});gsap.set(xb,{opacity:0});
+  scrim.style.display='block';gsap.set(scrim,{opacity:0});gsap.set(bOut,{opacity:0});
+  await new Promise(res=>{gsap.timeline({onComplete:res})
+    .to(scrim,{opacity:1,duration:.5,ease:'power1.out'},0)
+    .to(pop,{left:fl,top:ft,width:pw,height:ph,borderRadius:30,duration:.8,ease:'power3.inOut'},0)
+    .to(pop,{boxShadow:'0 30px 70px rgba(30,41,100,.35)',duration:.8,ease:'sine.inOut'},0)
+    .to(wh,{opacity:1,duration:.3,ease:'none'},0)
+    .to(gr,{opacity:0,duration:.5,ease:'sine.inOut'},.2)
+    .to(fk,{opacity:0,duration:.25,ease:'power1.out'},0)
+    .to(hd,{opacity:1,y:0,duration:.5,ease:'power3.out'},.5)
+    .to(items,{opacity:1,y:0,duration:.5,stagger:.07,ease:'power3.out'},.55)
+    .to(xb,{opacity:1,duration:.3},.9)})}
+
+async function open(){
+  if(adState||wlBusy||!wlOpen)return;adState=1;wdState=1;   // adState stays 1 while Withdraw is busy: Add money can't start, the wallet can't close
+  bAdd.style.transition=bOut.style.transition='none';
+  try{sc.scrollTo({top:0,behavior:'smooth'});await push();await top0();await grow();wdState=2}
+  catch(e){console.error('withdraw',e);reset()}}
+
+// 3) close: everything plays backwards (also used by OK after a request was sent)
+async function close(){
+  if((wdState!==2&&wdState!==3)||wdBusy)return;wdState=1;amt.blur();num.blur();
+  const ar=rel(bOut.getBoundingClientRect());
+  await new Promise(res=>{gsap.timeline({onComplete:res})
+    .to([...items,hd],{opacity:0,y:10,duration:.25,stagger:{each:.04,from:'end'},ease:'power2.in'},0)
+    .to([xb,okv],{opacity:0,duration:.22},0)
+    .to(pop,{left:ar.l,top:ar.t,width:ar.w,height:ar.h,borderRadius:26,y:0,duration:.75,ease:'power3.inOut'},.2)
+    .to(pop,{boxShadow:'0 12px 26px rgba(79,86,230,.3)',duration:.75,ease:'sine.inOut'},.2)
+    .to(gr,{opacity:1,duration:.4,ease:'sine.inOut'},.45)
+    .to(fk,{opacity:1,duration:.3,ease:'power1.in'},.65)
+    .to(scrim,{opacity:0,duration:.5,ease:'power1.in'},.35)});
+  gsap.set(bOut,{opacity:1});gsap.set([pop,scrim,wh,gr,fk,xb,hd,inn,okv,...items,...okv.querySelectorAll('*')],{clearProps:'all'});
+  amt.value='';num.value='';clr();
+  gsap.set(bAdd,{visibility:'visible',x:wdX,scaleX:1,scaleY:1,skewX:0});
+  await new Promise(res=>{gsap.timeline({onComplete:res})   // same duration + same ease for both: Withdraw glides right, Add money slides in from the left edge, never touching
+    .to(bOut,{x:0,duration:.75,ease:'power3.inOut'},0)
+    .to(bAdd,{x:0,duration:.75,ease:'power3.inOut'},0)});
+  gsap.set([bAdd,bOut],{clearProps:'all'});bAdd.style.transition=bOut.style.transition='';wdBusy=false;wdState=0;adState=0}
+
+// 4) the request: cut the money + create the request + create the history line, all or nothing
+async function submit(){
+  if(wdState!==2||wdBusy)return;
+  const C=WDM[wdM],n=Number(amt.value)||0,no=num.value.replace(/\D/g,'');
+  if(n<20){err('Minimum withdraw is BDT 20',amt.parentNode);return}
+  if(n>balPrev){err('Not enough balance (you have '+wlMoney(balPrev)+')',amt.parentNode);return}
+  if(!(wdM==='rocket'?/^01[3-9]\d{8,9}$/:/^01[3-9]\d{8}$/).test(no)){err('Enter your '+C.n+' number ('+(wdM==='rocket'?'11 or 12':'11')+' digits)',num.parentNode);return}
+  const u=auth.currentUser;if(!u){err('Please log in again');return}
+  wdBusy=true;go.classList.add('busy');amt.blur();num.blur();msg.textContent='';
+  const hold=new Promise(r=>setTimeout(r,1400));let e0=null;
+  try{
+    if(navigator.onLine===false)throw{code:'unavailable'};
+    const id=Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+    await Promise.race([runTransaction(db,async tx=>{
+      const uRef=doc(db,'users',u.uid),s=await tx.get(uRef),bal=Number(s.exists()&&s.data().balance)||0;
+      if(bal<n)throw{code:'low'};
+      tx.update(uRef,{balance:bal-n,lastWd:id});
+      tx.set(doc(db,'withdrawRequests',id),{uid:u.uid,amount:n,method:wdM,number:no,status:'pending',createdAt:serverTimestamp()});
+      tx.set(doc(db,'users',u.uid,'transactions','wd_'+id),{type:'withdraw',amount:n,method:wdM,status:'pending',createdAt:serverTimestamp(),requestId:id})}),
+      new Promise((_,j)=>setTimeout(()=>j({code:'unavailable'}),20000))]);
+  }catch(e){e0=e||{code:'x'}}
+  await hold;
+  if(!e0)await showOk(n,no,C);
+  else{console.error('withdraw',e0);
+    msg.textContent=e0.code==='low'?'Not enough balance':e0.code==='permission-denied'?'Withdraw was refused. Check the Firestore rules':/unavailable|network/.test(e0.code||'')?'No internet. Look at your wallet history before trying again':'Could not send the request. Try again'}
+  wdBusy=false;go.classList.remove('busy')}
+// the same pop-up turns into the success card (it becomes shorter, the tick draws itself, a ripple rings out)
+async function showOk(n,no,C){
+  q('#wd_okp').textContent='The admin will send the money after checking. If it is rejected, BDT '+n.toLocaleString('en-US')+' comes back to your wallet.';
+  q('#wd_oks').innerHTML='BDT '+n.toLocaleString('en-US')+' &middot; '+C.n+'<br>To '+no+'<br>Taken from your wallet now';
+  okv.style.display='flex';okv.style.visibility='hidden';
+  const oh=okv.offsetHeight,Wr=W.getBoundingClientRect(),nt=Math.max(16,(Wr.height-oh)*.42),ring=okv.querySelector('.ring'),path=ring.querySelector('path'),rp=ring.querySelector('.rp'),
+    parts=[ring,okv.querySelector('h3'),q('#wd_okp'),q('#wd_oks'),okb];
+  gsap.set(okv,{visibility:'visible'});gsap.set(parts,{opacity:0,y:12});gsap.set(inn,{pointerEvents:'none'});gsap.set(pop,{y:0});wdState=3;
+  await new Promise(res=>{gsap.timeline({onComplete:res})
+    .to([...items,hd,xb],{opacity:0,duration:.25,ease:'power1.in'},0)
+    .to(pop,{height:oh,top:nt,duration:.6,ease:'power3.inOut'},.15)
+    .to(parts,{opacity:1,y:0,duration:.45,stagger:.07,ease:'power3.out'},.5)
+    .fromTo(path,{strokeDashoffset:1},{strokeDashoffset:0,duration:.5,ease:'power2.out'},.7)
+    .fromTo(rp,{scale:1,opacity:.55},{scale:2,opacity:0,duration:.9,ease:'power2.out'},.9)})}
+
+bOut.onclick=open;scrim.onclick=close;xb.onclick=close;okb.onclick=close;go.onclick=submit;
+pms.forEach(b=>b.onclick=()=>{wdM=b.dataset.m;pms.forEach(x=>x.classList.toggle('on',x===b));syncM();clr()});
+amt.oninput=()=>{amt.value=amt.value.replace(/\D/g,'').replace(/^0+(?=\d)/,'');clr()};
+num.oninput=()=>{num.value=num.value.replace(/\D/g,'').slice(0,WDM[wdM].len);clr()};
+amt.onkeydown=num.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();e.target.blur()}};
+// keyboard: if it would cover the pop-up, lift the pop-up so the boxes and the button stay visible
+const kb=()=>{if(wdState!==2)return;const vv=window.visualViewport;if(!vv)return;const y=gsap.getProperty(pop,'y'),r=pop.getBoundingClientRect(),top=r.top-y,bot=r.bottom-y;
+  gsap.to(pop,{y:Math.max(-(top-8),Math.min(0,vv.offsetTop+vv.height-12-bot)),duration:.3,ease:'power2.out'})};
+[amt,num].forEach(i=>{i.addEventListener('focus',()=>setTimeout(kb,350));i.addEventListener('blur',()=>{if(wdState===2)gsap.to(pop,{y:0,duration:.3,ease:'power2.out'})})});
+window.visualViewport&&window.visualViewport.addEventListener('resize',kb)}
 }
 
 </script>
@@ -2229,9 +2423,24 @@ window.visualViewport&&window.visualViewport.addEventListener('resize',kb)}
       <header class="wl-top"><button class="ib" id="wl_back" type="button" aria-label="Back"><svg class="ico" viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button><h2>My wallet</h2></header>
       <section class="wallet wl-card"><div class="w-l">WALLET BALANCE</div><div class="w-b" id="wl_bal">BDT 0.00</div>
         <div class="w-r"><div class="wl-sec"><svg class="ico" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg>Wallet secured by Ultimate Tour</div></div></section>
-      <div class="wl-act"><button class="wb add" type="button" id="wl_add"><svg class="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Add money</button><button class="wb out" type="button" data-toast="Withdraw is coming soon"><svg class="ico" viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8"/></svg>Withdraw</button></div>
-      <h3 class="hm-h wl-h">Transaction history</h3>
+      <div class="wl-act"><button class="wb add" type="button" id="wl_add"><svg class="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>Add money</button><button class="wb out" type="button" id="wl_out"><svg class="ico" viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8"/></svg>Withdraw</button></div>
+      <div class="wl-hh"><h3 class="hm-h wl-h">Transaction history</h3><button type="button" id="wl_clr">Clear all</button></div>
       <div class="wl-ls" id="wl_list"></div>
+    </div>
+    <!-- @@WALLET-WITHDRAW - dim layer + pop-up (the Withdraw button pushes Add money off the LEFT edge and grows into it): amount, method, number, Request withdraw -->
+    <div id="wd_sc"></div>
+    <div id="wd_pop"><i id="wd_wh"></i><i id="wd_gr"></i><span id="wd_fk"><svg class="ico" viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8"/></svg>Withdraw</span>
+      <div id="wd_in">
+        <button type="button" id="wd_x" aria-label="Close"><svg class="ico" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+        <div id="wd_hd"><span id="wd_ic"><svg class="ico" viewBox="0 0 24 24"><path d="M7 17 17 7M9 7h8v8"/></svg></span><span id="wd_ti">Withdraw</span></div>
+        <p id="wd_av" class="wd-i">Available <b>BDT 0.00</b></p>
+        <label class="ad-box wd-i"><b>BDT</b><input id="wd_amt" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="7" autocomplete="off" placeholder="Min 20"></label>
+        <div class="wd-pm wd-i" id="wd_pm"><button type="button" data-m="bkash" class="on">bKash</button><button type="button" data-m="nagad">Nagad</button><button type="button" data-m="rocket">Rocket</button></div>
+        <label class="ad-box wd-i"><b id="wd_nl">bKash</b><input id="wd_num" type="text" inputmode="numeric" maxlength="11" autocomplete="off" placeholder="01XXXXXXXXX"></label>
+        <p id="wd_msg" class="wd-i"></p>
+        <button type="button" id="wd_go" class="wd-i"><span>Request withdraw</span><i class="bk-sp"></i></button>
+      </div>
+      <div id="wd_okv"><i class="ring"><svg viewBox="0 0 24 24"><path pathLength="1" d="M5 13l4 4L19 7"/></svg><b class="rp"></b></i><h3>Withdraw requested</h3><p id="wd_okp"></p><div id="wd_oks"></div><button type="button" id="wd_okb">OK</button></div>
     </div>
     <!-- @@WALLET-ADDMONEY - dim layer + pop-up (the Add money button grows into it): + icon, title, Enter amount box, quick amounts, Proceed to payment -->
     <div id="ad_sc"></div>
@@ -2760,15 +2969,26 @@ so for now it only shows "No transactions yet". Called by initAdmin() in admin.h
 .rq-no{background:rgba(214,69,42,.1);color:#c0392b}.rq-yes{background:#0d9488;color:#fff;box-shadow:0 10px 20px rgba(13,148,136,.25)}
 .rq-no.arm{background:#c0392b;color:#fff}.rq-yes.arm{background:#0a7a70}
 .rq-err{margin:0;min-height:0;text-align:center;font:700 11px var(--mono);color:#c0392b}
+.rq-kind{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.rq-kb{all:unset;box-sizing:border-box;text-align:center;padding:13px 6px;border-radius:18px;background:#fff;box-shadow:0 8px 18px rgba(30,41,100,.06);font:700 11.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:#6b7692;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .3s,color .3s}
+.rq-kb.on{background:var(--ink);color:#fff}.rq-kb i{font-style:normal;margin-left:6px;padding:2px 7px;border-radius:99px;background:rgba(245,158,11,.2);color:#b45309;font-size:10px}.rq-kb.on i{background:rgba(255,255,255,.2);color:#fff}
+.rq-bulk{display:none;margin:-4px 0 12px}.rq-bulk button{all:unset;box-sizing:border-box;width:100%;text-align:center;padding:11px;border-radius:99px;background:rgba(214,69,42,.1);color:#c0392b;font:700 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;cursor:pointer}
+.rq-bulk button.arm{background:#c0392b;color:#fff}
+.rq-del{background:rgba(214,69,42,.1);color:#c0392b}.rq-del.arm{background:#c0392b;color:#fff}
+.rq-s.rejected.wd{background:rgba(214,69,42,.12)}
 </script>
 <script type="text/plain" data-kind="app" data-order="205">
 /* ===== pages/transactions/transactions.js ===== */
 // ======================================================================
 // @@TRANSACTIONS
-// Admin Panel > Requests page: every player's "Add money" request as a card (live, newest first).
-//   Accept  = in ONE safe step: the request becomes 'approved', the amount is added to users/{uid}.balance, and a line is added to users/{uid}/transactions.
-//   Reject  = the request becomes 'rejected', no money moves.   A request can only be decided once (it must still be 'pending').
-//   Tap Accept / Reject once = the button asks "Tap again", tap again = done (so nobody adds money by a mistaken touch).
+// Admin Panel > Requests page. Two lists (switch at the top): "Add money" requests and "Withdraw" requests, live, newest first, as cards.
+//   Add money  Accept = the amount is added to users/{uid}.balance + a line in users/{uid}/transactions + request 'approved'.  Reject = nothing moves.
+//   Withdraw   (the player's money was already cut when he sent the request)
+//              Accept = "I sent the money": request 'approved', the player's history line becomes 'done'.
+//              Reject = the amount goes BACK to the player's balance, request 'rejected', his history line becomes 'rejected'.
+//   Every decision is ONE Firestore transaction and only a 'pending' request can be decided (once).
+//   Tap Accept / Reject once = the button asks "Tap again", tap again = done.  Decided cards can be deleted (testing helper).
+//   The Binance rate card (settings/rates) shows on the Add money list.
 // Called by initAdmin() in admin.html:  const admTransactions = txSetup(X);  ->  admTransactions({box}) gives { start, stop }.
 // ======================================================================
 function txSetup(X){
@@ -2780,60 +3000,85 @@ const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;'
 const fmt=ts=>{const d=ts&&ts.toDate?ts.toDate():null;return d?d.toLocaleString('en-GB',{day:'numeric',month:'short',hour:'numeric',minute:'2-digit',hour12:true}):'just now'};
 const money=n=>Number(n||0).toLocaleString('en-US');
 function admTransactions(U){
-  const {box}=U;let on=false,unsub=null,rows=[],flt='pending',loaded=false,failed=false;const uc={};
-  box.innerHTML='<div class="rq-rate"><small>Binance rate</small><div class="rq-rr"><span>1 USDT = BDT</span><input inputmode="decimal" autocomplete="off" placeholder="125"><button type="button">Save</button></div><p class="rq-rm"></p></div><div class="rq-chips"></div><div class="rq-list"></div>';
-  const rEl=box.querySelector('.rq-rate'),rIn=rEl.querySelector('input'),rBt=rEl.querySelector('button'),rMs=rEl.querySelector('.rq-rm');
+  const {box}=U;let on=false,kind='dep',flt='pending';
+  const K={dep:{col:'depositRequests',rows:[],loaded:false,failed:false,unsub:null},wd:{col:'withdrawRequests',rows:[],loaded:false,failed:false,unsub:null}};
+  const uc={};
+  box.innerHTML='<div class="rq-kind"></div><div class="rq-rate"><small>Binance rate</small><div class="rq-rr"><span>1 USDT = BDT</span><input inputmode="decimal" autocomplete="off" placeholder="125"><button type="button">Save</button></div><p class="rq-rm"></p></div><div class="rq-chips"></div><div class="rq-bulk"><button type="button"></button></div><div class="rq-list"></div>';
+  const kEl=box.querySelector('.rq-kind'),rEl=box.querySelector('.rq-rate'),rIn=rEl.querySelector('input'),rBt=rEl.querySelector('button'),rMs=rEl.querySelector('.rq-rm'),
+    chEl=box.querySelector('.rq-chips'),bkEl=box.querySelector('.rq-bulk'),bkBt=bkEl.querySelector('button'),ls=box.querySelector('.rq-list');
   // the rate that players see on the Binance page (settings/rates.usdt). Players pay  BDT / rate  USDT.
   async function loadRate(){try{const s=await getDoc(doc(db,'settings','rates'));rIn.value=s.exists()&&s.data().usdt?String(s.data().usdt):'';rMs.textContent=rIn.value?'':'Not set yet: Binance stays OFF for players until you save a rate'}catch(e){}}
   rIn.oninput=()=>{rIn.value=rIn.value.replace(/[^0-9.]/g,'').replace(/(\..*)\./g,'$1');rMs.textContent=''};
   rBt.onclick=async()=>{const v=parseFloat(rIn.value);if(!(v>=1&&v<=100000)){rMs.textContent='Enter a rate like 125';return}
     rBt.disabled=true;rMs.textContent='';try{await setDoc(doc(db,'settings','rates'),{usdt:v,updatedAt:serverTimestamp()});rMs.textContent='Saved: players now see 1 USDT = BDT '+v}
     catch(e){console.error(e);rMs.textContent=e&&e.code==='permission-denied'?'Not allowed: update the Firestore rules':'Failed. Check internet'}rBt.disabled=false};
-  const chEl=box.querySelector('.rq-chips'),ls=box.querySelector('.rq-list');
+  const cur=()=>K[kind],st=r=>r.status||'pending';
   // who sent it: name + username from users/{uid} (the admin may read it), cached
-  async function names(){const ids=[...new Set(rows.map(r=>r.uid).filter(u=>u&&!uc[u]))];
+  async function names(){const ids=[...new Set(cur().rows.map(r=>r.uid).filter(u=>u&&!uc[u]))];
     await Promise.all(ids.map(async u=>{try{const s=await getDoc(doc(db,'users',u));uc[u]=s.exists()?s.data():{}}catch(e){uc[u]={}}}));
     ls.querySelectorAll('[data-uid]').forEach(el=>{const d=uc[el.dataset.uid]||{};if(el.dataset.f==='n')el.textContent=d.name||d.username||'Player';else el.textContent=(d.username?'@'+d.username+' · ':'')+el.dataset.t})}
-  function drawChips(){chEl.innerHTML=FL.map(([k,l])=>'<button type="button" class="rq-ch'+(k===flt?' on':'')+'" data-k="'+k+'">'+l+'<i>'+rows.filter(r=>(r.status||'pending')===k).length+'</i></button>').join('')}
+  function drawTop(){
+    const pc=k=>K[k].rows.filter(r=>st(r)==='pending').length;
+    kEl.innerHTML=[['dep','Add money'],['wd','Withdraw']].map(([k,l])=>'<button type="button" class="rq-kb'+(k===kind?' on':'')+'" data-kind="'+k+'">'+l+(pc(k)?'<i>'+pc(k)+'</i>':'')+'</button>').join('');
+    chEl.innerHTML=FL.map(([k,l])=>'<button type="button" class="rq-ch'+(k===flt?' on':'')+'" data-k="'+k+'">'+l+'<i>'+cur().rows.filter(r=>st(r)===k).length+'</i></button>').join('');
+    rEl.style.display=kind==='dep'?'':'none'}
   function draw(anim){
-    drawChips();const list=rows.filter(r=>(r.status||'pending')===flt);ls.innerHTML='';
-    if(!loaded||!list.length){const d=document.createElement('div');d.className='empty';d.innerHTML=TX_ICON+'<p>'+(failed?'Could not load requests':!loaded?'Loading...':'No '+flt+' requests')+'</p>';ls.appendChild(d);return}
-    ls.innerHTML=list.map(r=>{const m=TXM[r.method]||[r.method||'?','?','#6b7692'],st=r.status||'pending';
-      return '<div class="rq" data-id="'+esc(r.id)+'"><div class="rq-h"><i class="rq-m" style="background:'+m[2]+'">'+m[1]+'</i><div class="rq-w"><b data-uid="'+esc(r.uid)+'" data-f="n">Player</b><small data-uid="'+esc(r.uid)+'" data-t="'+esc(fmt(r.createdAt))+'">'+esc(fmt(r.createdAt))+'</small></div><span class="rq-s '+st+'">'+(st==='approved'?'Accepted':st==='rejected'?'Rejected':'Pending')+'</span></div>'
+    drawTop();const C=cur(),list=C.rows.filter(r=>st(r)===flt);ls.innerHTML='';
+    bkEl.style.display=flt!=='pending'&&list.length?'block':'none';bkBt.classList.remove('arm');bkBt.textContent='Delete all '+list.length+' shown';
+    if(!C.loaded||!list.length){const d=document.createElement('div');d.className='empty';d.innerHTML=TX_ICON+'<p>'+(C.failed?'Could not load requests':!C.loaded?'Loading...':'No '+flt+' requests')+'</p>';ls.appendChild(d);return}
+    ls.innerHTML=list.map(r=>{const m=TXM[r.method]||[r.method||'?','?','#6b7692'],s=st(r),wd=kind==='wd';
+      return '<div class="rq" data-id="'+esc(r.id)+'"><div class="rq-h"><i class="rq-m" style="background:'+m[2]+'">'+m[1]+'</i><div class="rq-w"><b data-uid="'+esc(r.uid)+'" data-f="n">Player</b><small data-uid="'+esc(r.uid)+'" data-t="'+esc(fmt(r.createdAt))+'">'+esc(fmt(r.createdAt))+'</small></div><span class="rq-s '+s+'">'+(s==='approved'?(wd?'Paid':'Accepted'):s==='rejected'?(wd?'Refunded':'Rejected'):'Pending')+'</span></div>'
         +'<div class="rq-am"><small>BDT</small>'+money(r.amount)+'</div>'
-        +'<div class="rq-d">'+(r.method==='binance'?'<p><small>Should pay</small><b>'+esc(r.usdt)+' USDT</b></p><p><small>Rate then</small><b>BDT '+esc(r.rate)+'</b></p>':'<p><small>Method</small><b>'+esc(m[0])+'</b></p><p><small>Sent from</small><b>'+esc(r.senderNumber)+'</b></p>')+'<p class="w"><small>'+(r.method==='binance'?'Order ID':'Transaction ID')+'</small><b>'+esc(r.txid)+'</b></p></div>'
-        +(st==='pending'?'<p class="rq-err"></p><div class="rq-a"><button type="button" class="rq-no" data-a="rej">Reject</button><button type="button" class="rq-yes" data-a="acc">Accept</button></div>':'')+'</div>'}).join('');
+        +'<div class="rq-d">'+(wd?'<p><small>Method</small><b>'+esc(m[0])+'</b></p><p><small>Send money to</small><b>'+esc(r.number)+'</b></p>'
+          :(r.method==='binance'?'<p><small>Should pay</small><b>'+esc(r.usdt)+' USDT</b></p><p><small>Rate then</small><b>BDT '+esc(r.rate)+'</b></p>':'<p><small>Method</small><b>'+esc(m[0])+'</b></p><p><small>Sent from</small><b>'+esc(r.senderNumber)+'</b></p>')
+          +'<p class="w"><small>'+(r.method==='binance'?'Order ID':'Transaction ID')+'</small><b>'+esc(r.txid)+'</b></p>')+'</div>'
+        +'<p class="rq-err"></p><div class="rq-a">'+(s==='pending'?'<button type="button" class="rq-no" data-a="rej">Reject</button><button type="button" class="rq-yes" data-a="acc">'+(wd?'Mark paid':'Accept')+'</button>':'<button type="button" class="rq-del" data-a="del">Delete</button>')+'</div></div>'}).join('');
     if(anim)gsap.from(ls.children,{opacity:0,y:18,duration:.5,stagger:.06,ease:'power2.out',clearProps:'transform,opacity'});
     names()}
   // Accept / Reject, all-or-nothing (a Firestore transaction)
-  async function decide(id,ok){
+  async function decide(col,id,ok){
     await runTransaction(db,async tx=>{
-      const rRef=doc(db,'depositRequests',id),r=await tx.get(rRef);
+      const rRef=doc(db,col,id),r=await tx.get(rRef);
       if(!r.exists()||r.data().status!=='pending')throw{code:'handled'};
       const d=r.data();
-      if(ok){const uRef=doc(db,'users',d.uid),u=await tx.get(uRef);if(!u.exists())throw{code:'nouser'};
-        tx.update(uRef,{balance:(Number(u.data().balance)||0)+Number(d.amount)});
-        tx.set(doc(db,'users',d.uid,'transactions','dep_'+id),{type:'add',amount:Number(d.amount),method:d.method,status:'done',createdAt:serverTimestamp(),requestId:id})}
-      tx.update(rRef,{status:ok?'approved':'rejected',reviewedAt:serverTimestamp()})})}
+      if(col==='depositRequests'){
+        if(ok){const uRef=doc(db,'users',d.uid),u=await tx.get(uRef);if(!u.exists())throw{code:'nouser'};
+          tx.update(uRef,{balance:(Number(u.data().balance)||0)+Number(d.amount)});
+          tx.set(doc(db,'users',d.uid,'transactions','dep_'+id),{type:'add',amount:Number(d.amount),method:d.method,status:'done',createdAt:serverTimestamp(),requestId:id})}
+        tx.update(rRef,{status:ok?'approved':'rejected',reviewedAt:serverTimestamp()});
+      }else{   // withdraw: the money was cut when the player asked. Reject gives it back.
+        const lRef=doc(db,'users',d.uid,'transactions','wd_'+id),l=await tx.get(lRef);let uRef=null,u=null;
+        if(!ok){uRef=doc(db,'users',d.uid);u=await tx.get(uRef);if(!u.exists())throw{code:'nouser'}}
+        if(!ok)tx.update(uRef,{balance:(Number(u.data().balance)||0)+Number(d.amount)});
+        if(l.exists())tx.update(lRef,{status:ok?'done':'rejected'});   // the player may have deleted his history line: then there is nothing to update
+        tx.update(rRef,{status:ok?'approved':'rejected',reviewedAt:serverTimestamp()})}})}
+  const lab=(b,wd)=>b.dataset.a==='acc'?(wd?'Mark paid':'Accept'):b.dataset.a==='rej'?'Reject':'Delete';
   box.onclick=async e=>{
+    const kb=e.target.closest('.rq-kb');if(kb){if(kb.dataset.kind===kind)return;kind=kb.dataset.kind;draw(true);names();return}
     const ch=e.target.closest('.rq-ch');if(ch){if(ch.dataset.k===flt)return;flt=ch.dataset.k;draw(true);return}
+    if(e.target.closest('.rq-bulk button')){   // delete everything shown (2 taps)
+      if(!bkBt.classList.contains('arm')){bkBt.classList.add('arm');bkBt.textContent='Tap again to delete';clearTimeout(bkBt._t);bkBt._t=setTimeout(()=>{bkBt.classList.remove('arm');bkBt.textContent='Delete all '+cur().rows.filter(r=>st(r)===flt).length+' shown'},3000);return}
+      const ids=cur().rows.filter(r=>st(r)===flt).map(r=>r.id).slice(0,400);bkBt.disabled=true;
+      try{const bt=admFS_writeBatch(db);ids.forEach(i=>bt.delete(doc(db,cur().col,i)));await bt.commit()}catch(x){console.error(x);bkBt.textContent='Failed (check rules)'}
+      bkBt.disabled=false;return}
     const b=e.target.closest('.rq-a button');if(!b||b.disabled)return;
-    const card=b.closest('.rq'),id=card.dataset.id,ok=b.dataset.a==='acc',row=rows.find(r=>r.id===id),err=card.querySelector('.rq-err'),both=[...card.querySelectorAll('.rq-a button')];
+    const wd=kind==='wd',col=cur().col,card=b.closest('.rq'),id=card.dataset.id,a=b.dataset.a,row=cur().rows.find(r=>r.id===id),err=card.querySelector('.rq-err'),both=[...card.querySelectorAll('.rq-a button')];
     if(!b.classList.contains('arm')){   // first tap: ask again
-      both.forEach(x=>{x.classList.remove('arm');x.textContent=x.dataset.a==='acc'?'Accept':'Reject'});
-      b.classList.add('arm');b.textContent=ok?'Add BDT '+money(row&&row.amount)+'?':'Sure? Reject';err.textContent='';
-      clearTimeout(card._t);card._t=setTimeout(()=>{if(b.isConnected){b.classList.remove('arm');b.textContent=ok?'Accept':'Reject'}},3500);return}
+      both.forEach(x=>{x.classList.remove('arm');x.textContent=lab(x,wd)});
+      b.classList.add('arm');b.textContent=a==='acc'?(wd?'Paid BDT '+money(row&&row.amount)+'?':'Add BDT '+money(row&&row.amount)+'?'):a==='rej'?(wd?'Refund BDT '+money(row&&row.amount)+'?':'Sure? Reject'):'Sure? Delete';err.textContent='';
+      clearTimeout(card._t);card._t=setTimeout(()=>{if(b.isConnected){b.classList.remove('arm');b.textContent=lab(b,wd)}},3500);return}
     clearTimeout(card._t);both.forEach(x=>x.disabled=true);b.textContent='Please wait...';err.textContent='';
-    try{await decide(id,ok)}
+    try{if(a==='del')await admFS_deleteDoc(doc(db,col,id));else await decide(col,id,a==='acc')}
     catch(x){console.error('request decision',x);const c=x&&x.code;
       err.textContent=c==='handled'?'Already decided':c==='nouser'?'This player no longer exists':c==='permission-denied'?'Not allowed: update the Firestore rules':'Failed. Check internet and try again';
-      both.forEach(y=>{y.disabled=false;y.classList.remove('arm');y.textContent=y.dataset.a==='acc'?'Accept':'Reject'})}}
+      both.forEach(y=>{y.disabled=false;y.classList.remove('arm');y.textContent=lab(y,wd)})}}
   draw(false);
-  return{start:()=>{if(on)return;on=true;failed=false;loadRate();
-      try{unsub=admFS_onSnapshot(admFS_query(admFS_collection(db,'depositRequests'),admFS_orderBy('createdAt','desc'),admFS_limit(150)),
-        s=>{const first=!loaded;rows=s.docs.map(d=>({id:d.id,...d.data()}));loaded=true;failed=false;draw(first)},
-        e=>{console.error('requests',e);failed=true;loaded=false;draw(false)})}catch(e){console.error(e);failed=true;draw(false)}},
-    stop:()=>{on=false;if(unsub){unsub();unsub=null}gsap.killTweensOf(ls.children);rows=[];loaded=false;draw(false)}}}
+  function sub(k){const C=K[k];if(C.unsub)return;
+    try{C.unsub=admFS_onSnapshot(admFS_query(admFS_collection(db,C.col),admFS_orderBy('createdAt','desc'),admFS_limit(150)),
+      s=>{const first=!C.loaded;C.rows=s.docs.map(d=>({id:d.id,...d.data()}));C.loaded=true;C.failed=false;if(k===kind)draw(first);else drawTop()},
+      e=>{console.error('requests',k,e);C.failed=true;C.loaded=false;if(k===kind)draw(false)})}catch(e){console.error(e);C.failed=true;if(k===kind)draw(false)}}
+  return{start:()=>{if(on)return;on=true;loadRate();sub('dep');sub('wd')},
+    stop:()=>{on=false;for(const k in K){const C=K[k];if(C.unsub){C.unsub();C.unsub=null}C.rows=[];C.loaded=false;C.failed=false}gsap.killTweensOf(ls.children);draw(false)}}}
 return admTransactions}
 </script>
 <!-- ####  END OF FILE: transactions.html  #### -->
