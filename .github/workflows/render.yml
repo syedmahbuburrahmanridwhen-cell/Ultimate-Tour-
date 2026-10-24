@@ -12,7 +12,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Move component files into components folder
         run: |
@@ -20,7 +20,10 @@ jobs:
           mv Backdrop.tsx PreviewAudio.tsx Scene1Hook.tsx Scene2Intro.tsx Scene3Bento.tsx Scene4Hub.tsx Scene5Cta.tsx Scene6Contact.tsx Scene7End.tsx SceneShell.tsx SfxLayer.tsx Sweep.tsx ui.tsx motion.tsx components/ 2>/dev/null || true
 
       - name: Install dependencies
-        run: npm install
+        run: npm install --legacy-peer-deps
+
+      - name: Ensure Remotion Browser
+        run: npx remotion browser ensure
 
       - name: Render video
         run: npx remotion render index.ts Main out/video.mp4
